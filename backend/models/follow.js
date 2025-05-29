@@ -1,6 +1,4 @@
-//follow.js
-
-module.exports = (sequelize, DataTypes) =>{
+module.exports=(sequelize,DataTypes)=>{
   const Follow = sequelize.define('Follow',{
     from_user_id:{
       type:DataTypes.BIGINT,
@@ -11,8 +9,8 @@ module.exports = (sequelize, DataTypes) =>{
       allowNull:false,
     },
   },{
-    tableName:'user_follows',
-    timestamps:true, 
+    tableName:'follow',
+    timestamps:true,
     indexs:[
       {
         unique:true,
@@ -20,6 +18,5 @@ module.exports = (sequelize, DataTypes) =>{
       },
     ],
   });
-
-  return UserFollows;
-}
+  return Follow;
+};
