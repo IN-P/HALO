@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Button, Input } from 'antd';
+import { Button } from 'antd';
+import { useRouter } from 'next/router';
 import {
   HomeOutlined,
   EditOutlined,
@@ -8,10 +9,13 @@ import {
   SettingOutlined,
   LogoutOutlined,
   BulbOutlined,
+  AppstoreOutlined,
+  ShopOutlined,
+  GiftOutlined
 } from '@ant-design/icons';
 
 // 재사용 가능한 버튼 컴포넌트
-const SidebarButton = ({ icon, children }) => {
+const SidebarButton = ({ icon, children, onClick }) => {
   const [hover, setHover] = useState(false);
 
   return (
@@ -19,9 +23,14 @@ const SidebarButton = ({ icon, children }) => {
       icon={icon}
       block
       type="text"
+      onClick={onClick}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        padding: '12px 12px',
         background: hover
           ? 'linear-gradient(90deg, #f0faff 0%, #d0eaff 100%)'
           : 'transparent',
@@ -31,14 +40,17 @@ const SidebarButton = ({ icon, children }) => {
         border: 'none',
         borderRadius: '6px',
         color: '#333',
+        textAlign: 'left',
       }}
     >
-      {children}
+      <span style={{ marginLeft: 8 }}>{children}</span>
     </Button>
   );
 };
 
 const Sidebar = () => {
+  const router = useRouter();
+
   return (
     <div style={{
       width: 240,
@@ -58,12 +70,18 @@ const Sidebar = () => {
           <strong style={{ fontSize: 20 }}>HaLo</strong>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 60 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <SidebarButton icon={<HomeOutlined />}>홈</SidebarButton>
+          <SidebarButton icon={<AppstoreOutlined />}>메뉴</SidebarButton>
           <SidebarButton icon={<EditOutlined />}>게시물 작성</SidebarButton>
           <SidebarButton icon={<BellOutlined />}>알림</SidebarButton>
-          <SidebarButton icon={<MessageOutlined />}>채팅 (DM)</SidebarButton>
-          <SidebarButton icon={<SettingOutlined />}>관리자 문의</SidebarButton>
+          <SidebarButton
+          icon={<MessageOutlined />}
+          onClick={() => router.push('/chat')}
+          >채팅 (DM)
+          </SidebarButton>
+          <SidebarButton icon={<ShopOutlined />}>상점</SidebarButton>
+          <SidebarButton icon={<GiftOutlined />}>이벤트</SidebarButton>
         </div>
       </div>
 
@@ -71,7 +89,7 @@ const Sidebar = () => {
       <div style={{ flex: 1 }} />
 
       {/* 하단 버튼 */}
-      <div style={{ padding: '0 16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ padding: '0 16px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         <SidebarButton icon={<LogoutOutlined />}>Logout</SidebarButton>
         <SidebarButton icon={<BulbOutlined />}>Light mode</SidebarButton>
       </div>

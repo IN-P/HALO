@@ -2,15 +2,22 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const chatController = require('./controllers/chatController');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:3001', // 프론트 포트에 맞게 설정
+    origin: 'http://localhost:3000', // 프론트 포트에 맞게 설정
     methods: ['GET', 'POST']
   }
 });
+
+// ✅ JSON 파싱 미들웨어 추가 (POST 처리용) // ##
+app.use(express.json()); // ##
+
+// ✅ 테스트용 라우터 추가 (API 확인용) // ##
+app.get('/api/chat/test', chatController.testController); // ##
 
 io.on('connection', (socket) => {
   console.log('🟢 유저 접속:', socket.id);
@@ -29,6 +36,6 @@ io.on('connection', (socket) => {
   });
 });
 
-server.listen(3000, () => {
-  console.log('✅ Socket.IO 서버 실행 중 (http://localhost:3000)');
+server.listen(4000, () => {
+  console.log('✅ Socket.IO 서버 실행 중 (http://localhost:4000)');
 });
