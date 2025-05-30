@@ -1,26 +1,44 @@
-import React from 'react';
-import Sidebar from '../components/Sidebar';
+import React, { useState } from 'react';
+import AppLayout from '../components/AppLayout';
+import PostCard from '../components/PostCard';
+
+const dummyPosts = [
+  { id: 1, title: '첫 번째 게시물', content: '내용입니다.' },
+  { id: 2, title: '두 번째 게시물', content: '또 다른 내용입니다.' },
+];
 
 const Home = () => {
+  const [search, setSearch] = useState('');
+
   return (
-    <div style={{ display: 'flex' }}>
-      {/* 좌측 사이드바 */}
-      <Sidebar />
+    <AppLayout>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <div style={{ width: '60%' }}>
+          {/* 검색 바 */}
+          <input
+            type="text"
+            placeholder="검색어를 입력하세요"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              width: '60%',
+              padding: '12px 16px',
+              fontSize: 16,
+              border: '1px solid #ccc',
+              borderRadius: 8,
+              marginBottom: 20,
+            }}
+          />
 
-      {/* 중앙 콘텐츠 */}
-      <div style={{ marginLeft: 240, flex: 1, padding: 24, minHeight: '100vh', background: '#f8f8f8' }}>
-        <div style={{ height: '100%', border: '2px dashed #ccc', borderRadius: 8, textAlign: 'center', paddingTop: 100 }}>
-          메인 콘텐츠 영역 (준비 중)
+          {/* 포스트 카드 리스트 */}
+          {dummyPosts
+            .filter((post) => post.title.includes(search) || post.content.includes(search))
+            .map((post) => (
+              <PostCard key={post.id} title={post.title} content={post.content} />
+            ))}
         </div>
       </div>
-
-      {/* 우측 사이드바 */}
-      <div style={{ width: 260, borderLeft: '1px solid #eee', padding: 24, background: '#fff', minHeight: '100vh' }}>
-        <div style={{ height: '100%', border: '2px dashed #ccc', borderRadius: 8, textAlign: 'center', paddingTop: 100 }}>
-          우측 사이드바 영역 (준비 중)
-        </div>
-      </div>
-    </div>
+    </AppLayout>
   );
 };
 
