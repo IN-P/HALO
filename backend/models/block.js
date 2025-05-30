@@ -1,5 +1,6 @@
-module.exports=(sequelize,DataTypes)=>{
-  const Follow = sequelize.define('Follow',{
+
+module.exports = (sequelize,DataTypes) =>{
+  const Block = sequelize.define('Block',{
     from_user_id:{
       type:DataTypes.BIGINT,
       allowNull:false,
@@ -9,7 +10,7 @@ module.exports=(sequelize,DataTypes)=>{
       allowNull:false,
     },
   },{
-    tableName:'follow',
+    tableName:'block',
     timestamps:true,
     indexes:[
       {
@@ -19,16 +20,15 @@ module.exports=(sequelize,DataTypes)=>{
     ],
   });
 
-  Follow.associate = (models) => {
-    Follow.belongsTo(models.User,{
-      as:'Follower',
-      foreignKey:'to_user_id',
-    });
-    Follow.belongsTo(models.User,{
-      as:'Following',
+  Block.associate = (models) =>{
+    Block.belongsTo(models.User,{
+      as:'Blocker',
       foreignKey:'from_user_id',
     });
-
+    Block.belongsTo(models.User,{
+      as:'Blocked',
+      foreignKey:'to_user_id',
+    });
   };
-  return Follow;
+  return Block;
 };
