@@ -2,6 +2,17 @@
 > 리드미 뼈대만 잡았어요 나중에 입맛대로 수정해요! 이게 정답은 아니니까
   
 ---
+# 링크 바로가기 ( 이파트는 나중에 삭제하시면 됩니다)
+- (구글 공유시트)[https://docs.google.com/spreadsheets/d/14VBShfAerDHdVO0Yvr8Ct_cezvB2znE-J5dq9IzkbRI/edit?gid=0#gid=0]
+- (썜 블로그)[https://hi-sally03915.tistory.com/1786]
+- (react+node+몽고db 채팅앱 만들기 예시)[https://www.youtube.com/watch?v=uE9Ncr6qInQ&t=284s]
+- (참고할만한 프로젝트 github)[https://github.com/SeungjaeLee00/Instagram_Clone]
+- (그록 ai)[https://grok.com/]
+- (재미나이 ai)[https://gemini.google.com/?hl=ko]
+
+
+
+---
 
 ## 프로젝트 소개:
 
@@ -72,6 +83,10 @@
 #### 백엔드 개발 도구
 
 - Nodemon 2.0.22 - 서버 자동 재시작 도구
+
+#### 데이터베이스
+
+- MySQL 8. 몇버전이지
 
 ---
 ## 협업 도구
