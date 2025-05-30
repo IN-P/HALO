@@ -4,7 +4,7 @@ import ChatList from '../components/ChatList';
 import socket from '../socket'; // socket.js 파일 경로 확인
 
 const ChatPage = () => {
-  const [me] = useState(1); // 나는 User 1
+  const [me] = useState(2); // 나는 User 2
   const [selectedUser, setSelectedUser] = useState(null);
   const [message, setMessage] = useState('');
   const [log, setLog] = useState([]);
@@ -14,7 +14,7 @@ const ChatPage = () => {
   // 현재 스크롤이 최하단에 가까운지 확인
   const isAtBottom = () => {
     const box = chatBoxRef.current;
-    if (!box) return true; // 아직 DOM 요소가 없으면 최하단으로 간주
+    if (!box) return true;
     // ★ 수정: 스크롤의 가장 아래에서 '30px' 이내면 최하단으로 간주 (임계값 상향)
     return box.scrollHeight - box.scrollTop - box.clientHeight < 100;
   };
@@ -30,12 +30,12 @@ const ChatPage = () => {
     // 초기 로드 시 상대방 사용자 선택 (선택된 유저가 없을 경우 기본값 설정)
     if (!selectedUser) {
       setSelectedUser({
-        id: 2, // 상대방은 User 2 (덴지)
+        id: 1, // 상대방은 User 1 (덴지)
         nickname: '덴지',
         profileImage: '/images/덴지.png',
       });
     }
-  }, [selectedUser]); // selectedUser가 null일 때만 실행되도록 의존성 설정
+  }, [selectedUser]);
 
   const generateRoomId = (id1, id2) => {
     return `chat-${[id1, id2].sort().join('-')}`;
@@ -56,7 +56,7 @@ const ChatPage = () => {
     console.log(`✅ join_room: ${roomId}`);
 
     // socket.off를 socket.on 전에 호출하는 부분을 제거합니다. (이전 수정 유지)
-    // socket.off('receive_message', handleReceive);
+    // socket.off('receive_message', handleReceive); 
 
     socket.on('receive_message', handleReceive); // 리스너 등록
 
@@ -99,7 +99,7 @@ const ChatPage = () => {
         setShowNewMsgAlert(true);
       }
     }
-  }, [log, me]); // log와 me를 의존성 배열에 추가
+  }, [log, me]);
 
   const sendMessage = () => {
     if (!message.trim() || !selectedUser) return;
@@ -125,7 +125,7 @@ const ChatPage = () => {
       lastMessage: '헤헤헤헤헤헤헤헤헿?',
       lastTime: '2분 전',
       otherUser: {
-        id: 2, // 채팅 목록의 상대방 ID는 2 (덴지)
+        id: 1, // 채팅 목록의 상대방 ID는 1 (덴지)
         nickname: '덴지',
         profileImage: '/images/덴지.png',
       },
@@ -162,6 +162,7 @@ const ChatPage = () => {
                     key={idx}
                     style={{
                       textAlign: msg.senderId === me ? 'right' : 'left',
+                      색상변경: msg.senderId === me ? '#d1f0ff' : '#f2f2f2',
                       margin: '6px 0',
                     }}
                   >
