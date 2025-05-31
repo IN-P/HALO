@@ -1,5 +1,10 @@
 module.exports = (sequelize, DataTypes) => {
   const Achievement = sequelize.define('Achievement', {
+    id: {
+      type: DataTypes.BIGINT, 
+      autoIncrement: true,
+      primaryKey: true,
+    },      
     name: {
       type: DataTypes.STRING(45),
       allowNull: false,
@@ -11,6 +16,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     charset: 'utf8mb4',
     collate: 'utf8mb4_general_ci',
+    timestamps: false,
   });
 
   Achievement.associate = (db) => {

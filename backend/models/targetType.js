@@ -1,5 +1,10 @@
 module.exports = (sequelize, DataTypes) => {
   const target_type = sequelize.define('target_type', {
+    id: {
+      type: DataTypes.BIGINT, 
+      autoIncrement: true,
+      primaryKey: true,
+    },      
     code: {
       type: DataTypes.STRING(45),
       allowNull: false,

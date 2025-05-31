@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     charset: 'utf8mb4',
     collate: 'utf8mb4_general_ci',
-    timestamps: false, // createdAt, updatedAt 필요 없을 경우 생략
+    timestamps: false,
   });
 
   UserInfo.associate = (db) => {

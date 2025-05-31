@@ -1,5 +1,10 @@
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define('User', {
+    id: {
+      type: DataTypes.BIGINT, 
+      autoIncrement: true,
+      primaryKey: true,
+    },
     email: {
       type: DataTypes.STRING(30),
       allowNull: false,
@@ -66,8 +71,8 @@ module.exports = (sequelize, DataTypes) => {
     User.hasMany(db.UserPayment, { foreignKey: 'users_id' });
 
     User.belongsToMany(db.Achievement, {
-     through: 'user_achievements',
-     timestamps: true,
+      through: 'user_achievements',
+      timestamps: true,
     });
 
     User.belongsToMany(db.Badge, {
@@ -76,7 +81,29 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     User.hasMany(db.notification, { foreignKey: 'users_id' });
-    User.hasMany(db.active_log, { foreignKey: 'users_id' });  
+    User.hasMany(db.active_log, { foreignKey: 'users_id' });
+    
+    User.hasMany(db.Block, {
+      as: 'Blockeds', 
+      foreignKey: 'from_user_id',
+    });
+
+    User.hasMany(db.Block, {
+      as: 'Blockers', 
+      foreignKey: 'to_user_id',
+    });
+
+    User.hasMany(db.Follow, {
+      as: 'Followings',
+      foreignKey: 'from_user_id',
+    });
+
+    User.hasMany(db.Follow, {
+      as: 'Followers',
+      foreignKey: 'to_user_id',
+    });  
+    
+    
   };
 
   return User;
