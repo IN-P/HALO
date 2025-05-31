@@ -1,5 +1,10 @@
 module.exports = (sequelize, DataTypes) => {
   const Myteam = sequelize.define('Myteam', {
+    id: {
+      type: DataTypes.BIGINT, 
+      autoIncrement: true,
+      primaryKey: true,
+    },      
     teamname: {
       type: DataTypes.STRING(100),
       allowNull: false,
@@ -15,6 +20,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     charset: 'utf8mb4',
     collate: 'utf8mb4_general_ci',
+    timestamps: false,
   });
 
   Myteam.associate = (db) => {

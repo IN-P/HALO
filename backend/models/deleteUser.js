@@ -1,12 +1,8 @@
 module.exports = (sequelize, DataTypes) => {
-  const DeleteUser = sequelize.define('DeleteUser', {
+  const DeleteUser = sequelize.define('DeleteUser', {    
     users_id: {
       type: DataTypes.BIGINT,
       primaryKey: true,
-    },
-    reason: {
-      type: DataTypes.TEXT,
-      allowNull: true,
     },
     deleted_at: {
       type: DataTypes.DATE,

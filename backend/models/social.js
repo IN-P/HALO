@@ -1,11 +1,11 @@
 module.exports = (sequelize, DataTypes) => {
-  const UserStatus = sequelize.define('UserStatus', {
+  const Social = sequelize.define('Social', {
     id: {
       type: DataTypes.BIGINT, 
       autoIncrement: true,
       primaryKey: true,
-    },     
-    status: {
+    },      
+    social_id: {
       type: DataTypes.STRING(100),
       allowNull: false,
     },
@@ -15,9 +15,9 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: false,
   });
 
-  UserStatus.associate = (db) => {
-    UserStatus.hasMany(db.User, { foreignKey: 'user_status_id' });
+  Social.associate = (db) => {
+    Social.hasMany(db.User, {foreignKey: 'social_id'});
   };
 
-  return UserStatus;
+  return Social;
 };

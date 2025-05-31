@@ -1,5 +1,10 @@
 module.exports = (sequelize, DataTypes) => {
   const UserPayment = sequelize.define('UserPayment', {
+    id: {
+      type: DataTypes.BIGINT, 
+      autoIncrement: true,
+      primaryKey: true,
+    },    
     amount: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -15,6 +20,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     charset: 'utf8mb4',
     collate: 'utf8mb4_general_ci',
+    timestamps: false,
   });
 
   UserPayment.associate = (db) => {

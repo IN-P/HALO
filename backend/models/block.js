@@ -10,8 +10,11 @@ module.exports = (sequelize,DataTypes) =>{
       allowNull:false,
     },
   },{
+
+    charset: 'utf8mb4',
+    collate: 'utf8mb4_general_ci',       
     tableName:'block',
-    timestamps:true,
+
     indexes:[
       {
         unique:true,
@@ -20,12 +23,13 @@ module.exports = (sequelize,DataTypes) =>{
     ],
   });
 
-  Block.associate = (models) =>{
-    Block.belongsTo(models.User,{
+
+  Block.associate = (db) =>{
+    Block.belongsTo(db.User,{
       as:'Blocker',
       foreignKey:'from_user_id',
     });
-    Block.belongsTo(models.User,{
+    Block.belongsTo(db.User,{
       as:'Blocked',
       foreignKey:'to_user_id',
     });

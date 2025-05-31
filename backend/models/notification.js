@@ -1,5 +1,10 @@
 module.exports = (sequelize, DataTypes) => {
   const notification = sequelize.define('notification', {
+    id: {
+      type: DataTypes.BIGINT, 
+      autoIncrement: true,
+      primaryKey: true,
+    },      
     content: {
       type: DataTypes.TEXT,
     },
@@ -19,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   notification.associate = (db) => {
-    db.notification.belongsTo(db.user, {
+    db.notification.belongsTo(db.User, {
       foreignKey: 'users_id',
     });
     db.notification.belongsTo(db.target_type, {
