@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+<<<<<<< HEAD
     "dev": "nodemon app.js"
+=======
+    "dev":"nodemon app.js"
+>>>>>>> f17f31f2b3986a2492d199cb68fe4ae46af92a3b
   },
   "author": "HALO",
   "license": "ISC",

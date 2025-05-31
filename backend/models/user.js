@@ -1,5 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define('User', {
+<<<<<<< HEAD
     email: {
       type: DataTypes.STRING(30),
       allowNull: false,
@@ -79,5 +80,22 @@ module.exports = (sequelize, DataTypes) => {
     User.hasMany(db.active_log, { foreignKey: 'users_id' });  
   };
 
+=======
+    id: {
+      type: DataTypes.BIGINT,      
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    nickname: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    // 필요시 email, password 등등
+  }, {
+    tableName: 'users',
+    timestamps: true,
+  });
+
+>>>>>>> f17f31f2b3986a2492d199cb68fe4ae46af92a3b
   return User;
 };

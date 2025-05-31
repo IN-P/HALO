@@ -7,6 +7,10 @@ const dotenv = require('dotenv');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const db = require('./models');
+<<<<<<< HEAD
+=======
+const socialRouter = require('./routes/social');
+>>>>>>> f17f31f2b3986a2492d199cb68fe4ae46af92a3b
 
 // .env 적용
 dotenv.config();
@@ -30,6 +34,10 @@ db.sequelize.sync()
   .catch(console.error);
 
 // 라우터 연결 (나중에 추가 예정)
+<<<<<<< HEAD
+=======
+app.use('/api/social', socialRouter);
+>>>>>>> f17f31f2b3986a2492d199cb68fe4ae46af92a3b
 
 app.listen(3065, () => {
   console.log('🚀 서버 실행 중! http://localhost:3065');
