@@ -29,7 +29,6 @@ module.exports = (sequelize, DataTypes) => {
     role: {
       type: DataTypes.INTEGER,
       allowNull: false,      
-      defaultValue: 5,
     },
     ip: {
       type: DataTypes.STRING(255),
@@ -106,7 +105,26 @@ module.exports = (sequelize, DataTypes) => {
       as: 'Followers',
       foreignKey: 'to_user_id',
     });  
-    
+        
+    User.hasMany(db.Mention, { 
+      foreignKey: 'senders_id', 
+      as: 'SentMentions' 
+    });
+    User.hasMany(db.Mention, { 
+      foreignKey: 'receiver_id', 
+      as: 'ReceivedMentions' 
+    });
+
+    User.hasMany(db.ChatMessage, { foreignKey: 'sender_id', });
+
+    User.hasMany(db.ChatRoom, { 
+      foreignKey: 'user1_id', 
+      as: 'User1Rooms' 
+    });
+    User.hasMany(db.ChatRoom, { 
+      foreignKey: 'user2_id', 
+      as: 'User2Rooms' 
+    });    
     
   };
 
