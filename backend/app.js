@@ -8,8 +8,7 @@ const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const db = require('./models');
 
-const socialRouter = require('./routes/social');
-const blockRouter = require('./routes/social/block');
+const blockRouter = require('./routes/block');
 // .env 적용
 dotenv.config();
 
@@ -33,7 +32,6 @@ db.sequelize.sync()
 
 // 라우터 연결 (나중에 추가 예정)
 
-app.use('/api/social', socialRouter);
 
 app.use('/api/block', blockRouter);
 

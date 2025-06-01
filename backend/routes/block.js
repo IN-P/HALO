@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Block, User } = require('../../models');
+const { Block, User } = require('../models');
 
 // 차단추가 http://localhost:3065/api/block
 router.post('/',async(req,res,next)=>{
@@ -33,7 +33,7 @@ router.post('/',async(req,res,next)=>{
   }
 });
 
-// 차단 해제 http://localhost:3065/api/social/block/2
+// 차단 해제 http://localhost:3065/api/block/2
 router.delete('/block/:toUserId',async(req,res,next)=>{
   try{
     const fromUserId = 1;
