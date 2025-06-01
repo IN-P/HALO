@@ -6,11 +6,11 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
     },    
     amount: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.BIGINT,
       allowNull: false,
     },
     status: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
     paid_at: {

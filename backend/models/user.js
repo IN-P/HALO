@@ -9,16 +9,17 @@ module.exports = (sequelize, DataTypes) => {
     },
 
     email: {
-      type: DataTypes.STRING(30),
+      type: DataTypes.STRING(100),
       allowNull: false,
       unique: true,
     },
     email_chk: {
       type: DataTypes.TINYINT,
+      allowNull: false,      
       defaultValue: 0,
     },
     nickname: {
-      type: DataTypes.STRING(30),
+      type: DataTypes.STRING(100),
       allowNull: false,
     },
     password: {
@@ -30,7 +31,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     role: {
       type: DataTypes.INTEGER,
-      defaultValue: 5,
+      allowNull: false,      
     },
     ip: {
       type: DataTypes.STRING(255),
@@ -43,11 +44,13 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: 'light',
     },
     is_private: {
+      allowNull: false,    
       type: DataTypes.TINYINT,
       defaultValue: 0,
     },
     balance: {
       type: DataTypes.BIGINT,
+      allowNull: false,      
       defaultValue: 0,
     },
   }, {
@@ -61,16 +64,8 @@ module.exports = (sequelize, DataTypes) => {
     User.belongsTo(db.Membership, { foreignKey: 'membership_id' });
     User.belongsTo(db.Social, { foreignKey: 'social_id' });
 
-    User.hasOne(db.UserInfo, {
-      foreignKey: 'users_id',
-      sourceKey: 'id',
-    });
-
-    User.hasOne(db.DeleteUser, { 
-      foreignKey: 'users_id',
-      sourceKey: 'id', 
-    });
-
+    User.hasOne(db.UserInfo, { foreignKey: 'users_id' });
+    User.hasOne(db.DeleteUser, { foreignKey: 'users_id' });
     User.hasMany(db.UserPayment, { foreignKey: 'users_id' });
 
     User.belongsToMany(db.Achievement, {
@@ -83,8 +78,8 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: true,
     });
 
-    User.hasMany(db.notification, { foreignKey: 'users_id' });
-    User.hasMany(db.active_log, { foreignKey: 'users_id' });
+    User.hasMany(db.Notification, { foreignKey: 'users_id' });
+    User.hasMany(db.ActiveLog, { foreignKey: 'users_id' });
     
     User.hasMany(db.Block, {
       as: 'Blockeds', 
@@ -105,7 +100,34 @@ module.exports = (sequelize, DataTypes) => {
       as: 'Followers',
       foreignKey: 'to_user_id',
     });  
+        
+    User.hasMany(db.Mention, { 
+      foreignKey: 'senders_id', 
+      as: 'SentMentions' 
+    });
     
+    User.hasMany(db.Mention, { 
+      foreignKey: 'receiver_id', 
+      as: 'ReceivedMentions' 
+    });
+
+    User.hasMany(db.ChatMessage, { foreignKey: 'sender_id', });
+
+    User.hasMany(db.ChatRoom, { 
+      foreignKey: 'user1_id', 
+      as: 'User1Rooms' 
+    });
+    User.hasMany(db.ChatRoom, { 
+      foreignKey: 'user2_id', 
+      as: 'User2Rooms' 
+    });    
+
+    User.hasMany(db.Checkin, { foreignKey: 'users_id' });
+    User.hasMany(db.Roulette, { foreignKey: 'users_id' });
+    User.hasOne(db.UserPoint, { foreignKey: 'users_id' });
+    User.hasMany(db.PointLogs, { foreignKey: 'users_id' });
+    User.hasMany(db.PlayerDraw, { foreignKey: 'users_id' });
+    User.hasMany(db.UsersQuiz, { foreignKey: 'users_id' });    
     
   };
   return User;
