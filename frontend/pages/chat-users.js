@@ -2,7 +2,7 @@
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 
-const users = ['율비', '인', '재원', '윤기','준혁','경미']; // 테스트용 유저
+const users = ['율비', '인', '재원', '윤기','준혁','경미']; 
 
 const ChatUsers = () => {
   const router = useRouter();
