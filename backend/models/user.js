@@ -59,76 +59,80 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   User.associate = (db) => {
-    User.belongsTo(db.UserStatus, { foreignKey: 'user_status_id' });
-    User.belongsTo(db.Myteam, { foreignKey: 'myteam_id' });
-    User.belongsTo(db.Membership, { foreignKey: 'membership_id' });
-    User.belongsTo(db.Social, { foreignKey: 'social_id' });
+    db.User.belongsTo(db.UserStatus, { foreignKey: 'user_status_id' });
+    db.User.belongsTo(db.Myteam, { foreignKey: 'myteam_id' });
+    db.User.belongsTo(db.Membership, { foreignKey: 'membership_id' });
+    db.User.belongsTo(db.Social, { foreignKey: 'social_id' });
 
-    User.hasOne(db.UserInfo, { foreignKey: 'users_id' });
-    User.hasOne(db.DeleteUser, { foreignKey: 'users_id' });
-    User.hasMany(db.UserPayment, { foreignKey: 'users_id' });
+    db.User.hasOne(db.UserInfo, { foreignKey: 'users_id' });
+    db.User.hasOne(db.DeleteUser, { foreignKey: 'users_id' });
+    db.User.hasMany(db.UserPayment, { foreignKey: 'users_id' });
 
-    User.belongsToMany(db.Achievement, {
+    db.User.belongsToMany(db.Achievement, {
       through: 'user_achievements',
       timestamps: true,
     });
 
-    User.belongsToMany(db.Badge, {
+    db.User.belongsToMany(db.Badge, {
       through: 'user_badges',
       timestamps: true,
     });
 
-    User.hasMany(db.Notification, { foreignKey: 'users_id' });
-    User.hasMany(db.ActiveLog, { foreignKey: 'users_id' });
-    
-    User.hasMany(db.Block, {
+    db.User.hasMany(db.Notification, { foreignKey: 'users_id' });
+    db.User.hasMany(db.ActiveLog, { foreignKey: 'users_id' });
+
+    db.User.hasMany(db.Report, { foreignKey: 'users_id' });
+    db.User.hasMany(db.Inquiry, { foreignKey: 'users_id' });
+
+    db.User.hasMany(db.Block, {
       as: 'Blockeds', 
       foreignKey: 'from_user_id',
     });
 
-    User.hasMany(db.Block, {
+    db.User.hasMany(db.Block, {
       as: 'Blockers', 
       foreignKey: 'to_user_id',
     });
 
-    User.hasMany(db.Follow, {
+    db.User.hasMany(db.Follow, {
       as: 'Followings',
       foreignKey: 'from_user_id',
     });
 
-    User.hasMany(db.Follow, {
+    db.User.hasMany(db.Follow, {
       as: 'Followers',
       foreignKey: 'to_user_id',
     });  
         
-    User.hasMany(db.Mention, { 
+    db.User.hasMany(db.Mention, { 
       foreignKey: 'senders_id', 
       as: 'SentMentions' 
     });
     
-    User.hasMany(db.Mention, { 
+    db.User.hasMany(db.Mention, { 
       foreignKey: 'receiver_id', 
       as: 'ReceivedMentions' 
     });
 
-    User.hasMany(db.ChatMessage, { foreignKey: 'sender_id', });
+    db.User.hasMany(db.ChatMessage, { foreignKey: 'sender_id', });
 
-    User.hasMany(db.ChatRoom, { 
+    db.User.hasMany(db.ChatRoom, { 
       foreignKey: 'user1_id', 
       as: 'User1Rooms' 
     });
-    User.hasMany(db.ChatRoom, { 
+    db.User.hasMany(db.ChatRoom, { 
       foreignKey: 'user2_id', 
       as: 'User2Rooms' 
     });    
 
-    User.hasMany(db.Checkin, { foreignKey: 'users_id' });
-    User.hasMany(db.Roulette, { foreignKey: 'users_id' });
-    User.hasOne(db.UserPoint, { foreignKey: 'users_id' });
-    User.hasMany(db.PointLogs, { foreignKey: 'users_id' });
-    User.hasMany(db.PlayerDraw, { foreignKey: 'users_id' });
-    User.hasMany(db.UsersQuiz, { foreignKey: 'users_id' });    
+    db.User.hasMany(db.Checkin, { foreignKey: 'users_id' });
+    db.User.hasMany(db.Roulette, { foreignKey: 'users_id' });
+    db.User.hasOne(db.UserPoint, { foreignKey: 'users_id' });
+    db.User.hasMany(db.PointLogs, { foreignKey: 'users_id' });
+    db.User.hasMany(db.PlayerDraw, { foreignKey: 'users_id' });
+    db.User.hasMany(db.UsersQuiz, { foreignKey: 'users_id' });    
     
+  
   };
   return User;
 };

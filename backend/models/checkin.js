@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Checkin.associate = (db) => {
-    Checkin.belongsTo(db.User, { foreignKey: 'users_id' });
+    db.Checkin.belongsTo(db.User, { foreignKey: 'users_id' });
   };
 
   return Checkin;

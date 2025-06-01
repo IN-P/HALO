@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Social.associate = (db) => {
-    Social.hasMany(db.User, {foreignKey: 'social_id'});
+    db.Social.hasMany(db.User, {foreignKey: 'social_id'});
   };
 
   return Social;

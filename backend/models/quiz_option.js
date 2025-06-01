@@ -26,8 +26,8 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   QuizOption.associate = (db) => {
-    QuizOption.belongsTo(db.Quiz, { foreignKey: 'quizzes_id' });
-    QuizOption.hasMany(db.UsersQuiz, { foreignKey: 'quizOption_id' });
+    db.QuizOption.belongsTo(db.Quiz, { foreignKey: 'quizzes_id' });
+    db.QuizOption.hasMany(db.UsersQuiz, { foreignKey: 'quizOption_id' });
   };
 
   return QuizOption;

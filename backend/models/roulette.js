@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Roulette.associate = (db) => {
-    Roulette.belongsTo(db.User, { foreignKey: 'users_id' });
+    db.Roulette.belongsTo(db.User, { foreignKey: 'users_id' });
   };
 
   return Roulette;

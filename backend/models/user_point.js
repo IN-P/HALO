@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   UserPoint.associate = (db) => {
-    UserPoint.belongsTo(db.User, { foreignKey: 'users_id' });
+    db.UserPoint.belongsTo(db.User, { foreignKey: 'users_id' });
   };
 
   return UserPoint;
