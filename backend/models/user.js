@@ -6,16 +6,17 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
     },
     email: {
-      type: DataTypes.STRING(30),
+      type: DataTypes.STRING(100),
       allowNull: false,
       unique: true,
     },
     email_chk: {
       type: DataTypes.TINYINT,
+      allowNull: false,      
       defaultValue: 0,
     },
     nickname: {
-      type: DataTypes.STRING(30),
+      type: DataTypes.STRING(100),
       allowNull: false,
     },
     password: {
@@ -27,6 +28,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     role: {
       type: DataTypes.INTEGER,
+      allowNull: false,      
       defaultValue: 5,
     },
     ip: {
@@ -40,11 +42,13 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: 'light',
     },
     is_private: {
+      allowNull: false,    
       type: DataTypes.TINYINT,
       defaultValue: 0,
     },
     balance: {
       type: DataTypes.BIGINT,
+      allowNull: false,      
       defaultValue: 0,
     },
   }, {
