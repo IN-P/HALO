@@ -7,15 +7,19 @@ module.exports = (sequelize, DataTypes) => {
     },      
     action: {
       type: DataTypes.STRING(45),
+      allowNull: false,      
     },
     target_id: {
       type: DataTypes.BIGINT,
+      allowNull: false,      
     },
     users_id: {
       type: DataTypes.BIGINT,
+      allowNull: false,      
     },
     target_type_id: {
       type: DataTypes.BIGINT,
+      allowNull: false,      
     },
   }, {
     charset: 'utf8mb4',
