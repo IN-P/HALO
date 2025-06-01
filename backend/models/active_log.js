@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-  const active_log = sequelize.define('active_log', {
+  const ActiveLog = sequelize.define('ActiveLog', {
     id: {
       type: DataTypes.BIGINT, 
       autoIncrement: true,
@@ -24,16 +24,17 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     charset: 'utf8mb4',
     collate: 'utf8mb4_general_ci',
+    tableName: 'active_log',
   });
 
-  active_log.associate = (db) => {
-    db.active_log.belongsTo(db.User, {
+  ActiveLog.associate = (db) => {
+    ActiveLog.belongsTo(db.User, {
       foreignKey: 'users_id',
     });
-    db.active_log.belongsTo(db.target_type, {
+    ActiveLog.belongsTo(db.TargetType, {
       foreignKey: 'target_type_id',
     });
   };
 
-  return active_log;
+  return ActiveLog;
 };
