@@ -61,16 +61,8 @@ module.exports = (sequelize, DataTypes) => {
     User.belongsTo(db.Membership, { foreignKey: 'membership_id' });
     User.belongsTo(db.Social, { foreignKey: 'social_id' });
 
-    User.hasOne(db.UserInfo, {
-      foreignKey: 'users_id',
-      sourceKey: 'id',
-    });
-
-    User.hasOne(db.DeleteUser, { 
-      foreignKey: 'users_id',
-      sourceKey: 'id', 
-    });
-
+    User.hasOne(db.UserInfo, { foreignKey: 'users_id' });
+    User.hasOne(db.DeleteUser, { foreignKey: 'users_id' });
     User.hasMany(db.UserPayment, { foreignKey: 'users_id' });
 
     User.belongsToMany(db.Achievement, {
@@ -83,8 +75,8 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: true,
     });
 
-    User.hasMany(db.notification, { foreignKey: 'users_id' });
-    User.hasMany(db.active_log, { foreignKey: 'users_id' });
+    User.hasMany(db.Notification, { foreignKey: 'users_id' });
+    User.hasMany(db.ActiveLog, { foreignKey: 'users_id' });
     
     User.hasMany(db.Block, {
       as: 'Blockeds', 
@@ -110,6 +102,7 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'senders_id', 
       as: 'SentMentions' 
     });
+    
     User.hasMany(db.Mention, { 
       foreignKey: 'receiver_id', 
       as: 'ReceivedMentions' 
@@ -125,6 +118,13 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'user2_id', 
       as: 'User2Rooms' 
     });    
+
+    User.hasMany(db.Checkin, { foreignKey: 'users_id' });
+    User.hasMany(db.Roulette, { foreignKey: 'users_id' });
+    User.hasOne(db.UserPoint, { foreignKey: 'users_id' });
+    User.hasMany(db.PointLogs, { foreignKey: 'users_id' });
+    User.hasMany(db.PlayerDraw, { foreignKey: 'users_id' });
+    User.hasMany(db.UsersQuiz, { foreignKey: 'users_id' });    
     
   };
 
