@@ -23,6 +23,9 @@ module.exports = (sequelize, DataTypes) => {
     db.TargetType.hasMany(db.ActiveLog, {
       foreignKey: 'target_type_id',
     });
+    db.TargetType.hasMany(db.Report, { 
+      foreignKey: 'target_type_id' 
+    });
   };
 
   return TargetType;

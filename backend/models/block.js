@@ -22,11 +22,11 @@ module.exports = (sequelize,DataTypes) =>{
   });
 
   Block.associate = (db) =>{
-    Block.belongsTo(db.User,{
+    db.Block.belongsTo(db.User,{
       as:'Blocker',
       foreignKey:'from_user_id',
     });
-    Block.belongsTo(db.User,{
+    db.Block.belongsTo(db.User,{
       as:'Blocked',
       foreignKey:'to_user_id',
     });

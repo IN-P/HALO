@@ -24,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Player.associate = (db) => {
-    Player.hasMany(db.PlayerDraw, { foreignKey: 'players_id' });
+    db.Player.hasMany(db.PlayerDraw, { foreignKey: 'players_id' });
   };
 
   return Player;

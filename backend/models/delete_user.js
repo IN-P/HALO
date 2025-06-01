@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   DeleteUser.associate = (db) => {
-    DeleteUser.belongsTo(db.User, {
+    db.DeleteUser.belongsTo(db.User, {
       foreignKey: 'users_id',
       targetKey: 'id', 
     });
