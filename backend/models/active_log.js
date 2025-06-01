@@ -28,10 +28,10 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   ActiveLog.associate = (db) => {
-    ActiveLog.belongsTo(db.User, {
+    db.ActiveLog.belongsTo(db.User, {
       foreignKey: 'users_id',
     });
-    ActiveLog.belongsTo(db.TargetType, {
+    db.ActiveLog.belongsTo(db.TargetType, {
       foreignKey: 'target_type_id',
     });
   };

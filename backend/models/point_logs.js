@@ -26,7 +26,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   PointLogs.associate = (db) => {
-    PointLogs.belongsTo(db.User, { foreignKey: 'users_id' });
+    db.PointLogs.belongsTo(db.User, { foreignKey: 'users_id' });
   };
 
   return PointLogs;

@@ -29,8 +29,8 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   PlayerDraw.associate = (db) => {
-    PlayerDraw.belongsTo(db.User, { foreignKey: 'users_id' });
-    PlayerDraw.belongsTo(db.Player, { foreignKey: 'players_id' });
+    db.PlayerDraw.belongsTo(db.User, { foreignKey: 'users_id' });
+    db.PlayerDraw.belongsTo(db.Player, { foreignKey: 'players_id' });
   };
 
   return PlayerDraw;

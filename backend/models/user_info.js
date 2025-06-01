@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   UserInfo.associate = (db) => {
-    UserInfo.belongsTo(db.User, {
+    db.UserInfo.belongsTo(db.User, {
       foreignKey: 'users_id',
       targetKey: 'id',
     });
