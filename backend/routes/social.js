@@ -131,56 +131,5 @@ router.get('/followers', async(req,res,next)=>{
   }
 });
 
-// 차단추가 http://localhost:3065/api/social/block
-router.post('/block',async(req,res,next)=>{
-  try{
-    const fromUserId = 1;
-    const{toUserId}=req.body;
 
-    if(fromUserId === toUserId){
-      return res.status(400).json({message:'자기 자신을 차단할 수 없습니다.'})
-    }
-
-    const existing = await Block.findOne({
-      where:{from_user_id: fromUserId, to_user_id:toUserId},
-    });
-
-    if(existing){
-      return res.status(400).json({message:'이미 차단한 사용자입니다.'});
-    }
-
-    const block = await Block.create({
-      from_user_id:fromUserId,
-      to_user_id:toUserId,
-    }); 
-    
-    res.status(201).json(block);
-  }catch(err){
-    console.error(err);
-    next(err);
-  }
-});
-
-// 차단 해제 http://localhost:3065/api/social/block/2
-router.delete('/block/:toUserId',async(req,res,next)=>{
-  try{
-    const fromUserId = 1;
-    const toUserId = parseInt(req.params.toUserId,10);
-
-    const existing = await Block.findOne({
-      where:{
-        from_user_id:fromUserId,
-        to_user_id:toUserId,
-      },
-    });
-    if(!existing){
-      return res.status(404).json({message:'차단관계가 존재하지 않습니다.'});
-    }
-    await existing.destroy();
-    res.status(200).json({message:'차단을 해제했습니다.'});
-  }catch(err){
-    console.error(err);
-    next(err);
-  }
-});
 module.exports = router;

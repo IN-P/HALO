@@ -9,7 +9,7 @@ const cookieParser = require('cookie-parser');
 const db = require('./models');
 
 const socialRouter = require('./routes/social');
-
+const blockRouter = require('./routes/social/block');
 // .env 적용
 dotenv.config();
 
@@ -35,6 +35,7 @@ db.sequelize.sync()
 
 app.use('/api/social', socialRouter);
 
+app.use('/api/block', blockRouter);
 
 app.listen(3065, () => {
   console.log('🚀 서버 실행 중! http://localhost:3065');
