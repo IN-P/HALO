@@ -1,5 +1,5 @@
-import React from 'react';
-import { Button, Input } from 'antd';
+import React, { useState } from 'react';
+import { Button } from 'antd';
 import {
   HomeOutlined,
   EditOutlined,
@@ -8,7 +8,44 @@ import {
   SettingOutlined,
   LogoutOutlined,
   BulbOutlined,
+  AppstoreOutlined,
+  ShopOutlined,
+  GiftOutlined
 } from '@ant-design/icons';
+
+// 재사용 가능한 버튼 컴포넌트
+const SidebarButton = ({ icon, children, onClick }) => {
+  const [hover, setHover] = useState(false);
+
+  return (
+    <Button
+      icon={icon}
+      block
+      type="text"
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        padding: '12px 12px',
+        background: hover
+          ? 'linear-gradient(90deg, #f0faff 0%, #d0eaff 100%)'
+          : 'transparent',
+        boxShadow: 'none',
+        transition: 'background 0.3s ease',
+        outline: 'none',
+        border: 'none',
+        borderRadius: '6px',
+        color: '#333',
+        textAlign: 'left',
+      }}
+    >
+      <span style={{ marginLeft: 8 }}>{children}</span>
+    </Button>
+  );
+};
 
 const Sidebar = () => {
   return (
@@ -26,19 +63,18 @@ const Sidebar = () => {
       {/* 상단 로고/검색/메뉴 */}
       <div style={{ padding: '20px 16px' }}>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <img src="/logo.png" alt="Halo" style={{ height: 40 }} /><br />
+          <img src="/images/HALOlogo.png" alt="Halo" style={{ height: 40 }} /><br />
           <strong style={{ fontSize: 20 }}>HaLo</strong>
-          <div style={{ fontSize: 12, color: '#999' }}>Halo98@abc.com</div>
         </div>
 
-        <Input.Search placeholder="Search..." style={{ marginBottom: 20 }} />
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <Button icon={<HomeOutlined />} block type="text">홈</Button>
-          <Button icon={<EditOutlined />} block type="text">게시물 작성</Button>
-          <Button icon={<BellOutlined />} block type="text">알림</Button>
-          <Button icon={<MessageOutlined />} block type="text">채팅 (DM)</Button>
-          <Button icon={<SettingOutlined />} block type="text">관리자 문의</Button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <SidebarButton icon={<HomeOutlined />}>홈</SidebarButton>
+          <SidebarButton icon={<AppstoreOutlined />}>메뉴</SidebarButton>
+          <SidebarButton icon={<EditOutlined />}>게시물 작성</SidebarButton>
+          <SidebarButton icon={<BellOutlined />}>알림</SidebarButton>
+          <SidebarButton icon={<MessageOutlined />}>채팅 (DM)</SidebarButton>
+          <SidebarButton icon={<ShopOutlined />}>상점</SidebarButton>
+          <SidebarButton icon={<GiftOutlined />}>이벤트</SidebarButton>
         </div>
       </div>
 
@@ -46,9 +82,9 @@ const Sidebar = () => {
       <div style={{ flex: 1 }} />
 
       {/* 하단 버튼 */}
-      <div style={{ padding: '0 16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <Button icon={<LogoutOutlined />} block type="text">Logout</Button>
-        <Button icon={<BulbOutlined />} block type="text">Light mode</Button>
+      <div style={{ padding: '0 16px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <SidebarButton icon={<LogoutOutlined />}>Logout</SidebarButton>
+        <SidebarButton icon={<BulbOutlined />}>Light mode</SidebarButton>
       </div>
     </div>
   );

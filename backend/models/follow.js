@@ -9,8 +9,9 @@ module.exports=(sequelize,DataTypes)=>{
       allowNull:false,
     },
   },{
+    charset: 'utf8mb4',
+    collate: 'utf8mb4_general_ci',    
     tableName:'follow',
-    timestamps:true,
     indexes:[
       {
         unique:true,
@@ -19,12 +20,13 @@ module.exports=(sequelize,DataTypes)=>{
     ],
   });
 
-  Follow.associate = (models) => {
-    Follow.belongsTo(models.User,{
+
+  Follow.associate = (db) => {
+    db.Follow.belongsTo(db.User,{
       as:'Follower',
       foreignKey:'to_user_id',
     });
-    Follow.belongsTo(models.User,{
+    db.Follow.belongsTo(db.User,{
       as:'Following',
       foreignKey:'from_user_id',
     });
