@@ -18,6 +18,11 @@ require('./utils/scheduler/autoDeleteScheduler')(); //## 윤기추가 - 계정 �
 require('./utils/scheduler/autoDormantScheduler')(); //## 윤기 추가 - 휴면 전환 스케줄러
 
 
+const profile = require("./routes/dev_jh/profile"); // ## 준혁 추가
+const notification = require("./routes/dev_jh/notification"); // ## 준혁 추가
+const activeLog = require("./routes/dev_jh/active_log");
+
+
 // .env 적용
 dotenv.config();
 
@@ -53,6 +58,10 @@ db.sequelize.sync()
 
 // 라우터 연결 (나중에 추가 예정)
 app.use('/user', userRouter); //## 윤기
+
+app.use("/profile", profile); // ## 준혁 추가
+app.use("/notification", notification); // ## 준혁 추가
+app.use("/log", activeLog); // ## 준혁 추가
 
 app.listen(3065, () => {
   console.log('🚀 서버 실행 중! http://localhost:3065');

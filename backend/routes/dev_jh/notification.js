@@ -1,17 +1,18 @@
 const express = require("express");
 const router = express.Router();
-const { Notification, User, TargetType } = require("../models");
+const { Notification, User, TargetType } = require("../../models");
+const { isLoggedIn } = require("../middlewares");
 
 
 // userId(users의 id)로 알림 불러오기
-router.get('/:userId', async (req, res, next) => {
+router.get('/:userId', /*isLoggedIn,*/ async (req, res, next) => {
   try {
     const notifications = await Notification.findAll({
       where: { users_id: req.params.userId },
       include: [
         {
-          model: TargetType,
-          attributes: ['id', 'name'],
+          model: TargetType,  
+          attributes: ['id', 'code'],
         },
         {
           model: User,
