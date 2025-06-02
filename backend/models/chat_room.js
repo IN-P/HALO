@@ -20,15 +20,15 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   ChatRoom.associate = (db) => {
-    db.ChatRoom.belongsTo(db.User, { foreignKey: 'user1_id', as: 'User1' });
-    db.ChatRoom.belongsTo(db.User, { foreignKey: 'user2_id', as: 'User2' });
+    ChatRoom.belongsTo(db.User, { foreignKey: 'user1_id', as: 'User1' });
+    ChatRoom.belongsTo(db.User, { foreignKey: 'user2_id', as: 'User2' });
 
-    db.ChatRoom.hasMany(db.ChatMessage, {
+    ChatRoom.hasMany(db.ChatMessage, {
       foreignKey: 'rooms_id',
       sourceKey: 'id',
     });
 
-    db.ChatRoom.hasOne(db.ChatRoomExit, {
+    ChatRoom.hasOne(db.ChatRoomExit, {
       foreignKey: 'chat_rooms_id',
     });
   };

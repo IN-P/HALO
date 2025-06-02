@@ -24,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Myteam.associate = (db) => {
-    db.Myteam.hasMany(db.User, {foreignKey: 'myteam_id'});
+    Myteam.hasMany(db.User, {foreignKey: 'myteam_id'});
   };
 
   return Myteam;

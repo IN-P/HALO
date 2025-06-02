@@ -38,8 +38,8 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   ChatMessage.associate = (db) => {
-    db.ChatMessage.belongsTo(db.User, { foreignKey: 'sender_id' });
-    db.ChatMessage.belongsTo(db.ChatRoom, { foreignKey: 'rooms_id' });
+    ChatMessage.belongsTo(db.User, { foreignKey: 'sender_id' });
+    ChatMessage.belongsTo(db.ChatRoom, { foreignKey: 'rooms_id' });
   };
 
   return ChatMessage;

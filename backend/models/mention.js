@@ -32,10 +32,10 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Mention.associate = (db) => {
-    db.Mention.belongsTo(db.User, { 
+    Mention.belongsTo(db.User, { 
       foreignKey: 'senders_id', 
     });
-    db.Mention.belongsTo(db.User, { 
+    Mention.belongsTo(db.User, { 
       foreignKey: 'receiver_id',
     });
   };

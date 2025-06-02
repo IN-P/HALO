@@ -24,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Badge.associate = (db) => {
-    db.Badge.belongsToMany(db.User, {
+    Badge.belongsToMany(db.User, {
       through: 'user_badges', 
       timestamps: true,       
     });
