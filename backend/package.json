@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "next"
+    "dev": "nodemon app.js"
   },
-  "author": "kjh",
+  "author": "HALO",
   "license": "ISC",
   "description": "",
   "dependencies": {

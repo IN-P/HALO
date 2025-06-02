@@ -1,36 +1,41 @@
-import React from "react";
+import React, { useState } from "react";
 import AppLayout from "../components/AppLayout";
 import MyHeader from "../components/mypage/MyHeader";
 import MyAvatar from "../components/mypage/MyAvatar";
 import MyMain from "../components/mypage/MyMain";
 import MyPost from "../components/mypage/MyPost";
+import MySetting from "../components/mypage/MySetting";
 import { InboxOutlined, NumberOutlined, TagOutlined } from "@ant-design/icons";
 
 const mypage = () => {
   return (
     <AppLayout>
-      <MyHeader />
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <MyAvatar />
-        <div style={{ width: "30px" }} />
-        <MyMain />
+      <div>
+        <MyHeader />
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <MyAvatar />
+          <div style={{ width: "30px" }} />
+          <MyMain />
+        </div>
+        <hr />
+        <div
+          style={{ display: "flex", justifyContent: "center", gap: "100px" }}
+        >
+          <span>
+            <InboxOutlined />
+            &nbsp;게시물
+          </span>
+          <span>
+            <TagOutlined />
+            &nbsp;북마크
+          </span>
+          <span>
+            <NumberOutlined />
+            &nbsp;태그됨
+          </span>
+        </div>
+        <MyPost />
       </div>
-      <hr />
-      <div style={{ display: "flex", justifyContent: "center", gap: "100px" }}>
-        <span>
-          <InboxOutlined />
-          &nbsp;게시물
-        </span>
-        <span>
-          <TagOutlined />
-          &nbsp;북마크
-        </span>
-        <span>
-          <NumberOutlined />
-          &nbsp;태그됨
-        </span>
-      </div>
-      <MyPost />
     </AppLayout>
   );
 };

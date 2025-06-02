@@ -15,7 +15,7 @@ const MyAvatar = () => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          border: "5px solid #BC91F8",
+          border: "5px solid black",
         }}
       />
     </div>
