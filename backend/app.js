@@ -20,8 +20,8 @@ require('./utils/scheduler/autoDormantScheduler')(); //## 윤기 추가 - 휴면
 
 const followRouter = require('./routes/follow');//조율비
 const blockRouter = require('./routes/block');//조율비
-//const inquiryRouter = require('./routes/inquiry');//조율비
-//const reportRouter = require('./routes/report');//조율비
+const reportRouter = require('./routes/report');//조율비
+const inquiryRouter = require('./routes/inquiry');//조율비
 
 // .env 적용
 dotenv.config();
@@ -61,8 +61,8 @@ app.use('/user', userRouter); //## 윤기
 
 app.use('/api', followRouter);//조율비
 app.use('/api', blockRouter);//조율비
-//app.use('/api/inquiry',inquiryRouter);//조율비
-//app.use('/api/report', reportRouter);//조율비
+app.use('/api/report', reportRouter);//조율비
+app.use('/api/inquiry',inquiryRouter);//조율비
 
 app.listen(3065, () => {
   console.log('🚀 서버 실행 중! http://localhost:3065');

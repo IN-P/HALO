@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Follow,User } = require('../models');
 const { where } = require('sequelize');
-const {Block} = require('../models');
+
 
 // 팔로우하기 http://localhost:3065/api/follow
 router.post('/follow', async (req, res, next) => {
