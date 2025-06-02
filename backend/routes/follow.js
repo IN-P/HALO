@@ -4,8 +4,10 @@ const { Follow,User } = require('../models');
 const { where } = require('sequelize');
 const {Block} = require('../models');
 
-// 팔로우하기 http://localhost:3065/api/social/follow
+// 팔로우하기 http://localhost:3065/api/follow
 router.post('/follow', async (req, res, next) => {
+  console.log('......req.body:', req.body);
+
   try {
     const { toUserId } = req.body;
     const fromUserId = 1;
@@ -35,7 +37,7 @@ router.post('/follow', async (req, res, next) => {
 });
 
 
-// 팔로우 삭제 http://localhost:3065/api/social/following/2
+// 팔로우 삭제 http://localhost:3065/api/following/2
 router.delete('/following/:toUserId', async (req, res, next) => {
   try {
     const fromUserId = 1;
@@ -61,7 +63,7 @@ router.delete('/following/:toUserId', async (req, res, next) => {
   }
 });
 
-// 팔로워 삭제 http://localhost:3065/api/social/follower/1
+// 팔로워 삭제 http://localhost:3065/api/follower/1
 router.delete('/follower/:fromUserId',async(req,res,next)=>{
   try{
     const toUserId = 2;
@@ -90,7 +92,7 @@ router.delete('/follower/:fromUserId',async(req,res,next)=>{
 });
 
 
-// 팔로잉 목록조회 http://localhost:3065/api/social/followings
+// 팔로잉 목록조회 http://localhost:3065/api/followings
 router.get('/followings', async (req, res, next) => {
   try {
     const fromUserId = 1;
@@ -111,7 +113,7 @@ router.get('/followings', async (req, res, next) => {
   }
 });
 
-// 팔로워 목록조회 http://localhost:3065/api/social/followers
+// 팔로워 목록조회 http://localhost:3065/api/followers
 router.get('/followers', async(req,res,next)=>{
   try{
     const toUserId = 2;

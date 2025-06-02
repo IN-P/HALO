@@ -3,7 +3,7 @@ const router = express.Router();
 const { Block, User } = require('../models');
 
 // 차단추가 http://localhost:3065/api/block
-router.post('/',async(req,res,next)=>{
+router.post('/block',async(req,res,next)=>{
    console.log('req.body:', req.body); // ✅ 찍어봐
   try{
     const fromUserId = 1;
@@ -57,7 +57,7 @@ router.delete('/block/:toUserId',async(req,res,next)=>{
 });
 
 // 차단 목록 조회: GET /api/block
-router.get('/', async (req, res, next) => {
+router.get('/block', async (req, res, next) => {
   try {
     const fromUserId = 1; // 나중에 req.user.id로 바꾸기
 

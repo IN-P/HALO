@@ -8,7 +8,11 @@ const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const db = require('./models');
 
-const blockRouter = require('./routes/block');
+const followRouter = require('./routes/follow');//조율비
+const blockRouter = require('./routes/block');//조율비
+//const inquiryRouter = require('./routes/inquiry');//조율비
+//const reportRouter = require('./routes/report');//조율비
+
 // .env 적용
 dotenv.config();
 
@@ -32,8 +36,10 @@ db.sequelize.sync()
 
 // 라우터 연결 (나중에 추가 예정)
 
-
-app.use('/api/block', blockRouter);
+app.use('/api', followRouter);//조율비
+app.use('/api', blockRouter);//조율비
+//app.use('/api/inquiry',inquiryRouter);//조율비
+//app.use('/api/report', reportRouter);//조율비
 
 app.listen(3065, () => {
   console.log('🚀 서버 실행 중! http://localhost:3065');
