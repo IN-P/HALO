@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Membership.associate = (db) => {
-    Membership.hasMany(db.User, {foreignKey: 'membership_id'});
+    db.Membership.hasMany(db.User, {foreignKey: 'membership_id'});
   };
 
   return Membership;
