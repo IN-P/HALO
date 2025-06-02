@@ -53,8 +53,4 @@ db.sequelize.sync()
   .catch(console.error); //## 윤기 추가
 
 // 라우터 연결 (나중에 추가 예정)
-app.use('/user', userRouter); //## 윤기
 
-app.listen(3065, () => {
-  console.log('🚀 서버 실행 중! http://localhost:3065');
-});
