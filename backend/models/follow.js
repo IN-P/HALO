@@ -20,6 +20,7 @@ module.exports=(sequelize,DataTypes)=>{
     ],
   });
 
+
   Follow.associate = (db) => {
     db.Follow.belongsTo(db.User,{
       as:'Follower',

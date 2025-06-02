@@ -28,6 +28,11 @@ const profile = require("./routes/profile"); //## 준혁
 const notification = require("./routes/notification"); //## 준혁
 const activeLog = require("./routes/active_log"); //## 준혁
 
+const followRouter = require('./routes/follow');//조율비
+const blockRouter = require('./routes/block');//조율비
+const reportRouter = require('./routes/report');//조율비
+const inquiryRouter = require('./routes/inquiry');//조율비
+
 // .env 적용
 dotenv.config();
 
@@ -74,6 +79,11 @@ app.use('/inquiry',inquiryRouter); //## 율비
 app.use("/profile", profile); //## 준혁
 app.use("/notification", notification); //## 준혁
 app.use("/log", activeLog); //## 준혁
+
+app.use('/follow', followRouter);//조율비
+app.use('/block', blockRouter);//조율비
+app.use('/report', reportRouter);//조율비
+app.use('/inquiry',inquiryRouter);//조율비
 
 app.listen(3065, () => {
   console.log('🚀 서버 실행 중! http://localhost:3065');
