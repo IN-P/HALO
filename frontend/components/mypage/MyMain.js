@@ -1,8 +1,12 @@
 import React from "react";
 import { BulbFilled } from "@ant-design/icons";
+import { useDispatch, useSelector } from "react-redux";
 import { Card } from "antd";
 
 const MyMain = () => {
+  // c
+
+  //
   return (
     <div>
       <div style={{ paddingBottom: "10px" }}>

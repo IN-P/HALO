@@ -24,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   UserPayment.associate = (db) => {
-    UserPayment.belongsTo(db.User, {foreignKey: 'users_id'});
+    db.UserPayment.belongsTo(db.User, {foreignKey: 'users_id'});
   };
 
   return UserPayment;

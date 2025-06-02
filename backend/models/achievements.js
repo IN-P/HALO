@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Achievement.associate = (db) => {
-    Achievement.belongsToMany(db.User, {
+    db.Achievement.belongsToMany(db.User, {
       through: 'user_achievements',
       timestamps: true,             
     });
