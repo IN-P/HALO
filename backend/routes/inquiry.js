@@ -2,6 +2,15 @@ const express = require('express');
 const router = express.Router();
 const { Inquiry, User } = require('../models');
 
+/////////////////////////////////////////////지우기
+// 테스트용 로그인 정보 
+router.use((req, res, next) => {
+  //req.user = { id: 1, isAdmin: true }; // 관리자 테스트
+  req.user = { id: 2, isAdmin: false }; // 일반 유저 테스트
+  next();
+});
+////////////////////////////////////////////지우기
+
 // 문의 등록 (C)
 router.post('/', async (req, res, next) => {
   try {
@@ -39,7 +48,10 @@ router.get('/:id', async (req, res, next) => {
     const inquiry = await Inquiry.findByPk(req.params.id, {
       include: { model: User, attributes: ['id', 'nickname'] },
     });
-    if (!inquiry) return res.status(404).json({ message: '문의 없음' });
+    //본인 or 관리자만 접근 가능
+    if (inquiry.users_id !== req.user.id && !req.user.isAdmin) {
+      return res.status(403).json({ message: '접근 권한이 없습니다.' });
+    }
     res.status(200).json(inquiry);
   } catch (error) {
     console.error('문의 상세 조회 실패:', error);
@@ -69,6 +81,10 @@ router.delete('/:id', async (req, res, next) => {
   try {
     const inquiry = await Inquiry.findByPk(req.params.id);
     if (!inquiry) return res.status(404).json({ message: '문의 없음' });
+    // 본인만 삭제 가능
+    if (inquiry.users_id !== req.user.id) {
+      return res.status(403).json({ message: '본인만 삭제할 수 있습니다.' });
+    }
 
     await inquiry.destroy();
     res.status(204).send();
