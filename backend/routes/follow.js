@@ -5,7 +5,7 @@ const { where } = require('sequelize');
 
 
 // 팔로우하기 http://localhost:3065/api/follow
-router.post('/follow', async (req, res, next) => {
+router.post('/', async (req, res, next) => {
   console.log('......req.body:', req.body);
 
   try {

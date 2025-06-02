@@ -59,10 +59,10 @@ db.sequelize.sync()
 // 라우터 연결 (나중에 추가 예정)
 app.use('/user', userRouter); //## 윤기
 
-app.use('/api', followRouter);//조율비
-app.use('/api', blockRouter);//조율비
-app.use('/api/report', reportRouter);//조율비
-app.use('/api/inquiry',inquiryRouter);//조율비
+app.use('/follow', followRouter);//조율비
+app.use('/block', blockRouter);//조율비
+app.use('/report', reportRouter);//조율비
+app.use('/inquiry',inquiryRouter);//조율비
 
 app.listen(3065, () => {
   console.log('🚀 서버 실행 중! http://localhost:3065');
