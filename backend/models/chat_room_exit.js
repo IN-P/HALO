@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   ChatRoomExit.associate = (db) => {
-    ChatRoomExit.belongsTo(db.ChatRoom, {
+    db.ChatRoomExit.belongsTo(db.ChatRoom, {
       foreignKey: 'chat_rooms_id',
     });
   };

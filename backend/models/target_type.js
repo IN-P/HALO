@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-  const target_type = sequelize.define('target_type', {
+  const TargetType = sequelize.define('TargetType', {
     id: {
       type: DataTypes.BIGINT, 
       autoIncrement: true,
@@ -13,16 +13,20 @@ module.exports = (sequelize, DataTypes) => {
     charset: 'utf8mb4',
     collate: 'utf8mb4_general_ci',
     timestamps: false,
+    tableName: 'target_type',
   });
 
-  target_type.associate = (db) => {
-    db.target_type.hasMany(db.notification, {
+  TargetType.associate = (db) => {
+    db.TargetType.hasMany(db.Notification, {
       foreignKey: 'target_type_id',
     });
-    db.target_type.hasMany(db.active_log, {
+    db.TargetType.hasMany(db.ActiveLog, {
       foreignKey: 'target_type_id',
+    });
+    db.TargetType.hasMany(db.Report, { 
+      foreignKey: 'target_type_id' 
     });
   };
 
-  return target_type;
+  return TargetType;
 };
