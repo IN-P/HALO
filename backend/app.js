@@ -23,6 +23,7 @@ app.use(session({
   secret: process.env.COOKIE_SECRET,
   cookie: { httpOnly: true, secure: false },
 }));
+app.use('/api/chat', require('./routes/chat')); // 재원
 
 // DB 연결
 db.sequelize.sync()

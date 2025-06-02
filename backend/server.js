@@ -31,63 +31,113 @@ sequelize.sync()
 io.on('connection', (socket) => {
   console.log('🟢 유저 접속:', socket.id);
 
-  socket.on('join_room', (roomId) => {
-    socket.join(roomId);
-    console.log(`🔗 ${socket.id} joined room ${roomId}`);
-  });
+  socket.on('join_room', async (roomId, userId) => {
+  socket.join(roomId);
+  console.log(`🔗 ${socket.id} joined room ${roomId}`);
 
-  socket.on('send_message', async (data) => {
-    const { roomId, senderId, content } = data;
+  try {
+    const parts = roomId.split('-');
+    const user1Id = parseInt(parts[1]);
+    const user2Id = parseInt(parts[2]);
+    const sortedUser1Id = Math.min(user1Id, user2Id);
+    const sortedUser2Id = Math.max(user1Id, user2Id);
 
-    try {
-      // roomId 파싱 로직
-      const parts = roomId.split('-');
-      const user1Id = parseInt(parts[1]);
-      const user2Id = parseInt(parts[2]);
-      const sortedUser1Id = Math.min(user1Id, user2Id);
-      const sortedUser2Id = Math.max(user1Id, user2Id);
+    const chatRoom = await ChatRoom.findOne({
+      where: {
+        user1_id: sortedUser1Id,
+        user2_id: sortedUser2Id
+      }
+    });
 
-      let chatRoomInstance = await ChatRoom.findOne({
+    if (!chatRoom) {
+      console.log(`🚫 채팅방 없음: ${roomId}`);
+      return;
+    }
+
+    // ✅ 안읽은 메시지 읽음 처리
+    const updatedCount = await ChatMessage.update(
+      { is_read: true },
+      {
         where: {
-          [Sequelize.Op.or]: [
-            { user1_id: sortedUser1Id, user2_id: sortedUser2Id },
-            { user1_id: sortedUser2Id, user2_id: sortedUser1Id }
-          ]
+          rooms_id: chatRoom.id,
+          sender_id: { [Sequelize.Op.ne]: userId },
+          is_read: false
         }
+      }
+    );
+    console.log(`✅ 유저 ${userId} 안읽은 메시지 읽음 처리 완료 (${updatedCount[0]}건)`);
+
+  } catch (err) {
+    console.error('❌ join_room 중 에러 발생:', err);
+  }
+});
+
+socket.on('send_message', async (data) => {
+  const { roomId, senderId, content } = data;
+
+  try {
+    const parts = roomId.split('-');
+    const user1Id = parseInt(parts[1]);
+    const user2Id = parseInt(parts[2]);
+    const sortedUser1Id = Math.min(user1Id, user2Id);
+    const sortedUser2Id = Math.max(user1Id, user2Id);
+
+    let chatRoomInstance = await ChatRoom.findOne({
+      where: {
+        [Sequelize.Op.or]: [
+          { user1_id: sortedUser1Id, user2_id: sortedUser2Id },
+          { user1_id: sortedUser2Id, user2_id: sortedUser1Id }
+        ]
+      }
+    });
+
+    // ✅ 채팅방이 없으면 생성 (exit 정보도 포함)
+    if (!chatRoomInstance) {
+      chatRoomInstance = await ChatRoom.create({
+        user1_id: sortedUser1Id,
+        user2_id: sortedUser2Id
       });
+      console.log(`🆕 채팅방 생성: ID ${chatRoomInstance.id}`);
 
-      if (!chatRoomInstance) {
-        // 채팅방이 없으면 생성
-        chatRoomInstance = await ChatRoom.create({
-          user1_id: sortedUser1Id,
-          user2_id: sortedUser2Id
-        });
-        console.log(`🆕 채팅방 생성: ID ${chatRoomInstance.id}`);
-
-        // ChatRoomExit 정보도 같이 생성
-        // 기존 ChatRoomExit 모델의 필드명 'user2_active'를 유지합니다.
+      // ✅ ChatRoomExit도 같이 생성
+      await ChatRoomExit.create({
+        chat_rooms_id: chatRoomInstance.id,
+        user1_id_active: true,
+        user2_id_active: true
+      });
+      console.log(`✅ ChatRoomExit 생성됨 for room ${chatRoomInstance.id}`);
+    } else {
+      // ✅ 만약 채팅방은 있는데 exit가 없다면 → 예외 처리용 자동 생성 (한 번만)
+      const exitInfo = await ChatRoomExit.findOne({
+        where: { chat_rooms_id: chatRoomInstance.id }
+      });
+      if (!exitInfo) {
         await ChatRoomExit.create({
           chat_rooms_id: chatRoomInstance.id,
           user1_id_active: true,
-          user2_id_active: true // ✅ ChatRoomExit 모델의 필드명 'user2_active'를 그대로 사용
+          user2_id_active: true
         });
-        console.log(`✅ ChatRoomExit 생성됨 for room ${chatRoomInstance.id}`);
+        console.log(`🔄 누락된 ChatRoomExit 복구됨 (room ${chatRoomInstance.id})`);
       }
-
-      // 메시지 저장
-      await ChatMessage.create({
-        rooms_id: chatRoomInstance.id,
-        sender_id: senderId,
-        content: content
-      });
-
-      console.log('💬 메시지 저장 완료:', { roomId, senderId, content });
-      // 메시지 전송 (클라이언트에게 받은 data를 그대로 전달)
-      io.to(roomId).emit('receive_message', data);
-    } catch (err) {
-      console.error('❌ 메시지 전송 실패:', err);
     }
-  });
+
+    // ✅ 메시지 저장
+    await ChatMessage.create({
+      rooms_id: chatRoomInstance.id,
+      sender_id: senderId,
+      content: content,
+      is_read: false
+    });
+
+    console.log('💬 메시지 저장 완료:', { roomId, senderId, content });
+
+    // ✅ 클라이언트에게 메시지 전송
+    io.to(roomId).emit('receive_message', data);
+
+  } catch (err) {
+    console.error('❌ 메시지 전송 실패:', err);
+  }
+});
 
   socket.on('exit_room', async ({ roomId, userId }) => {
     console.log(`[EXIT_ROOM] 클라이언트로부터 exit_room 이벤트 수신: roomId="${roomId}", userId=${userId}`); // 디버깅용 로그 추가
