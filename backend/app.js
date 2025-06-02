@@ -16,6 +16,13 @@ const initMyTeam = require('./utils/init/initMyTeam'); // ##윤기 추가
 const initSocials = require('./utils/init/initSocials') //##윤기 추가
 require('./utils/scheduler/autoDeleteScheduler')(); //## 윤기추가 - 계정 삭제 스케줄려
 require('./utils/scheduler/autoDormantScheduler')(); //## 윤기 추가 - 휴면 전환 스케줄러
+const postRouter = require('./routes/post'); //## 인
+const hashtagRouter = require('./routes/hashtag'); //## 인
+const commentRouter = require('./routes/comment'); //## 인
+const followRouter = require('./routes/follow');//## 율비
+const blockRouter = require('./routes/block');//## 율비
+const reportRouter = require('./routes/report');//## 율비
+const inquiryRouter = require('./routes/inquiry');//## 율비
 
 
 const profile = require("./routes/dev_jh/profile"); // ## 준혁 추가
@@ -58,6 +65,13 @@ db.sequelize.sync()
 
 // 라우터 연결 (나중에 추가 예정)
 app.use('/user', userRouter); //## 윤기
+app.use('/post', postRouter); //## 인
+app.use('/hashtag', hashtagRouter); //## 인
+app.use('/comment', commentRouter); //## 인
+app.use('/follow', followRouter); //## 율비
+app.use('/block', blockRouter); //## 율비
+app.use('/report', reportRouter); //## 율비
+app.use('/inquiry',inquiryRouter); //## 율비
 
 app.use("/profile", profile); // ## 준혁 추가
 app.use("/notification", notification); // ## 준혁 추가
