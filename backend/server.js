@@ -1,9 +1,8 @@
-// backend/server.js
 const http = require('http');
 const { Server } = require('socket.io');
 const dotenv = require('dotenv');
-const app = require('./app'); // app.js에서 express app을 가져옴
-const { ChatRoom, ChatMessage, ChatRoomExit, Sequelize, sequelize } = require('./models'); // sequelize도 임포트
+const app = require('./app'); 
+const { ChatRoom, ChatMessage, ChatRoomExit, Sequelize, sequelize } = require('./models'); 
 
 // .env 파일 로드는 스크립트 시작 부분에서 실행하는 것이 일반적
 dotenv.config();
@@ -21,12 +20,12 @@ const io = new Server(server, {
 // ✅ DB 연결 및 동기화 (앱 실행 전에 수행)
 // 이 부분은 app.js에 있을 수도 있지만, server.js에서 관리한다면 여기에 둡니다.
 // 주의: 배포 시 force: true 제거
-sequelize.sync()
-  .then(() => console.log('✅ DB 연결 및 동기화 완료'))
-  .catch(err => {
-    console.error('❌ DB 연결 실패:', err);
-    process.exit(1);
-  });
+// sequelize.sync()
+//   .then(() => console.log('✅ DB 연결 및 동기화 완료'))
+//   .catch(err => {
+//     console.error('❌ DB 연결 실패:', err);
+//     process.exit(1);
+//   });
 
 io.on('connection', (socket) => {
   console.log('🟢 유저 접속:', socket.id);

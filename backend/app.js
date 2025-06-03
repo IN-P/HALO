@@ -16,6 +16,7 @@ const initMyTeam = require('./utils/init/initMyTeam'); // ##윤기 추가
 const initSocials = require('./utils/init/initSocials') //##윤기 추가
 require('./utils/scheduler/autoDeleteScheduler')(); //## 윤기추가 - 계정 삭제 스케줄려
 require('./utils/scheduler/autoDormantScheduler')(); //## 윤기 추가 - 휴면 전환 스케줄러
+const weatherRouter = require('./routes/weather'); // ## 재원 날씨
 
 
 // .env 적용
@@ -34,6 +35,7 @@ app.use(session({
   cookie: { httpOnly: true, secure: false },
 }));
 app.use('/api/chat', require('./routes/chat')); // 재원
+app.use('/api/weather', weatherRouter); // 재원 날씨
 
 // 반드시 session 뒤에 호출! 이것도 추가입니다
 app.use(passport.initialize());  //##윤기 <-- 이거 꼭 넣어야 req.isAuthenticated가 생김
@@ -54,7 +56,4 @@ db.sequelize.sync()
 
 // 라우터 연결 (나중에 추가 예정)
 app.use('/user', userRouter); //## 윤기
-
-app.listen(3065, () => {
-  console.log('🚀 서버 실행 중! http://localhost:3065');
-});
+module.exports = app;

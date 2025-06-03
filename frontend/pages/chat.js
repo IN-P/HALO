@@ -4,7 +4,7 @@ import AppLayout from '../components/AppLayout';
 import ChatList from '../components/ChatList';
 import SearchModal from '../components/SearchModal';
 import { joinRoom, exitRoom, sendMessage as sendMsg } from '../sagas/chatSaga';
-import { setSelectedUser, setMessage, clearLog, appendMessage, setSearchTerm, toggleSearchModal } from '../reducers/chatReducer';
+import { setSelectedUser, setMessage, clearLog, addLog, setSearchTerm, toggleSearchModal,setShowNewMsgAlert } from '../reducers/chatReducer';
 import socket from '../socket';
 
 const ChatPage = () => {
@@ -42,7 +42,7 @@ const ChatPage = () => {
   };
 
   const handleReceive = useCallback((data) => {
-    dispatch(appendMessage(data));
+    dispatch(addLog(data));
   }, [dispatch]);
 
   const handleExitSuccess = useCallback(() => {
@@ -94,21 +94,17 @@ const ChatPage = () => {
     <AppLayout>
       <div style={{ display: 'flex', position: 'relative' }}>
         <ChatList chatRooms={chatRooms} onSelectUser={(user) => dispatch(setSelectedUser(user))} />
-        <div style={{ flex: 1, position: 'relative' }}> {/* <-- 이 부분에 position: 'relative' 추가! */}
+        <div style={{ flex: 1, position: 'relative' }}> 
   {showSearchModal && (
   <SearchModal
-    searchTerm={searchTerm}
-    onSearchChange={(e) => dispatch(setSearchTerm(e.target.value))}
     onUserSelect={(user) => {
       dispatch(setSelectedUser(user));
       dispatch(toggleSearchModal(false));
     }}
-    onClose={() => dispatch(toggleSearchModal(false))} // 이제 이 toggleSearchModal은 인자 없이 호출하도록 수정되었지?
+    onClose={() => dispatch(toggleSearchModal(false))} 
     userMap={userMap}
   />
   )}
-          {/* 검색 모달 생략. 기존 코드와 동일한 로직으로 toggleSearchModal, setSearchTerm, setSelectedUser 등 디스패치 사용 */}
-
           {!selectedUser ? (
             <div style={{ textAlign: 'center', marginTop: '20%' }}>
               <h2 style={{ cursor: 'pointer' }} onClick={() => dispatch(toggleSearchModal(true))}>
