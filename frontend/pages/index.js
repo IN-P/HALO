@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import AppLayout from '../components/AppLayout';
 import PostCard from '../components/PostCard';
+import { useSelector } from 'react-redux'; // 윤기 추가
+import { useRouter } from 'next/router';   // 윤기 추가
+import { useEffect } from 'react';         // 윤기 추가
 
 const dummyPosts = [
   { id: 1, title: '첫 번째 게시물', content: '내용입니다.' },
@@ -8,6 +11,14 @@ const dummyPosts = [
 ];
 
 const Home = () => {
+  const router = useRouter();                           // 윤기 추가
+  const { isLogin } = useSelector((state) => state.user_y); // 윤기 추가
+
+  useEffect(() => {
+    if (!isLogin) {
+      router.replace('/login');                         // 윤기 추가
+    }
+  }, [isLogin]);
   const [search, setSearch] = useState('');
 
   return (
