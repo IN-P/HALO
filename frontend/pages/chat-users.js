@@ -32,5 +32,4 @@ const ChatUsers = () => {
     </div>
   );
 };
-
 export default ChatUsers;
