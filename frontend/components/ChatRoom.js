@@ -1,5 +1,4 @@
-// components/ChatRoom.js
-import React from 'react';
+import React, { useEffect } from 'react';
 
 const ChatRoom = ({
   me,
@@ -14,7 +13,23 @@ const ChatRoom = ({
   onExit,
   onSendMessage,
   userMap,
+  onClose,
 }) => {
+
+  useEffect(() => {
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      onClose(); // ESC 누르면 닫기 실행
+    }
+  };
+
+  window.addEventListener('keydown', handleKeyDown);
+
+  return () => {
+    window.removeEventListener('keydown', handleKeyDown); // 정리
+  };
+}, [onClose]);
+
   const handleSend = () => {
     if (!message.trim()) return;
 
@@ -32,14 +47,29 @@ const ChatRoom = ({
     onSendMessage(newMsg);
   };
 
+  
+
   return (
-    <div style={{ padding: 20, position: 'relative' }}>
+    <div
+      style={{
+        width: '600px',
+        maxHeight: '80vh',
+        background: '#fff',
+        border: '1px solid #ccc',
+        borderRadius: '12px',
+        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+        padding: 20,
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+      }}
+    >
+      {/* 상단 타이틀 */}
       <h2 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span>💬 {selectedUser.nickname}와의 채팅 (내 ID: {me})</span>
         <button
-          onClick={onExit}
+          onClick={onClose}
           style={{
-            marginLeft: 10,
             padding: '4px 10px',
             background: '#eee',
             border: '1px solid #ccc',
@@ -47,7 +77,7 @@ const ChatRoom = ({
             cursor: 'pointer',
           }}
         >
-          나가기
+          닫기
         </button>
       </h2>
 
@@ -57,11 +87,15 @@ const ChatRoom = ({
         ref={chatBoxRef}
         onScroll={handleScroll}
         style={{
+          flex: 1,
           border: '1px solid #ccc',
-          padding: 10,
-          height: 300,
-          overflowY: 'scroll',
-          marginBottom: 10,
+          padding: '16px',
+          overflowY: 'auto',
+          marginBottom: '12px',
+          minHeight: '400px',
+          maxHeight: '500px',
+          borderRadius: '8px',
+          background: '#fafafa',
         }}
       >
         {log.map((msg, idx) => {
@@ -75,7 +109,6 @@ const ChatRoom = ({
                 justifyContent: isMine ? 'flex-end' : 'flex-start',
                 alignItems: 'flex-start',
                 margin: '6px 0',
-                flexDirection: 'row',
               }}
             >
               {!isMine && (
@@ -93,14 +126,7 @@ const ChatRoom = ({
               )}
               <div style={{ maxWidth: '70%' }}>
                 {!isMine && (
-                  <div
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 'bold',
-                      color: '#555',
-                      marginBottom: 2,
-                    }}
-                  >
+                  <div style={{ fontSize: 12, fontWeight: 'bold', color: '#555', marginBottom: 2 }}>
                     {sender.nickname}
                   </div>
                 )}
@@ -154,19 +180,54 @@ const ChatRoom = ({
         </div>
       )}
 
-      {/* 메시지 입력창 */}
-      <input
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        onKeyPress={(e) => {
-          if (e.key === 'Enter') handleSend();
-        }}
-        placeholder="메시지를 입력하세요"
-        style={{ width: '80%', padding: '8px' }}
-      />
-      <button onClick={handleSend} style={{ padding: '8px 16px', marginLeft: 8 }}>
-        전송
-      </button>
+      {/* 메시지 입력 */}
+      <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+        <input
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') handleSend();
+          }}
+          placeholder="메시지를 입력하세요"
+          style={{
+            flex: 1,
+            padding: '12px 16px',
+            fontSize: '16px',
+            borderRadius: '8px',
+            border: '1px solid #ccc',
+          }}
+        />
+        <button
+          onClick={handleSend}
+          style={{
+            padding: '12px 20px',
+            fontSize: '16px',
+            borderRadius: '8px',
+            border: 'none',
+            background: '#4a90e2',
+            color: '#fff',
+            cursor: 'pointer',
+          }}
+        >
+          전송
+        </button>
+      </div>
+
+      {/* ✅ 나가기 버튼 - 아래 따로 배치 */}
+      <div style={{ marginTop: '16px', textAlign: 'right' }}>
+        <button
+          onClick={onExit}
+          style={{
+            padding: '8px 16px',
+            background: '#f5f5f5',
+            border: '1px solid #ccc',
+            borderRadius: '6px',
+            cursor: 'pointer',
+          }}
+        >
+          나가기
+        </button>
+      </div>
     </div>
   );
 };

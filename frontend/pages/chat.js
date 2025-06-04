@@ -3,8 +3,24 @@ import { useDispatch, useSelector } from 'react-redux';
 import AppLayout from '../components/AppLayout';
 import ChatList from '../components/ChatList';
 import SearchModal from '../components/SearchModal';
-import { joinRoom, exitRoom, sendMessage as sendMsg } from '../sagas/chatSaga';
-import { setSelectedUser, setMessage, clearLog, addLog, setSearchTerm, toggleSearchModal,setShowNewMsgAlert } from '../reducers/chatReducer';
+import ChatRoom from '../components/ChatRoom'; // ✅ ChatRoom 컴포넌트로 변경
+
+import {
+  joinRoom,
+  exitRoom,
+  sendMessage as sendMsg
+} from '../sagas/chatSaga';
+
+import {
+  setSelectedUser,
+  setMessage,
+  clearLog,
+  addLog,
+  setSearchTerm,
+  toggleSearchModal,
+  setShowNewMsgAlert
+} from '../reducers/chatReducer';
+
 import socket from '../socket';
 
 const ChatPage = () => {
@@ -92,73 +108,71 @@ const ChatPage = () => {
 
   return (
     <AppLayout>
-      <div style={{ display: 'flex', position: 'relative' }}>
-        <ChatList chatRooms={chatRooms} onSelectUser={(user) => dispatch(setSelectedUser(user))} />
-        <div style={{ flex: 1, position: 'relative' }}> 
-  {showSearchModal && (
-  <SearchModal
-    onUserSelect={(user) => {
-      dispatch(setSelectedUser(user));
-      dispatch(toggleSearchModal(false));
-    }}
-    onClose={() => dispatch(toggleSearchModal(false))} 
-    userMap={userMap}
-  />
-  )}
+      <div
+        style={{
+          display: 'flex',
+          padding: '20px',
+          height: 'calc(100vh - 80px)',
+          gap: '20px',
+          boxSizing: 'border-box',
+        }}
+      >
+        <ChatList
+          chatRooms={chatRooms}
+          onSelectUser={(user) => dispatch(setSelectedUser(user))}
+        />
+
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'flex-start',
+            position: 'relative',
+          }}
+        >
+          {showSearchModal && (
+            <SearchModal
+              onUserSelect={(user) => {
+                dispatch(setSelectedUser(user));
+                dispatch(toggleSearchModal(false));
+              }}
+              onClose={() => dispatch(toggleSearchModal(false))}
+              userMap={userMap}
+            />
+          )}
+
           {!selectedUser ? (
-            <div style={{ textAlign: 'center', marginTop: '20%' }}>
-              <h2 style={{ cursor: 'pointer' }} onClick={() => dispatch(toggleSearchModal(true))}>
+            <div style={{ margin: 'auto' }}>
+              <h2
+                style={{ cursor: 'pointer' }}
+                onClick={() => dispatch(toggleSearchModal(true))}
+              >
                 💬 채팅을 시작하세요
               </h2>
             </div>
           ) : (
-            <div style={{ padding: 20, position: 'relative' }}>
-              <h2 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>💬 {selectedUser.nickname}와의 채팅 (내 ID: {me})</span>
-                <button
-                  onClick={() => dispatch(exitRoom({ roomId, userId: me }))}
-                  style={{ marginLeft: 10, padding: '4px 10px', background: '#eee', border: '1px solid #ccc', borderRadius: '6px', cursor: 'pointer' }}
-                >
-                  나가기
-                </button>
-              </h2>
-              <div ref={chatBoxRef} onScroll={handleScroll} style={{ border: '1px solid #ccc', padding: 10, height: 300, overflowY: 'scroll', marginBottom: 10 }}>
-                {log.map((msg, idx) => {
-                  const isMine = msg.senderId === me;
-                  const sender = userMap[msg.senderId];
-                  return (
-                    <div key={idx} style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', alignItems: 'flex-start', margin: '6px 0' }}>
-                      {!isMine && (
-                        <img src={sender.profileImage} alt="상대 프로필" style={{ width: 32, height: 32, borderRadius: '50%', marginRight: 8 }} />
-                      )}
-                      <div style={{ maxWidth: '70%' }}>
-                        {!isMine && <div style={{ fontSize: 12, fontWeight: 'bold' }}>{sender.nickname}</div>}
-                        <div style={{ padding: '8px 12px', borderRadius: 12, background: isMine ? '#d1f0ff' : '#f2f2f2' }}>{msg.content}</div>
-                        <div style={{ fontSize: 11, textAlign: isMine ? 'right' : 'left' }}>{msg.time}</div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {showNewMsgAlert && (
-                <div style={{ position: 'absolute', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: '#333', color: '#fff', padding: '6px 12px', borderRadius: '12px', cursor: 'pointer' }}
-                  onClick={() => {
-                    chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
-                    dispatch(setShowNewMsgAlert(false));
-                  }}>
-                  🔽 새 메시지 도착
-                </div>
-              )}
-
-              <input
-                value={message}
-                onChange={(e) => dispatch(setMessage(e.target.value))}
-                onKeyPress={(e) => { if (e.key === 'Enter') handleSend(); }}
-                placeholder="메시지를 입력하세요"
-                style={{ width: '80%', padding: '8px' }}
+            <div style={{ width: '600px',
+                          margin: '80px auto 0', // 위쪽 80px, 가운데 정렬
+                          }}>
+              <ChatRoom
+                me={me}
+                selectedUser={selectedUser}
+                roomId={roomId}
+                log={log}
+                chatBoxRef={chatBoxRef}
+                message={message}
+                setMessage={(value) => dispatch(setMessage(value))}
+                showNewMsgAlert={showNewMsgAlert}
+                handleScroll={handleScroll}
+                onExit={() => dispatch(exitRoom({ roomId, userId: me }))}
+                onSendMessage={(msg) => {
+                  dispatch(sendMsg(msg));
+                  dispatch(setMessage(''));
+                }}
+                userMap={userMap}
+                onClose={() => dispatch(setSelectedUser(null))}
               />
-              <button onClick={handleSend} style={{ padding: '8px 16px', marginLeft: 8 }}>전송</button>
             </div>
           )}
         </div>
