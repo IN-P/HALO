@@ -1,2 +1,6 @@
+.env
+backend/.env
 node_modules/
 .next/
+.env/
+backend/.env/
