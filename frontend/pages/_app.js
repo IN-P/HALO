@@ -40,7 +40,6 @@ const HALO = ({ Component, ...rest }) => {
           <meta charSet="utf-8" />
           <title>HALO SNS</title>
         </Head>
-        <Component {...pageProps} />
         <AppContent Component={Component} pageProps={pageProps} /> {/* 윤기추가 */}
       </AuthProvider>
     </Provider>
