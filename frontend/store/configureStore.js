@@ -4,9 +4,11 @@ import { composeWithDevTools } from 'redux-devtools-extension';
 import { createWrapper } from 'next-redux-wrapper';
 import rootSaga from '../sagas';
 import post_IN from '../reducers/post_IN';
+import user_y from '../reducers/user_y'; //윤기 추가
 
 const rootReducer = combineReducers({
   post_IN,
+  user_y, // 윤기추가
   // 다른 리듀서들 추가 가능
 });
 
