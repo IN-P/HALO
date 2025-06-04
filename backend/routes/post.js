@@ -8,17 +8,17 @@ const { isLoggedIn } = require('./middlewares');
 
 // uploads 폴더 생성
 try {
-  fs.accessSync('uploads');
+  fs.accessSync('uploads/post');
 } catch (error) {
-  console.log('📁 uploads 폴더 생성');
-  fs.mkdirSync('uploads');
+  console.log('📁 uploads/post 폴더가 없어서 생성합니다.');
+  fs.mkdirSync('uploads/post', { recursive: true });
 }
 
 // multer 설정
 const upload = multer({
   storage: multer.diskStorage({
     destination(req, file, done) {
-      done(null, 'uploads');
+      done(null, 'uploads/post');
     },
     filename(req, file, done) {
       const ext = path.extname(file.originalname);
@@ -30,7 +30,7 @@ const upload = multer({
 });
 
 // 게시글 등록
-router.post('/', isLoggedIn, upload.none(), async (req, res, next) => {
+router.post('/', isLoggedIn, async (req, res, next) => {
   try {
     const hashtags = req.body.content.match(/#[^\s#]+/g);
     const post = await Post.create({
