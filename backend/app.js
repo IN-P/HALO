@@ -1,4 +1,3 @@
-// backend/app.js
 const express = require('express');
 const app = express();
 const cors = require('cors');
@@ -27,6 +26,7 @@ const inquiryRouter = require('./routes/inquiry');//## 율비
 const profile = require("./routes/profile"); //## 준혁
 const notification = require("./routes/notification"); //## 준혁
 const activeLog = require("./routes/active_log"); //## 준혁
+
 const quizRouter = require('./routes/quiz');  //## 경미
 const adminQuizRouter = require('./routes/adminQuiz');  //## 경미 
 const playerDrawRouter = require('./routes/playerDraw');   //## 경미
@@ -39,7 +39,10 @@ dotenv.config();
 
 // 미들웨어
 app.use(morgan('dev'));
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({                      //## 윤기
+  origin: 'http://localhost:3000',
+  credentials: true,
+}));    //## 윤기 여기까지
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser(process.env.COOKIE_SECRET));
@@ -80,12 +83,13 @@ app.use('/inquiry',inquiryRouter); //## 율비
 app.use("/profile", profile); //## 준혁
 app.use("/notification", notification); //## 준혁
 app.use("/log", activeLog); //## 준혁
+
 app.use('/event/quizzes', quizRouter);  //## 경미
 app.use('/event/admin', adminQuizRouter);  //## 경미
-app.use('/store/draw', playerDrawRouter);  //## 경미
-app.use('/store/admin', adminPlayerRouter);  //## 경미
-app.use('/api/chat', chatRouter); // 재원
-app.use('/api/weather', weatherRouter); // 재원 날씨
+app.use('/store/draw', playerDrawRouter);   //## 경미
+app.use('/store/admin', adminPlayerRouter);   //## 경미
+app.use('/api/chat', chatRouter); //## 재원
+app.use('/api/weather', weatherRouter); //## 재원 날씨
 
 app.listen(3065, () => {
   console.log('🚀 서버 실행 중! http://localhost:3065');

@@ -1,4 +1,3 @@
-// reducers/user_y.js
 import produce from 'immer';
 
 //  액션 타입
@@ -34,6 +33,10 @@ export const initialState = {
   signUpLoading: false,
   signUpDone: false,
   signUpError: null,
+
+  loadMyInfoLoading: false,
+  loadMyInfoDone: false,
+  loadMyInfoError: null,
 };
 
 //  리듀서
@@ -86,6 +89,25 @@ const reducer = (state = initialState, action) => produce(state, (draft) => {
     case SIGN_UP_FAILURE:
       draft.signUpLoading = false;
       draft.signUpError = action.error;
+      break;
+
+    // 내 정보 불러오기
+    case LOAD_MY_INFO_REQUEST:
+      draft.loadMyInfoLoading = true;
+      draft.loadMyInfoError = null;
+      draft.loadMyInfoDone = false;
+      break;
+    case LOAD_MY_INFO_SUCCESS:
+      draft.loadMyInfoLoading = false;
+      draft.loadMyInfoDone = true;
+      draft.isLogin = true;
+      draft.user = action.data;
+      break;
+    case LOAD_MY_INFO_FAILURE:
+      draft.loadMyInfoLoading = false;
+      draft.loadMyInfoError = action.error;
+      draft.isLogin = false;
+      draft.user = null;
       break;
 
     default:
