@@ -26,13 +26,13 @@ const inquiryRouter = require('./routes/inquiry');//## 율비
 const profile = require("./routes/profile"); //## 준혁
 const notification = require("./routes/notification"); //## 준혁
 const activeLog = require("./routes/active_log"); //## 준혁
-
 const quizRouter = require('./routes/quiz');  //## 경미
 const adminQuizRouter = require('./routes/adminQuiz');  //## 경미 
 const playerDrawRouter = require('./routes/playerDraw');   //## 경미
 const adminPlayerRouter = require('./routes/adminPlayer');   //## 경미
 const weatherRouter = require('./routes/weather'); //## 재원
 const chatRouter = require('./routes/chat') //## 재원
+
 
 // .env 적용
 dotenv.config();
@@ -92,3 +92,5 @@ app.use('/api/chat', chatRouter); //## 재원
 app.use('/api/weather', weatherRouter); //## 재원 날씨
 
 module.exports = app;
+
+
