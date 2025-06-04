@@ -11,43 +11,37 @@ const ChatRoom = ({
   showNewMsgAlert,
   handleScroll,
   onExit,
-  onSendMessage,
+  onSendMessage, // 이제 이 onSendMessage를 사용할 거야
   userMap,
   onClose,
 }) => {
 
+  // ESC 키 누르면 닫기 기능
   useEffect(() => {
-  const handleKeyDown = (e) => {
-    if (e.key === 'Escape') {
-      onClose(); // ESC 누르면 닫기 실행
-    }
-  };
-
-  window.addEventListener('keydown', handleKeyDown);
-
-  return () => {
-    window.removeEventListener('keydown', handleKeyDown); // 정리
-  };
-}, [onClose]);
-
-  const handleSend = () => {
-    if (!message.trim()) return;
-
-    const newMsg = {
-      id: Date.now(),
-      roomId,
-      senderId: me,
-      content: message,
-      time: new Date().toLocaleTimeString('ko-KR', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose(); // ESC 누르면 닫기 실행
+      }
     };
 
-    onSendMessage(newMsg);
-  };
+    window.addEventListener('keydown', handleKeyDown);
 
-  
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown); // 정리
+    };
+  }, [onClose]);
+
+  // ⭐ 기존 ChatRoom 내부의 handleSend 함수는 이제 필요 없으므로 삭제했어.
+  //    pages/chat.js에서 전달받은 onSendMessage를 직접 호출할 거야.
+
+  // 나가기 버튼 클릭 시 확인 알림창 띄우기
+  const handleExitConfirm = () => {
+    const confirmExit = window.confirm('채팅방을 나가시면 현재 사용자에게만 메시지 기록이 모두 모두 삭제됩니다. 정말 나가시겠습니까?');
+    if (confirmExit) {
+      onExit(); // 사용자가 '확인'을 누르면 onExit 함수 호출 (Redux 액션 디스패치)
+    }
+    // '취소'를 누르면 아무것도 하지 않음
+  };
 
   return (
     <div
@@ -186,7 +180,7 @@ const ChatRoom = ({
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyPress={(e) => {
-            if (e.key === 'Enter') handleSend();
+            if (e.key === 'Enter') onSendMessage(); // ⭐ onSendMessage로 변경!
           }}
           placeholder="메시지를 입력하세요"
           style={{
@@ -198,7 +192,7 @@ const ChatRoom = ({
           }}
         />
         <button
-          onClick={handleSend}
+          onClick={onSendMessage} // ⭐ onSendMessage로 변경!
           style={{
             padding: '12px 20px',
             fontSize: '16px',
@@ -213,10 +207,10 @@ const ChatRoom = ({
         </button>
       </div>
 
-      {/* ✅ 나가기 버튼 - 아래 따로 배치 */}
+      {/* 나가기 버튼 */}
       <div style={{ marginTop: '16px', textAlign: 'right' }}>
         <button
-          onClick={onExit}
+          onClick={handleExitConfirm}
           style={{
             padding: '8px 16px',
             background: '#f5f5f5',

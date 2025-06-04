@@ -354,7 +354,9 @@ router.get('/my-rooms', isLoggedIn, async (req, res) => {
     });
 
     const result = await Promise.all(rooms.map(async (room) => {
-      const partnerId = room.user1_id === me ? room.user2_id : room.user1_id;
+      const isUser1 = room.user1_id === me;
+      const partnerId = isUser1 ? room.user2_id : room.user1_id;
+
       const partner = await User.findOne({
         where: { id: partnerId },
         attributes: ['id', 'nickname', 'profile_img']
@@ -375,7 +377,11 @@ router.get('/my-rooms', isLoggedIn, async (req, res) => {
 
       return {
         roomId: `chat-${[room.user1_id, room.user2_id].sort().join('-')}`,
-        partner,
+        otherUser: {
+          id: partner.id,
+          nickname: partner.nickname,
+          profileImage: partner.profile_img,
+        },
         lastMessage: lastMsg ? lastMsg.content : '',
         lastMessageTime: lastMsg ? lastMsg.created_at : null,
         unreadCount

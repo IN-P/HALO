@@ -3,23 +3,17 @@ import { useDispatch, useSelector } from 'react-redux';
 import AppLayout from '../components/AppLayout';
 import ChatList from '../components/ChatList';
 import SearchModal from '../components/SearchModal';
-import ChatRoom from '../components/ChatRoom'; // ✅ ChatRoom 컴포넌트로 변경
+import ChatRoom from '../components/ChatRoom';
 import axios from 'axios';
-
-import {
-  joinRoom,
-  exitRoom,
-  sendMessage as sendMsg
-} from '../sagas/chatSaga_JW';
-
+import { setChatRooms, sendMessage as sendMsg } from '../reducers/chatReducer_JW';
 import {
   setSelectedUser,
   setMessage,
   clearLog,
   addLog,
-  setSearchTerm,
   toggleSearchModal,
-  setShowNewMsgAlert
+  setShowNewMsgAlert,
+  exitRoom
 } from '../reducers/chatReducer_JW';
 
 import socket from '../socket';
@@ -33,47 +27,44 @@ const ChatPage = () => {
     log,
     showNewMsgAlert,
     showSearchModal,
-    searchTerm,
     chatRooms,
   } = useSelector((state) => state.chat);
 
   const chatBoxRef = useRef();
-
   const [userMap, setUserMap] = useState({});
-
-  useEffect(() => {
-  axios.get('http://localhost:3065/userSearch/all', { withCredentials: true })
-    .then((res) => {
-      const map = {};
-      res.data.forEach(user => {
-        map[user.id] = {
-          id: user.id,
-          nickname: user.nickname,
-          profileImage: user.profile_img,
-        };
-      });
-      setUserMap(map);
-    })
-    .catch((err) => {
-      console.error('❌ 유저 목록 불러오기 실패:', err);
-    });
-}, []);
 
   const roomId = selectedUser ? `chat-${[me, selectedUser.id].sort().join('-')}` : null;
 
-  const isAtBottom = () => {
-    const box = chatBoxRef.current;
-    if (!box) return true;
-    return box.scrollHeight - box.scrollTop - box.clientHeight < 100;
-  };
+  // 1. 최초 1회 - 전체 유저 목록 가져오기
+  useEffect(() => {
+    axios.get('http://localhost:3065/userSearch/all', { withCredentials: true })
+      .then(res => {
+        const map = {};
+        res.data.forEach(user => {
+          map[user.id] = {
+            id: user.id,
+            nickname: user.nickname,
+            profileImage: user.profile_img,
+          };
+        });
+        setUserMap(map);
+      })
+      .catch(err => {
+        console.error('❌ 유저 목록 불러오기 실패:', err);
+      });
+  }, []);
 
-  const handleScroll = () => {
-    if (isAtBottom()) dispatch(setShowNewMsgAlert(false));
-  };
-
+  // 2. socket 리스너: receive_message (딱 1번만 등록)
   const handleReceive = useCallback((data) => {
+    if (!roomId || data.roomId !== roomId) {
+      // 현재 안 보고 있는 채팅방 메시지면 새 메시지 알림만 띄움
+      dispatch(setShowNewMsgAlert(true));
+      return;
+    }
+
+    // 현재 보고 있는 채팅방이면 메시지 로그 추가
     dispatch(addLog(data));
-  }, [dispatch]);
+  }, [dispatch, roomId]);
 
   const handleExitSuccess = useCallback(() => {
     alert('채팅방을 나갔습니다.');
@@ -87,8 +78,6 @@ const ChatPage = () => {
   }, []);
 
   useEffect(() => {
-    if (!roomId) return;
-    socket.emit('join_room', roomId, me);
     socket.on('receive_message', handleReceive);
     socket.on('exit_room_success', handleExitSuccess);
     socket.on('exit_room_failed', handleExitFailed);
@@ -98,7 +87,36 @@ const ChatPage = () => {
       socket.off('exit_room_success', handleExitSuccess);
       socket.off('exit_room_failed', handleExitFailed);
     };
-  }, [roomId, handleReceive, handleExitSuccess, handleExitFailed]);
+  }, [handleReceive, handleExitSuccess, handleExitFailed]);
+
+  // 3. roomId가 바뀔 때마다 join_room emit
+  useEffect(() => {
+    if (roomId) {
+      socket.emit('join_room', roomId, me);
+    }
+  }, [roomId, me]);
+
+  // 4. 채팅방 목록은 최초 1회만 불러오기
+  useEffect(() => {
+    axios.get('http://localhost:3065/api/chat/my-rooms', { withCredentials: true })
+      .then(res => {
+        dispatch(setChatRooms(res.data));
+      })
+      .catch(err => {
+        console.error('❌ 채팅방 목록 불러오기 실패:', err);
+      });
+  }, [dispatch]);
+
+  // 5. 스크롤 및 새 메시지 알림 관리
+  const isAtBottom = () => {
+    const box = chatBoxRef.current;
+    if (!box) return true;
+    return box.scrollHeight - box.scrollTop - box.clientHeight < 100;
+  };
+
+  const handleScroll = () => {
+    if (isAtBottom()) dispatch(setShowNewMsgAlert(false));
+  };
 
   useEffect(() => {
     if (!chatBoxRef.current || log.length === 0) return;
@@ -114,6 +132,7 @@ const ChatPage = () => {
     }
   }, [log, me, dispatch]);
 
+  // 6. 메시지 보내기 함수
   const handleSend = () => {
     if (!message.trim() || !selectedUser) return;
     dispatch(sendMsg({ roomId, senderId: me, content: message }));
@@ -122,29 +141,25 @@ const ChatPage = () => {
 
   return (
     <AppLayout>
-      <div
-        style={{
-          display: 'flex',
-          padding: '20px',
-          height: 'calc(100vh - 80px)',
-          gap: '20px',
-          boxSizing: 'border-box',
-        }}
-      >
+      <div style={{
+        display: 'flex',
+        padding: '20px',
+        height: 'calc(100vh - 80px)',
+        gap: '20px',
+        boxSizing: 'border-box',
+      }}>
         <ChatList
           chatRooms={chatRooms}
           onSelectUser={(user) => dispatch(setSelectedUser(user))}
         />
 
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            justifyContent: 'flex-end',
-            alignItems: 'flex-start',
-            position: 'relative',
-          }}
-        >
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          justifyContent: 'flex-end',
+          alignItems: 'flex-start',
+          position: 'relative',
+        }}>
           {showSearchModal && (
             <SearchModal
               onUserSelect={(user) => {
@@ -166,9 +181,7 @@ const ChatPage = () => {
               </h2>
             </div>
           ) : (
-            <div style={{ width: '600px',
-                          margin: '80px auto 0', // 위쪽 80px, 가운데 정렬
-                          }}>
+            <div style={{ width: 600, margin: '80px auto 0' }}>
               <ChatRoom
                 me={me}
                 selectedUser={selectedUser}
@@ -180,10 +193,7 @@ const ChatPage = () => {
                 showNewMsgAlert={showNewMsgAlert}
                 handleScroll={handleScroll}
                 onExit={() => dispatch(exitRoom({ roomId, userId: me }))}
-                onSendMessage={(msg) => {
-                  dispatch(sendMsg(msg));
-                  dispatch(setMessage(''));
-                }}
+                onSendMessage={handleSend}
                 userMap={userMap}
                 onClose={() => dispatch(setSelectedUser(null))}
               />
