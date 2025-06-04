@@ -91,6 +91,4 @@ app.use('/store/admin', adminPlayerRouter);   //## 경미
 app.use('/api/chat', chatRouter); //## 재원
 app.use('/api/weather', weatherRouter); //## 재원 날씨
 
-app.listen(3065, () => {
-  console.log('🚀 서버 실행 중! http://localhost:3065');
-});
+module.exports = app;
