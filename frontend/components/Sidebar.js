@@ -72,7 +72,9 @@ const Sidebar = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <SidebarButton icon={<HomeOutlined />}>홈</SidebarButton>
           <SidebarButton icon={<AppstoreOutlined />}>메뉴</SidebarButton>
-          <SidebarButton icon={<EditOutlined />}>게시물 작성</SidebarButton>
+          <SidebarButton icon={<EditOutlined /> } onClick={() => router.push('/new_post')}>
+            게시물 작성
+          </SidebarButton>
           <SidebarButton icon={<BellOutlined />}>알림</SidebarButton>
           <SidebarButton
             icon={<MessageOutlined />}
