@@ -7,10 +7,17 @@ import { LOG_IN_REQUEST } from '../reducers/user_YG';
 const LoginPage = () => {
   const router = useRouter();
   const dispatch = useDispatch();
-  const { logInLoading, logInError, logInDone } = useSelector((state) => state.user_YG);
+  const { logInLoading, logInError, logInDone, isLogin } = useSelector((state) => state.user_YG);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  //  이미 로그인된 상태면 메인으로 리다이렉트
+  useEffect(() => {
+    if (isLogin) {
+      router.replace('/');
+    }
+  }, [isLogin]);
 
   // 로그인 요청
   const handleLogin = (e) => {

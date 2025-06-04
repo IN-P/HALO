@@ -10,6 +10,16 @@ const { isLoggedIn, isNotLoggedIn } = require('./middlewares'); // 로그인 여
 const userService = require('../services/userService'); //소프트 딜리트
 const db = require('../models');
 
+// 현재 로그인한 유저 정보를 반환하는 라우터
+router.get('/me', isLoggedIn, async (req, res) => {
+  try {
+    return res.status(200).json(req.user); // 로그인한 유저의 정보를 보냄
+  } catch (error) {
+    console.error('GET /user/me 에러', error);
+    return res.status(500).send('서버 에러');
+  }
+});
+
 
 /*회원가입    ★테스트 성공
 - URL: http://localhost:3065/user

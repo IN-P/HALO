@@ -10,6 +10,9 @@ import {
   SIGN_UP_REQUEST,
   SIGN_UP_SUCCESS,
   SIGN_UP_FAILURE,
+  LOAD_MY_INFO_REQUEST,
+  LOAD_MY_INFO_SUCCESS,
+  LOAD_MY_INFO_FAILURE,
 } from '../reducers/user_YG';
 
 //  로그인
@@ -76,6 +79,26 @@ function* signUp(action) {
   }
 }
 
+//  내 정보 불러오기
+function loadMyInfoAPI() {
+  return axios.get('/user/me'); // baseURL + withCredentials 전역 설정 가정
+}
+
+function* loadMyInfo() {
+  try {
+    const result = yield call(loadMyInfoAPI);
+    yield put({
+      type: LOAD_MY_INFO_SUCCESS,
+      data: result.data,
+    });
+  } catch (err) {
+    yield put({
+      type: LOAD_MY_INFO_FAILURE,
+      error: err.response?.data || err.message,
+    });
+  }
+}
+
 //  Watchers
 function* watchLogin() {
   yield takeLatest(LOG_IN_REQUEST, login);
@@ -89,11 +112,16 @@ function* watchSignUp() {
   yield takeLatest(SIGN_UP_REQUEST, signUp);
 }
 
+function* watchLoadMyInfo() {
+  yield takeLatest(LOAD_MY_INFO_REQUEST, loadMyInfo);
+}
+
 //  Root Saga
 export default function* userSaga() {
   yield all([
     fork(watchLogin),
     fork(watchLogout),
     fork(watchSignUp),
+    fork(watchLoadMyInfo),
   ]);
 }
