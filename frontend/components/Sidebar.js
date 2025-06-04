@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
+import { useRouter } from 'next/router';
 import { Button } from 'antd';
 import {
   HomeOutlined,
   EditOutlined,
   BellOutlined,
   MessageOutlined,
-  SettingOutlined,
   LogoutOutlined,
   BulbOutlined,
   AppstoreOutlined,
@@ -48,6 +48,8 @@ const SidebarButton = ({ icon, children, onClick }) => {
 };
 
 const Sidebar = () => {
+  const router = useRouter();
+
   return (
     <div style={{
       width: 240,
@@ -72,7 +74,12 @@ const Sidebar = () => {
           <SidebarButton icon={<AppstoreOutlined />}>메뉴</SidebarButton>
           <SidebarButton icon={<EditOutlined />}>게시물 작성</SidebarButton>
           <SidebarButton icon={<BellOutlined />}>알림</SidebarButton>
-          <SidebarButton icon={<MessageOutlined />}>채팅 (DM)</SidebarButton>
+          <SidebarButton
+            icon={<MessageOutlined />}
+            onClick={() => router.push('/chat')}
+          >
+            채팅 (DM)
+          </SidebarButton>
           <SidebarButton icon={<ShopOutlined />}>상점</SidebarButton>
           <SidebarButton icon={<GiftOutlined />}>이벤트</SidebarButton>
           <SidebarButton icon={<ShopOutlined />}>문의</SidebarButton> {/*조율비 추가*/}

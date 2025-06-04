@@ -26,7 +26,6 @@ const inquiryRouter = require('./routes/inquiry');//## 율비
 const profile = require("./routes/profile"); //## n준혁
 const notification = require("./routes/notification"); //## 준혁
 const activeLog = require("./routes/active_log"); //## 준혁
-
 const quizRouter = require('./routes/quiz');  //## 경미
 const adminQuizRouter = require('./routes/adminQuiz');  //## 경미 
 const playerDrawRouter = require('./routes/playerDraw');   //## 경미
@@ -92,7 +91,5 @@ app.use('/store/admin', adminPlayerRouter);   //## 경미
 app.use('/api/chat', chatRouter); //## 재원
 app.use('/api/weather', weatherRouter); //## 재원 날씨
 
+module.exports = app;
 
-app.listen(3065, () => {
-  console.log('🚀 서버 실행 중! http://localhost:3065');
-});
