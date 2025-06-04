@@ -1,6 +1,7 @@
 import React from 'react';
+import FollowButton from './FollowButton'; 
 
-const PostCard = ({ title, content }) => {
+const PostCard = ({ title, content, toUserId }) => {
   return (
     <div style={{
       background: '#fff',
@@ -10,6 +11,7 @@ const PostCard = ({ title, content }) => {
       marginBottom: 16
     }}>
       <h3 style={{ marginBottom: 8 }}>{title}</h3>
+      <FollowButton toUserId={toUserId} />
       <p>{content}</p>
     </div>
   );

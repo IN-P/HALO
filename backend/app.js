@@ -23,7 +23,7 @@ const followRouter = require('./routes/follow');//## 율비
 const blockRouter = require('./routes/block');//## 율비
 const reportRouter = require('./routes/report');//## 율비
 const inquiryRouter = require('./routes/inquiry');//## 율비
-const profile = require("./routes/profile"); //## 준혁
+const profile = require("./routes/profile"); //## n준혁
 const notification = require("./routes/notification"); //## 준혁
 const activeLog = require("./routes/active_log"); //## 준혁
 const quizRouter = require('./routes/quiz');  //## 경미
@@ -92,5 +92,4 @@ app.use('/api/chat', chatRouter); //## 재원
 app.use('/api/weather', weatherRouter); //## 재원 날씨
 
 module.exports = app;
-
 
