@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get('http://localhost:3065/auth/me', {
+        const res = await axios.get('http://localhost:3065/user/me', {
           withCredentials: true,
         });
         setUser(res.data); // 로그인 유저 정보 저장

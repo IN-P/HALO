@@ -36,16 +36,13 @@ const HALO = ({ Component, ...rest }) => {
   return (
     <Provider store={store}>
       <AuthProvider> {/* 율비추가 */}
-      <Head>
-        <meta charSet="utf-8" />
-        <title>HALO SNS</title>
-      </Head>
-
-      <Component {...pageProps} />
+        <Head>
+          <meta charSet="utf-8" />
+          <title>HALO SNS</title>
+        </Head>
+        <Component {...pageProps} />
+        <AppContent Component={Component} pageProps={pageProps} /> {/* 윤기추가 */}
       </AuthProvider>
-
-      <AppContent Component={Component} pageProps={pageProps} /> {/* 윤기추가 */}
-
     </Provider>
   );
 };
