@@ -3,18 +3,36 @@ import axios from 'axios';
 import PropTypes from "prop-types";
 
 const FollowButton = ({ toUserId, fromUserId, initialIsFollowing }) => {
-  const [isFollowing, setIsFollowing] = useState(initialIsFollowing); //현재 팔로우상태 초기값
+  const [isFollowing, setIsFollowing] = useState(null); //현재 팔로우상태 초기값
+  const [loading, setLoading] = useState(true); //로딩상태
+
+  useEffect(()=>{
+    const fetchFollowStatus = async () =>{
+      try {
+        const res = await axios.get(`http://localhost:3065/follow/check/${toUserId}`,
+          {withCredentials: true}
+        );
+        setIsFollowing(res.data.isFollowing);
+      }catch(err){
+        console.error("팔로우 상태 확인 실패",err);
+        setIsFollowing(false);
+      }finally{
+        setLoading(false);
+      }
+    };
+    fetchFollowStatus();   
+  },[toUserId]);
 
   const handleFollow = async () => {
     try {
       if (isFollowing) {
-        await axios.delete(`http://localhost:3065/api/following/${toUserId}`);
+        await axios.delete(`http://localhost:3065/follow/following/${toUserId}`);
       } else {
-        await axios.post(`http://localhost:3065/api/follow`, { toUserId });
+        await axios.post(`http://localhost:3065/follow`, { toUserId });
       }
       setIsFollowing(!isFollowing);
     } catch (err) {
-      console.error('팔로우 처리 실패', err);
+      console.error('팔로우 처리 실패', err.response?.data?.message || err.message);
     }
   };
 

@@ -14,9 +14,10 @@ router.use((req, res, next) => {
 // 문의 등록 (C)
 router.post('/', async (req, res, next) => {
   try {
-    const { users_id, title, message } = req.body;
+    const { title, message } = req.body;
+    const users_id = req.user.id;
 
-    if (!users_id || !title || !message) {
+    if (!title || !message) {
       return res.status(400).json({ message: '필수 항목 누락' });
     }
 

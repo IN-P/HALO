@@ -16,7 +16,6 @@ const PostCard = ({ title, content }) => {
       <FollowButton
         toUserId={toUserId}
         fromUserId={fromUserId}
-        initialIsFollowing={isFollowing}
       />
       <p>{content}</p>
     </div>
