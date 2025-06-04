@@ -75,6 +75,7 @@ const Sidebar = () => {
           <SidebarButton icon={<MessageOutlined />}>채팅 (DM)</SidebarButton>
           <SidebarButton icon={<ShopOutlined />}>상점</SidebarButton>
           <SidebarButton icon={<GiftOutlined />}>이벤트</SidebarButton>
+          <SidebarButton icon={<ShopOutlined />}>관리자 문의</SidebarButton> 
         </div>
       </div>
 
