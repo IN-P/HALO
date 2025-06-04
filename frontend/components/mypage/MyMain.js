@@ -18,7 +18,7 @@ const MyMain = () => {
       <div>
         <BulbFilled style={{ color: "orange", fontSize: "20px" }} /> 15
       </div>
-      <div style={{ display: "flex", justifyContent: "center" }}>
+      <div style={{ display: "flex", justifyContent: "center", height: "120px" }}>
         <Card
           style={{
             width: "80px",

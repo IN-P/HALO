@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AppLayout from "../components/AppLayout";
 import MyHeader from "../components/mypage/MyHeader";
 import MyAvatar from "../components/mypage/MyAvatar";
@@ -7,11 +7,21 @@ import MyPost from "../components/mypage/MyPost";
 import MySetting from "../components/mypage/MySetting";
 import { InboxOutlined, NumberOutlined, TagOutlined } from "@ant-design/icons";
 
+
 const mypage = () => {
+  // c
+  useEffect(() => {
+  const removePadding = document.getElementById("mainContents");
+
+  if (removePadding) { removePadding.style.padding = "0"; } }, []);
+
+  // v
   return (
     <AppLayout>
       <div>
-        <MyHeader />
+        <div style={{ display: "flex", justifyContent: "end", padding: "1% 1% 0 0" }}>
+          <MyHeader />
+        </div>
         <div style={{ display: "flex", justifyContent: "center" }}>
           <MyAvatar />
           <div style={{ width: "30px" }} />

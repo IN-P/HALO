@@ -28,10 +28,6 @@ const profile = require("./routes/profile"); //## 준혁
 const notification = require("./routes/notification"); //## 준혁
 const activeLog = require("./routes/active_log"); //## 준혁
 
-const profile = require("./routes/dev_jh/profile"); // ## 준혁 추가
-const notification = require("./routes/dev_jh/notification"); // ## 준혁 추가
-const activeLog = require("./routes/dev_jh/active_log");
-
 
 // .env 적용
 dotenv.config();

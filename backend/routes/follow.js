@@ -29,6 +29,7 @@ router.post('/', async (req, res, next) => {
       from_user_id: fromUserId,
       to_user_id: toUserId,
     });
+
     res.status(201).json(follow);
   } catch (err) {
     console.error(err);
@@ -56,6 +57,7 @@ router.delete('/following/:toUserId', async (req, res, next) => {
     }
 
     await existing.destroy();
+
     res.status(200).json({ message: '팔로우가 취소되었습니다' });
   } catch (err) {
     console.error(err);
