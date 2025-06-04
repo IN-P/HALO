@@ -21,6 +21,11 @@ module.exports = (sequelize,DataTypes)=>{
     parent_id: {
       type: DataTypes.BIGINT,
       allowNull: true,
+    },   
+    is_deleted: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     }    
   },{
     charset:'utf8',
