@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from "react";
 import axios from 'axios';
 import PropTypes from "prop-types";
+import { useAuth } from "../hooks/useAuth";// 전역 로그인 상태 훅
 
-const FollowButton = ({ toUserId, fromUserId, initialIsFollowing }) => {
+const FollowButton = ({ toUserId }) => {
+  const { user: currentUser } = useAuth(); // 현재 로그인 유저 정보
   const [isFollowing, setIsFollowing] = useState(null); //현재 팔로우상태 초기값
   const [loading, setLoading] = useState(true); //로딩상태
 
   useEffect(()=>{
     const fetchFollowStatus = async () =>{
+      if (!currentUser) return;
       try {
         const res = await axios.get(`http://localhost:3065/follow/check/${toUserId}`,
           {withCredentials: true}
@@ -21,14 +24,14 @@ const FollowButton = ({ toUserId, fromUserId, initialIsFollowing }) => {
       }
     };
     fetchFollowStatus();   
-  },[toUserId]);
+  }, [toUserId, currentUser]);
 
   const handleFollow = async () => {
     try {
       if (isFollowing) {
-        await axios.delete(`http://localhost:3065/follow/following/${toUserId}`);
+        await axios.delete(`http://localhost:3065/follow/following/${toUserId}`,{withCredentials: true});
       } else {
-        await axios.post(`http://localhost:3065/follow`, { toUserId });
+        await axios.post(`http://localhost:3065/follow`, { toUserId },{withCredentials: true});
       }
       setIsFollowing(!isFollowing);
     } catch (err) {
@@ -36,7 +39,8 @@ const FollowButton = ({ toUserId, fromUserId, initialIsFollowing }) => {
     }
   };
 
-  if (fromUserId == toUserId) return null;
+  if (!currentUser || currentUser.id === toUserId) return null;
+  if (loading) return <span>로딩 중...</span>;
 
   return (
     <button onClick={handleFollow}>
@@ -47,8 +51,6 @@ const FollowButton = ({ toUserId, fromUserId, initialIsFollowing }) => {
 
 FollowButton.propTypes = {
   toUserId: PropTypes.number.isRequired,
-  fromUserId: PropTypes.number.isRequired,
-  initialIsFollowing: PropTypes.bool,
 };
 
 FollowButton.defaultProps = {
@@ -56,14 +58,3 @@ FollowButton.defaultProps = {
 };
 
 export default FollowButton;
-
-////포스트카드 and user프로필에 추가
-/* 
-import FollowButton from './FollowButton';
-
-<FollowButton
-  toUserId={targetUser.id}
-  fromUserId={loginUser.id}
-  initialIsFollowing={true}
-/>
-*/
