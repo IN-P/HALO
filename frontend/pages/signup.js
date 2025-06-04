@@ -2,12 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useDispatch, useSelector } from 'react-redux';
-import { SIGN_UP_REQUEST } from '../reducers/user_y';
+import { SIGN_UP_REQUEST } from '../reducers/user_YG';
 
 const SignupPage = () => {
   const router = useRouter();
   const dispatch = useDispatch();
-  const { signUpLoading, signUpDone, signUpError } = useSelector((state) => state.user_y);
+  const { signUpLoading, signUpDone, signUpError } = useSelector((state) => state.user_YG);
 
   const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('');

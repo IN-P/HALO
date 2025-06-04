@@ -2,12 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useDispatch, useSelector } from 'react-redux';
-import { LOG_IN_REQUEST } from '../reducers/user_y';
+import { LOG_IN_REQUEST } from '../reducers/user_YG';
 
 const LoginPage = () => {
   const router = useRouter();
   const dispatch = useDispatch();
-  const { logInLoading, logInError, logInDone } = useSelector((state) => state.user_y);
+  const { logInLoading, logInError, logInDone } = useSelector((state) => state.user_YG);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

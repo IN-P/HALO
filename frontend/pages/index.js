@@ -12,7 +12,7 @@ const dummyPosts = [
 
 const Home = () => {
   const router = useRouter();                           // 윤기 추가
-  const { isLogin } = useSelector((state) => state.user_y); // 윤기 추가
+  const { isLogin } = useSelector((state) => state.user_YG); // 윤기 추가
 
   useEffect(() => {
     if (!isLogin) {

@@ -1,4 +1,3 @@
-// sagas/user.js
 import { all, fork, put, takeLatest, call } from 'redux-saga/effects';
 import axios from 'axios';
 import {
@@ -11,7 +10,7 @@ import {
   SIGN_UP_REQUEST,
   SIGN_UP_SUCCESS,
   SIGN_UP_FAILURE,
-} from '../reducers/user_y';
+} from '../reducers/user_YG';
 
 //  로그인
 function loginAPI(data) {
