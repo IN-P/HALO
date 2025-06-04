@@ -27,6 +27,12 @@ const inquiryRouter = require('./routes/inquiry');//## 율비
 const profile = require("./routes/profile"); //## n준혁
 const notification = require("./routes/notification"); //## 준혁
 const activeLog = require("./routes/active_log"); //## 준혁
+const quizRouter = require('./routes/quiz');  //## 경미
+const adminQuizRouter = require('./routes/adminQuiz');  //## 경미 
+const playerDrawRouter = require('./routes/playerDraw');   //## 경미
+const adminPlayerRouter = require('./routes/adminPlayer');   //## 경미
+const weatherRouter = require('./routes/weather'); //## 재원
+const chatRouter = require('./routes/chat') //## 재원
 
 
 // .env 적용
@@ -75,6 +81,12 @@ app.use('/inquiry',inquiryRouter); //## 율비
 app.use("/profile", profile); //## 준혁
 app.use("/notification", notification); //## 준혁
 app.use("/log", activeLog); //## 준혁
+app.use('/event/quizzes', quizRouter);  //## 경미
+app.use('/event/admin', adminQuizRouter);  //## 경미
+app.use('/store/draw', playerDrawRouter);  //## 경미
+app.use('/store/admin', adminPlayerRouter);  //## 경미
+app.use('/api/chat', chatRouter); // 재원
+app.use('/api/weather', weatherRouter); // 재원 날씨
 
 
 app.listen(3065, () => {

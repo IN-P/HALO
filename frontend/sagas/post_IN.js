@@ -4,7 +4,7 @@ import {
   ADD_POST_IN_REQUEST,
   ADD_POST_IN_SUCCESS,
   ADD_POST_IN_FAILURE,
-} from './post_IN';
+} from '../reducers/post_IN';
 
 // 글 작성 API 호출 함수
 function addPostAPI(data) {
