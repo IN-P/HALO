@@ -32,7 +32,7 @@ const adminQuizRouter = require('./routes/adminQuiz');  //## 경미
 const playerDrawRouter = require('./routes/playerDraw');   //## 경미
 const adminPlayerRouter = require('./routes/adminPlayer');   //## 경미
 const weatherRouter = require('./routes/weather'); //## 재원
-const chatRouter = require('./routes/chat') //## 재원
+const chatRouter = require('./routes/chat') //## 재원 
 
 // .env 적용
 dotenv.config();
