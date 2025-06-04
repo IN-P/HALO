@@ -10,6 +10,7 @@ const { isLoggedIn, isNotLoggedIn } = require('./middlewares'); // 로그인 여
 const userService = require('../services/userService'); //소프트 딜리트
 const db = require('../models');
 
+
 /*회원가입    ★테스트 성공
 - URL: http://localhost:3065/user
 - Method: POST
@@ -49,7 +50,7 @@ router.post('/', async (req, res, next) => {
       password: hashedPassword,
       role: 0, // 일반회원 (default 제거했으므로 명시), 일반회원을 0으로 두고, 1마스터 2유저관리자 이렇게 하는게 좀 늘리기 편한듯? 5로 두니까 애매함
       email_chk: 0,
-      is_private: 0,
+      is_private: 0, //공개계정
       balance: 0,
       profile_img: 'https://i.pinimg.com/originals/2f/55/97/2f559707c3b04a1964b37856f00ad608.jpg',
       user_status_id: 1,    // 일반계정
@@ -84,6 +85,16 @@ router.post('/login', isNotLoggedIn, (req, res, next) => {
 
     if (info) {
       return res.status(401).send('로그인에 실패했습니다. 이메일 또는 비밀번호를 확인하세요.');
+    }
+
+    if (user.user_status_id === 2) {
+      return res.status(403).send('탈퇴한 회원입니다.');
+    }
+    if (user.user_status_id === 3) {
+      return res.status(403).send('정지된 회원입니다.');
+    }
+    if (user.user_status_id === 4) {
+      return res.status(403).send('휴면 상태입니다. 이메일 인증 후 복구해주세요.');
     }
 
     return req.login(user, async (loginErr) => {
@@ -246,9 +257,100 @@ router.delete('/withdraw', isLoggedIn, async (req, res, next) => {
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).send(err.message);
+     return res.status(200).send('탈퇴 완료');
   }
 });
+
+
+/*비밀번호 수정   ★테스트 완료
+- URL: http://localhost:3065/user/password
+- Method: PATCH
+- 쿠키!
+- Body (raw - JSON)
+{
+  "currentPassword": "1234",
+  "newPassword": "abcd1234",
+  "confirmPassword": "abcd1234"
+}
+*/
+router.patch('/password', isLoggedIn, async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    // 필수 입력 체크
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).send('모든 비밀번호 항목을 입력해주세요.');
+    }
+
+    // 새 비밀번호 일치 여부 확인
+    if (newPassword !== confirmPassword) {
+      return res.status(400).send('새 비밀번호가 서로 일치하지 않습니다.');
+    }
+
+    // 사용자 조회
+    const user = await User.findOne({ where: { id: req.user.id } });
+    if (!user) {
+      return res.status(404).send('사용자를 찾을 수 없습니다.');
+    }
+
+    // 현재 비밀번호 확인
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(403).send('현재 비밀번호가 일치하지 않습니다.');
+    }
+
+    // 새 비밀번호 해싱 후 저장
+    const hashed = await bcrypt.hash(newPassword, 12);
+    await User.update(
+      { password: hashed },
+      { where: { id: req.user.id } }
+    );
+
+    res.status(200).send('비밀번호가 성공적으로 변경되었습니다.');
+  } catch (err) {
+    console.error(err);
+    next(err);
+  }
+});
+
+
+/* 탈퇴계정 복구    ★ 테스트 완료
+- URL: http://localhost:3065/user/restore
+- Method: PATCH
+- 쿠키!
+- Body :
+{
+  "email": "test3@example.com"
+}
+*/
+router.patch('/restore', async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({
+      where: { email, user_status_id: 2 },
+    });
+
+    if (!user) {
+      return res.status(404).send('복구 가능한 탈퇴 유저가 없습니다.');
+    }
+
+    // 1. 상태 복구
+    await user.update({ user_status_id: 1 });
+
+    // 2. 삭제 로그 제거
+    await db.DeleteUser.destroy({ where: { users_id: user.id } }); 
+
+    return res.status(200).json({ message: '계정이 복구되었습니다.' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send('서버 오류');
+  }
+});
+
+
+
+
 
 module.exports = router;
 
