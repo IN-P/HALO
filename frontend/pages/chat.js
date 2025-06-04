@@ -4,6 +4,7 @@ import AppLayout from '../components/AppLayout';
 import ChatList from '../components/ChatList';
 import SearchModal from '../components/SearchModal';
 import ChatRoom from '../components/ChatRoom'; // ✅ ChatRoom 컴포넌트로 변경
+import axios from 'axios';
 
 import {
   joinRoom,
@@ -38,12 +39,25 @@ const ChatPage = () => {
 
   const chatBoxRef = useRef();
 
-  const userMap = {
-    1: { id: 1, nickname: '덴지', profileImage: '/images/덴지.png' },
-    2: { id: 2, nickname: '마키마', profileImage: '/images/마키마.png' },
-    3: { id: 3, nickname: '파워', profileImage: '/images/파워.png' },
-    4: { id: 4, nickname: '아키', profileImage: '/images/아키.png' },
-  };
+  const [userMap, setUserMap] = useState({});
+
+  useEffect(() => {
+  axios.get('http://localhost:3065/userSearch/all', { withCredentials: true })
+    .then((res) => {
+      const map = {};
+      res.data.forEach(user => {
+        map[user.id] = {
+          id: user.id,
+          nickname: user.nickname,
+          profileImage: user.profile_img,
+        };
+      });
+      setUserMap(map);
+    })
+    .catch((err) => {
+      console.error('❌ 유저 목록 불러오기 실패:', err);
+    });
+}, []);
 
   const roomId = selectedUser ? `chat-${[me, selectedUser.id].sort().join('-')}` : null;
 

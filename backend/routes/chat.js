@@ -340,4 +340,54 @@ router.get('/message/:roomId/unread', isLoggedIn, async (req, res, next) => {
   }
 });
 
+router.get('/my-rooms', isLoggedIn, async (req, res) => {
+  const me = req.user.id;
+
+  try {
+    const rooms = await ChatRoom.findAll({
+      where: {
+        [Op.or]: [
+          { user1_id: me },
+          { user2_id: me }
+        ]
+      }
+    });
+
+    const result = await Promise.all(rooms.map(async (room) => {
+      const partnerId = room.user1_id === me ? room.user2_id : room.user1_id;
+      const partner = await User.findOne({
+        where: { id: partnerId },
+        attributes: ['id', 'nickname', 'profile_img']
+      });
+
+      const lastMsg = await ChatMessage.findOne({
+        where: { rooms_id: room.id },
+        order: [['created_at', 'DESC']],
+      });
+
+      const unreadCount = await ChatMessage.count({
+        where: {
+          rooms_id: room.id,
+          sender_id: { [Op.ne]: me },
+          is_read: false
+        }
+      });
+
+      return {
+        roomId: `chat-${[room.user1_id, room.user2_id].sort().join('-')}`,
+        partner,
+        lastMessage: lastMsg ? lastMsg.content : '',
+        lastMessageTime: lastMsg ? lastMsg.created_at : null,
+        unreadCount
+      };
+    }));
+
+    res.json(result);
+  } catch (err) {
+    console.error('❌ /my-rooms 에러:', err);
+    res.status(500).send('서버 오류');
+  }
+});
+
+
 module.exports = router;

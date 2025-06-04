@@ -32,7 +32,7 @@ const playerDrawRouter = require('./routes/playerDraw');   //## 경미
 const adminPlayerRouter = require('./routes/adminPlayer');   //## 경미
 const weatherRouter = require('./routes/weather'); //## 재원
 const chatRouter = require('./routes/chat') //## 재원
-
+const userSearchRouter = require('./routes/userSearch'); // ## 재원
 
 // .env 적용
 dotenv.config();
@@ -90,6 +90,7 @@ app.use('/store/draw', playerDrawRouter);   //## 경미
 app.use('/store/admin', adminPlayerRouter);   //## 경미
 app.use('/api/chat', chatRouter); //## 재원
 app.use('/api/weather', weatherRouter); //## 재원 날씨
+app.use('/userSearch', userSearchRouter); // 재원 유저검색
 
 module.exports = app;
 
