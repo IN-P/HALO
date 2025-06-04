@@ -2,7 +2,7 @@
 import { createStore, combineReducers, applyMiddleware } from 'redux'; // applyMiddleware 임포트
 import { composeWithDevTools } from 'redux-devtools-extension';
 import createSagaMiddleware from 'redux-saga'; // redux-saga 임포트
-import chatReducer from '../reducers/chatReducer';
+import chatReducer from '../reducers/chatReducer_JW';
 import rootSaga from '../sagas'; // rootSaga 임포트 (위에서 새로 만든 파일)
 
 // 루트 리듀서 생성

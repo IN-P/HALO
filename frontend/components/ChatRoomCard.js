@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
-import { setShowNewMsgAlert } from '../reducers/chatReducer';
+import { setShowNewMsgAlert } from '../reducers/chatReducer_JW';
 
 const ChatRoomCard = ({
   me,

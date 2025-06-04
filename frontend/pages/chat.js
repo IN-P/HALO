@@ -9,7 +9,7 @@ import {
   joinRoom,
   exitRoom,
   sendMessage as sendMsg
-} from '../sagas/chatSaga';
+} from '../sagas/chatSaga_JW';
 
 import {
   setSelectedUser,
@@ -19,7 +19,7 @@ import {
   setSearchTerm,
   toggleSearchModal,
   setShowNewMsgAlert
-} from '../reducers/chatReducer';
+} from '../reducers/chatReducer_JW';
 
 import socket from '../socket';
 
