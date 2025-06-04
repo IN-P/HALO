@@ -1,27 +1,36 @@
-// store.js (수정)
-import { createStore, combineReducers, applyMiddleware } from 'redux'; // applyMiddleware 임포트
+import { createStore, applyMiddleware, compose, combineReducers } from 'redux';
+import createSagaMiddleware from 'redux-saga';
 import { composeWithDevTools } from 'redux-devtools-extension';
-import createSagaMiddleware from 'redux-saga'; // redux-saga 임포트
-import chatReducer from '../reducers/chatReducer_JW';
-import rootSaga from '../sagas'; // rootSaga 임포트 (위에서 새로 만든 파일)
+import { createWrapper } from 'next-redux-wrapper';
+import rootSaga from '../sagas';
+import post_IN from '../reducers/post_IN'; // 인
+import user_YG from '../reducers/user_YG'; // 윤기
+import chatReducer from '../reducers/chatReducer_JW'; // 재원
 
-// 루트 리듀서 생성
 const rootReducer = combineReducers({
-  chat: chatReducer,
+  post_IN, // 인
+  user_YG, // 윤기
+  chat: chatReducer, // 재원
+  // 다른 리듀서들 추가 가능
 });
 
-// Redux Saga 미들웨어 생성
-const sagaMiddleware = createSagaMiddleware();
+const configureStore = () => {
+  const sagaMiddleware = createSagaMiddleware();
+  const middlewares = [sagaMiddleware];
 
-// Redux devtools와 Saga 미들웨어를 함께 적용한 store 생성
-const store = createStore(
-  rootReducer,
-  composeWithDevTools(
-    applyMiddleware(sagaMiddleware) // <-- 여기에 Saga 미들웨어 적용
-  )
-);
+  const enhancer =
+    process.env.NODE_ENV === 'production'
+      ? compose(applyMiddleware(...middlewares))
+      : composeWithDevTools(applyMiddleware(...middlewares));
 
-// Saga 미들웨어 실행
-sagaMiddleware.run(rootSaga); // <-- 여기가 가장 중요해!
+  const store = createStore(rootReducer, enhancer);
 
-export default store;
+  store.sagaTask = sagaMiddleware.run(rootSaga);
+
+  return store;
+};
+
+export const wrapper = createWrapper(configureStore, {
+  debug: process.env.NODE_ENV === 'development',
+});
+export default wrapper; 

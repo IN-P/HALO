@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import useDebounce from './useDebounce'; 
 
-const useSearch = (dataToSearch, searchKey, delay = 300) => {
-  const [searchTerm, setSearchTerm] = useState('');
+const useSearch = (initialSearchTerm, dataToSearch, searchKey, delay = 300) => {
+  const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const debouncedSearchTerm = useDebounce(searchTerm, delay); 
   const [filteredData, setFilteredData] = useState([]);
 
