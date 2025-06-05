@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'; //## 윤기추가 useEffect 여따가 박음
 import AppLayout from '../components/AppLayout';
+import MainFeed from '../components/MainFeed';
 import PostCard from '../components/PostCard';
 import { useSelector } from 'react-redux'; // 윤기 추가
 import { useRouter } from 'next/router';   // 윤기 추가
@@ -41,12 +42,7 @@ const Home = () => {
             }}
           />
 
-          {/* 포스트 카드 리스트 */}
-          {dummyPosts
-            .filter((post) => post.title.includes(search) || post.content.includes(search))
-            .map((post) => (
-              <PostCard key={post.id} title={post.title} content={post.content} />
-            ))}
+          <MainFeed search={search} />
         </div>
       </div>
     </AppLayout>
