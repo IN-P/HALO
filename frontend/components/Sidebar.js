@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import { Button } from 'antd';
+import Link from 'next/link';
 import {
   HomeOutlined,
   EditOutlined,
@@ -72,18 +73,17 @@ const Sidebar = () => {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <SidebarButton icon={<HomeOutlined />}>홈</SidebarButton>
+          <Link href="/" passHref>
+            <SidebarButton icon={<HomeOutlined />}>홈</SidebarButton>
+          </Link>
           <SidebarButton icon={<AppstoreOutlined />}>메뉴</SidebarButton>
-          <SidebarButton icon={<EditOutlined /> } onClick={() => router.push('/new_post')}>
-            게시물 작성
-          </SidebarButton>
+          <Link href="/new_post" passHref>
+            <SidebarButton icon={<EditOutlined />}>게시물 작성</SidebarButton>
+          </Link>
           <SidebarButton icon={<BellOutlined />}>알림</SidebarButton>
-          <SidebarButton
-            icon={<MessageOutlined />}
-            onClick={() => router.push('/chat')}
-          >
-            채팅 (DM)
-          </SidebarButton>
+          <Link href="/chat" passHref>
+            <SidebarButton icon={<MessageOutlined />}>채팅 (DM)</SidebarButton>
+          </Link>
           <SidebarButton icon={<ShopOutlined />}>상점</SidebarButton>
           <SidebarButton icon={<GiftOutlined />}>이벤트</SidebarButton>
           <SidebarButton icon={<ShopOutlined />}>문의</SidebarButton> {/*조율비 추가*/}
