@@ -3,7 +3,9 @@ import axios from 'axios';
 import {
   LOAD_POSTS_REQUEST, LOAD_POSTS_SUCCESS, LOAD_POSTS_FAILURE,
   ADD_POST_REQUEST, ADD_POST_SUCCESS, ADD_POST_FAILURE,
-  UPLOAD_IMAGES_REQUEST, UPLOAD_IMAGES_SUCCESS, UPLOAD_IMAGES_FAILURE
+  UPLOAD_IMAGES_REQUEST, UPLOAD_IMAGES_SUCCESS, UPLOAD_IMAGES_FAILURE,
+  LIKE_POST_REQUEST, LIKE_POST_SUCCESS, LIKE_POST_FAILURE,
+  UNLIKE_POST_REQUEST, UNLIKE_POST_SUCCESS, UNLIKE_POST_FAILURE,
 } from '../reducers/post_IN';
 
 // API 호출 함수
@@ -36,7 +38,7 @@ function* addPost(action) {
     const result = yield call(addPostAPI, action.data);
     yield put({ type: ADD_POST_SUCCESS, data: result.data });
   } catch (error) {
-    yield put({ type: ADD_POST_FAILURE, error: error.response.data });
+    yield put({ type: ADD_POST_FAILURE, error: error.response?.data || error.message, });
   }
 }
 
@@ -45,7 +47,31 @@ function* uploadImages(action) {
     const result = yield call(uploadImagesAPI, action.data);
     yield put({ type: UPLOAD_IMAGES_SUCCESS, data: result.data });
   } catch (error) {
-    yield put({ type: UPLOAD_IMAGES_FAILURE, error: error.response.data });
+    yield put({ type: UPLOAD_IMAGES_FAILURE, error: error.response?.data || error.message, });
+  }
+}
+
+function likePostAPI(postId) {
+  return axios.patch(`http://localhost:3065/post/${postId}/like`, {}, { withCredentials: true });
+}
+function* likePost(action) {
+  try {
+    const result = yield call(likePostAPI, action.data);
+    yield put({ type: LIKE_POST_SUCCESS, data: result.data });
+  } catch (error) {
+    yield put({ type: LIKE_POST_FAILURE, error: error.response?.data || error.message, });
+  }
+}
+
+function unlikePostAPI(postId) {
+  return axios.delete(`http://localhost:3065/post/${postId}/like`, { withCredentials: true });
+}
+function* unlikePost(action) {
+  try {
+    const result = yield call(unlikePostAPI, action.data);
+    yield put({ type: UNLIKE_POST_SUCCESS, data: result.data });
+  } catch (error) {
+    yield put({ type: UNLIKE_POST_FAILURE, error: error.response?.data || error.message, });
   }
 }
 
@@ -62,11 +88,20 @@ function* watchUploadImages() {
   yield takeLatest(UPLOAD_IMAGES_REQUEST, uploadImages);
 }
 
+function* watchLikePost() {
+  yield takeLatest(LIKE_POST_REQUEST, likePost);
+}
+function* watchUnlikePost() {
+  yield takeLatest(UNLIKE_POST_REQUEST, unlikePost);
+}
+
 // 최상위 Saga
 export default function* postINSaga() {
   yield all([
     fork(watchLoadPosts),
     fork(watchAddPost),
     fork(watchUploadImages),
+    fork(watchLikePost),
+    fork(watchUnlikePost),
   ]);
 }

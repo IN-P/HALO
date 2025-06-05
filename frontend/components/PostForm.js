@@ -2,15 +2,18 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Form, Input, Button, Switch, message } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
-  ADD_POST_REQUEST, 
+  ADD_POST_REQUEST, ADD_POST_RESET, 
   UPLOAD_IMAGES_REQUEST, 
-  REMOVE_IMAGE 
+  REMOVE_IMAGE,
+
 } from '../reducers/post_IN';
+import { useRouter } from 'next/router';
 
 const PostForm = () => {
   const dispatch = useDispatch();
   const { imagePaths, addPostLoading, addPostDone, uploadImagesLoading } = useSelector(state => state.post_IN);
-  
+  const router = useRouter();
+
   const imageInput = useRef();
   const [content, setContent] = useState('');
   const [isPublic, setIsPublic] = useState(true);
@@ -26,6 +29,8 @@ const PostForm = () => {
     if (addPostDone) {
       message.success('게시글이 성공적으로 등록되었습니다!');
       setContent('');
+      dispatch({ type: ADD_POST_RESET });
+      router.push('/');
     }
   }, [addPostDone]);
 
