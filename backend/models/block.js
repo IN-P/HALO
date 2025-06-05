@@ -10,9 +10,11 @@ module.exports = (sequelize,DataTypes) =>{
       allowNull:false,
     },
   },{
+
     charset: 'utf8mb4',
     collate: 'utf8mb4_general_ci',       
     tableName:'block',
+
     indexes:[
       {
         unique:true,
@@ -20,6 +22,7 @@ module.exports = (sequelize,DataTypes) =>{
       },
     ],
   });
+
 
   Block.associate = (db) =>{
     db.Block.belongsTo(db.User,{

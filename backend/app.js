@@ -15,6 +15,7 @@ const initMyTeam = require('./utils/init/initMyTeam'); // ##윤기 추가
 const initSocials = require('./utils/init/initSocials') //##윤기 추가
 require('./utils/scheduler/autoDeleteScheduler')(); //## 윤기추가 - 계정 삭제 스케줄려
 require('./utils/scheduler/autoDormantScheduler')(); //## 윤기 추가 - 휴면 전환 스케줄러
+const path = require('path'); //## 인
 const postRouter = require('./routes/post'); //## 인
 const postsRouter = require('./routes/posts'); //## 인
 const hashtagRouter = require('./routes/hashtag'); //## 인
@@ -23,7 +24,7 @@ const followRouter = require('./routes/follow');//## 율비
 const blockRouter = require('./routes/block');//## 율비
 const reportRouter = require('./routes/report');//## 율비
 const inquiryRouter = require('./routes/inquiry');//## 율비
-const profile = require("./routes/profile"); //## 준혁
+const profile = require("./routes/profile"); //## n준혁
 const notification = require("./routes/notification"); //## 준혁
 const activeLog = require("./routes/active_log"); //## 준혁
 const quizRouter = require('./routes/quiz');  //## 경미
@@ -71,6 +72,7 @@ db.sequelize.sync()
   .catch(console.error); //## 윤기 추가
 
 // 라우터 연결 (나중에 추가 예정)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); //## 인
 app.use('/user', userRouter); //## 윤기
 app.use('/post', postRouter); //## 인
 app.use('/posts', postsRouter); //## 인
@@ -93,5 +95,4 @@ app.use('/api/weather', weatherRouter); //## 재원 날씨
 app.use('/userSearch', userSearchRouter); // 재원 유저검색
 
 module.exports = app;
-
 
