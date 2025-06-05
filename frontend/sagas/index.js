@@ -1,15 +1,16 @@
 import { all, fork } from 'redux-saga/effects';
-import axios from 'axios';
-
-import post_IN from './post_IN';
-import mypage_jh from './mypage_jh';
-
-axios.defaults.baseURL = 'http://localhost:3065';  // 기본요청 url 설정
-axios.defaults.withCredentials = true; 
+import post_IN from './post_IN'; //인
+import comment_IN from './comment_IN'; //인
+import user_YG from './user_YG'; //윤기
+import chatSaga from './chatSaga_JW'; //재원
+import profile_jh from './profile_jh';
 
 export default function* rootSaga() {
   yield all([
-    fork(post_IN),
-    fork(mypage_jh),
+    fork(post_IN), //인
+    fork(comment_IN), //인
+    fork(user_YG), //윤기
+    fork(profile_jh),
+    chatSaga(), //재원
   ]);
 }

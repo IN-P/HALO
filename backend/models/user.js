@@ -1,10 +1,13 @@
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define('User', {
+
+
     id: {
       type: DataTypes.BIGINT, 
       autoIncrement: true,
       primaryKey: true,
     },
+
     email: {
       type: DataTypes.STRING(100),
       allowNull: false,
@@ -136,6 +139,5 @@ module.exports = (sequelize, DataTypes) => {
     
   
   };
-
   return User;
 };

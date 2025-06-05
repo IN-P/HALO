@@ -1,17 +1,21 @@
 import React from "react";
 import { SettingFilled, ShareAltOutlined, CrownFilled, } from "@ant-design/icons";
-import { useLocation, useNavigate } from "react-router-dom";
 import { useRouter } from "next/router";
 
-const MyHeader = () => {
-  // c
- const router = useRouter();
+const MyHeader = ({ data }) => {
+  const router = useRouter();
 
   const handleSettingClick = () => {
-    if (router.pathname === "/mypage") {
+    if (router.pathname === "/profile/[nickname]") {
+      // 프로필 페이지 → 세팅 페이지로 이동
       router.push("/myset");
-    } else {
-      router.push("/mypage");
+    } else if (router.pathname === "/myset") {
+      // 세팅 페이지 → 프로필 페이지로 이동
+      if (data?.nickname) {
+        router.push(`/profile/${data.nickname}`);
+      } else {
+        alert("닉네임 정보가 없습니다.");
+      }
     }
   };
   

@@ -2,6 +2,7 @@ import React, { useCallback } from "react";
 import styled from "styled-components";
 import { InfoCircleOutlined, UserOutlined } from '@ant-design/icons';
 import { Input, Tooltip, Button } from 'antd';
+import { useRouter } from "next/router";
 
 const StyledBar = styled.div`
   height: 8vh;
@@ -41,18 +42,15 @@ const SuccessMessage = styled.div`
   color: #0DDB39;
 `;
 
-const MySettingEditForm = () => {
+const MySettingEditForm = ({ data }) => {
   // c
-  // const [editOpen, setEditOpen] = useState(false);
-  // const onClickEdit = useCallback(()=> {
-  //   setClickEdit((prev) => !prev);
-  // }, []);
+  const router = useRouter();
 
 
   // v
   return (
     <div>
-      <StyledBar >김준혁</StyledBar>
+      <StyledBar></StyledBar>
         <StyledEditBar>
           <div>
             <p style={{fontSize:"18px", fontWeight:"bold"}}>사용자 이름 변경</p>

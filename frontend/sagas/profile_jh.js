@@ -3,7 +3,7 @@ import axios from 'axios';
 
 import {
   LOAD_USER_INFO_REQUEST, LOAD_USER_INFO_SUCCESS, LOAD_USER_INFO_FAILURE,
-} from "../reducers/mypage_jh";
+} from "../reducers/profile_jh";
 
 function loadUserInfoAPI(data) {
   return axios.get(`/profile/${data}`);
@@ -12,6 +12,7 @@ function loadUserInfoAPI(data) {
 function* loadUserInfo(action) {
   try {
     const result = yield call(loadUserInfoAPI, action.data);
+    console.log("result.data:", result.data);
     yield put({
       type: LOAD_USER_INFO_SUCCESS,
       data: result.data,
@@ -29,7 +30,7 @@ function* watchLoadUserInfo() {
   yield takeLatest(LOAD_USER_INFO_REQUEST, loadUserInfo);
 }
 
-export default function* mypage_jh() {
+export default function* profile_jh() {
   yield all([
     fork(watchLoadUserInfo),
   ]);

@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; //## 윤기추가 useEffect 여따가 박음
 import AppLayout from '../components/AppLayout';
+import MainFeed from '../components/MainFeed';
 import PostCard from '../components/PostCard';
+import { useSelector } from 'react-redux'; // 윤기 추가
+import { useRouter } from 'next/router';   // 윤기 추가
 
 const dummyPosts = [
   { id: 1, title: '첫 번째 게시물', content: '내용입니다.' },
@@ -8,6 +11,15 @@ const dummyPosts = [
 ];
 
 const Home = () => {
+  const router = useRouter();                                 // 윤기 추가
+  const { isLogin, loadMyInfoLoading } = useSelector((state) => state.user_YG); // 윤기 수정 (리듀서 이름 변경)
+
+  useEffect(() => {
+    if (!loadMyInfoLoading && !isLogin) {                     // 윤기 수정 : 세션 상태 확인 후 리다이렉트
+      router.replace('/login');                               // 윤기 추가
+    }
+  }, [isLogin, loadMyInfoLoading]);                           // 윤기 수정
+
   const [search, setSearch] = useState('');
 
   return (
@@ -30,12 +42,7 @@ const Home = () => {
             }}
           />
 
-          {/* 포스트 카드 리스트 */}
-          {dummyPosts
-            .filter((post) => post.title.includes(search) || post.content.includes(search))
-            .map((post) => (
-              <PostCard key={post.id} title={post.title} content={post.content} />
-            ))}
+          <MainFeed search={search} />
         </div>
       </div>
     </AppLayout>

@@ -19,20 +19,21 @@ router.get("/:nickname", async (req, res, next) => {
 
     const fullUser = await User.findOne({
     where: { id: userId },
-    attributes: ["nickname", "profile_img", "theme_mode", "is_private", "myteam_id"],
+    attributes: ["nickname", "profile_img", "theme_mode", "is_private", "myteam_id", "role"],
     include: [
       { model: UserInfo },
       { model: Post },
       { model: Follow, as: 'Followings', include: [
-        { model: User, as: 'Following', attributes: ['id', 'nickname', 'profile_img'], },
+        { model: User, as: 'Followings', attributes: ['id', 'nickname', 'profile_img'], },
       ], },
       { model: Follow, as: 'Followers', include: [
-        { model: User, as: 'Follower', attributes: ['id', 'nickname', 'profile_img'], },
+        { model: User, as: 'Followers', attributes: ['id', 'nickname', 'profile_img'], },
       ], },
+      { model: Post, as: 'BookmarkedPosts', attributes: ['id', 'content', 'createdAt'], through: { attributes: [] }, },
       { model: Achievement, attributes: ['id', 'name', 'description'], through: { attributes: ['createdAt', 'updatedAt'], }, },
       { model: Badge, attributes: ['id', 'name', 'description'], through: { attributes: ['createdAt', 'updatedAt'], }, },
       { model: Myteam, attributes: ['id', 'teamname', 'teamcolor', 'region'], },
-
+      
       // 민감한 정보
       { model: UserPoint },
       { model: UserPayment },

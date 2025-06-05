@@ -1,22 +1,29 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
-import 'antd/dist/antd.css'; // 공통 CSS
+import 'antd/dist/antd.css';
 import Head from 'next/head';
-import { Provider } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import wrapper from '../store/configureStore';
 
-const HALO = ({ Component, ...rest }) => {
-  const { store, props } = wrapper.useWrappedStore(rest);
-  const { pageProps } = props;
+import { AuthProvider } from '../hooks/useAuth'; // 율비 추가
+import { LOAD_MY_INFO_REQUEST } from '../reducers/user_YG'; // 윤기
+import '../utils/axiosConfig'; // axios 설정
+
+const HALO = ({ Component, pageProps }) => {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch({ type: LOAD_MY_INFO_REQUEST });
+  }, [dispatch]);
 
   return (
-    <Provider store={store}>
+    <AuthProvider>
       <Head>
         <meta charSet="utf-8" />
         <title>HALO SNS</title>
       </Head>
       <Component {...pageProps} />
-    </Provider>
+    </AuthProvider>
   );
 };
 
@@ -25,4 +32,4 @@ HALO.propTypes = {
   pageProps: PropTypes.any.isRequired,
 };
 
-export default HALO;
+export default wrapper.withRedux(HALO); 
