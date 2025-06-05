@@ -89,6 +89,15 @@ const LoginPage = () => {
             계정복구
           </span>
         </p>
+          <p className="recovery">
+          비밀번호를 잊으셨나요?{' '}
+          <span
+            className="link"
+            onClick={() => window.open('/reset-password-popup', '비밀번호 재발급', 'width=500,height=600')}
+          >
+            비밀번호 재발급
+          </span>
+      </p>
       </div>
       <style jsx>{`
         .container {
