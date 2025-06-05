@@ -24,6 +24,14 @@ export const initialState = {
   unlikePostLoading: false,
   unlikePostDone: false,
   unlikePostError: null,
+
+  removePostLoading: false,
+  removePostDone: false,
+  removePostError: null,
+  
+  editPostLoading: false,
+  editPostDone: false,
+  editPostError: null,
 };
 
 // 액션 타입
@@ -47,6 +55,14 @@ export const LIKE_POST_FAILURE = 'LIKE_POST_FAILURE';
 export const UNLIKE_POST_REQUEST = 'UNLIKE_POST_REQUEST';
 export const UNLIKE_POST_SUCCESS = 'UNLIKE_POST_SUCCESS';
 export const UNLIKE_POST_FAILURE = 'UNLIKE_POST_FAILURE';
+
+export const REMOVE_POST_REQUEST = 'REMOVE_POST_REQUEST';
+export const REMOVE_POST_SUCCESS = 'REMOVE_POST_SUCCESS';
+export const REMOVE_POST_FAILURE = 'REMOVE_POST_FAILURE';
+
+export const EDIT_POST_REQUEST = 'EDIT_POST_REQUEST';
+export const EDIT_POST_SUCCESS = 'EDIT_POST_SUCCESS';
+export const EDIT_POST_FAILURE = 'EDIT_POST_FAILURE';
 
 export const REMOVE_IMAGE = 'REMOVE_IMAGE';
 
@@ -142,6 +158,38 @@ const postINReducer = (state = initialState, action) =>
       case UNLIKE_POST_FAILURE:
         draft.unlikePostLoading = false;
         draft.unlikePostError = action.error;
+        break;
+
+      case REMOVE_POST_REQUEST:
+        draft.removePostLoading = true;
+        draft.removePostError = null;
+        draft.removePostDone = false;
+        break;
+      case REMOVE_POST_SUCCESS:
+        draft.removePostLoading = false;
+        draft.removePostDone = true;
+        draft.mainPosts = draft.mainPosts.filter((v) => v.id !== action.data.PostId);
+        break;
+      case REMOVE_POST_FAILURE:
+        draft.removePostLoading = false;
+        draft.removePostError = action.error;
+        break;
+
+      case EDIT_POST_REQUEST:
+        draft.editPostLoading = true;
+        draft.editPostError = null;
+        draft.editPostDone = false;
+        break;
+      case EDIT_POST_SUCCESS: {
+        draft.editPostLoading = false;
+        draft.editPostDone = true;
+        const post = draft.mainPosts.find((v) => v.id === action.data.PostId);
+        if (post) post.content = action.data.content;
+        break;
+      }
+      case EDIT_POST_FAILURE:
+        draft.editPostLoading = false;
+        draft.editPostError = action.error;
         break;
 
       case REMOVE_IMAGE:
