@@ -47,15 +47,10 @@ router.post('/', isLoggedIn, async (req, res, next) => {
       await post.addHashtags(result.map((v) => v[0]));
     }
 
-    if (req.body.image) {
-      if (Array.isArray(req.body.image)) {
-        const images = await Promise.all(
-          req.body.image.map((src) => Image.create({ src }))
-        );
-        await post.addImages(images);
-      } else {
-        const image = await Image.create({ src: req.body.image });
-        await post.addImages(image);
+    if (req.body.images) {
+      const images = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
+      for (const src of images) {
+        await Image.create({ src, post_id: post.id });
       }
     }
 

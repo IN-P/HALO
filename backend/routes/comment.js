@@ -50,7 +50,18 @@ router.post('/:commentId/reply', isLoggedIn, async (req, res, next) => {
       depth: a.depth + 1,
     }));
     paths.push({ upper_id: parent.id, lower_id: reply.id, depth: 1 });
-    await CommentPath.bulkCreate(paths);
+
+    const keySet = new Set();
+    const uniquePaths = [];
+    for (const row of paths) {
+      const key = `${row.upper_id}-${row.lower_id}`;
+      if (!keySet.has(key)) {
+        uniquePaths.push(row);
+        keySet.add(key);
+      }
+    }    
+    
+    await CommentPath.bulkCreate(uniquePaths);
 
     res.status(201).json(reply);
   } catch (error) {

@@ -8,7 +8,7 @@ router.get('/', async (req, res, next) => {
   try {
     const where = {};
     if (parseInt(req.query.lastId, 10)) {
-      where.id = { [Op.lt]: parseInt(req.query.lastId, 10) }; // lastId보다 작은 게시글 10개
+      where.id = { [Op.lt]: parseInt(req.query.lastId, 10) }; // lastId보다 작은 게시글만
     }
 
     const posts = await Post.findAll({
@@ -16,12 +16,12 @@ router.get('/', async (req, res, next) => {
       limit: 10,
       order: [
         ['createdAt', 'DESC'],
-        [Comment, 'createdAt', 'DESC'], // 댓글 최신순
+        [Comment, 'createdAt', 'DESC'],
       ],
       include: [
         {
           model: User,
-          attributes: ['id', 'nickname', 'profile_img'], // 작성자 정보
+          attributes: ['id', 'nickname', 'profile_img'],
         },
         {
           model: Image,
@@ -36,7 +36,7 @@ router.get('/', async (req, res, next) => {
           ],
         },
         {
-          model: User, // 좋아요 누른 사람
+          model: User,
           as: 'Likers',
           attributes: ['id'],
         },
@@ -56,7 +56,11 @@ router.get('/', async (req, res, next) => {
       ],
     });
 
-    res.status(200).json(posts);
+    // 무한스크롤을 위해 10개 채웠으면 hasMorePosts true, 아니면 false
+    res.status(200).json({
+      posts,
+      hasMorePosts: posts.length === 10,
+    });
   } catch (error) {
     console.error(error);
     next(error);
