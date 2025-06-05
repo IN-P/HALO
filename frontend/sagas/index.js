@@ -3,7 +3,11 @@ import post_IN from './post_IN'; //인
 import comment_IN from './comment_IN'; //인
 import user_YG from './user_YG'; //윤기
 import chatSaga from './chatSaga_JW'; //재원
+<<<<<<< HEAD
+import profile_jh from './profile_jh';
+=======
 import bookmark_IN from './bookmark_IN';
+>>>>>>> d65074a5460ee92aada6e8c32f1c3216247301ac
 
 export default function* rootSaga() {
   yield all([
@@ -11,6 +15,7 @@ export default function* rootSaga() {
     fork(comment_IN), //인
     fork(bookmark_IN), //인
     fork(user_YG), //윤기
+    fork(profile_jh),
     chatSaga(), //재원
   ]);
 }
