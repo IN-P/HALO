@@ -38,6 +38,8 @@ const chatRouter = require('./routes/chat') //## 재원
 // .env 적용
 dotenv.config();
 
+app.use('/img', express.static(path.join(__dirname, 'uploads'))); //##윤기 추가
+
 // 미들웨어
 app.use(morgan('dev'));
 app.use(cors({                      //## 윤기

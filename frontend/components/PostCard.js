@@ -57,9 +57,9 @@ const PostCard = ({ post }) => {
         {/* 작성자 정보 + 메뉴 */}
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
           <img
-            src={post.User?.profile_img
-              ? `http://localhost:3065/${post.User.profile_img}`
-              : '/default_profile.png'}
+  src={post.User?.profile_img
+    ? `http://localhost:3065${post.User.profile_img}`
+    : 'http://localhost:3065/img/profile/default.jpg'}
             alt="프로필"
             style={{ width: 50, height: 50, borderRadius: '50%', objectFit: 'cover', marginRight: 14, border: '2px solid #bbb' }}
           />
