@@ -5,12 +5,15 @@ import { Card } from "antd";
 
 const MyMain = () => {
   // c
+  const { user } = useSelector((state) => state.user || {});
 
+  const nickname = user?.nickname;
   //
   return (
     <div>
       <div style={{ paddingBottom: "10px" }}>
-        <span style={{ fontSize: "22px", fontWeight: "bold" }}>MYNAME</span>
+        <span style={{ fontSize: "22px", fontWeight: "bold" }}
+        title={nickname}></span>
         <span style={{ fontSIze: "16px", color: "#9F9F9F" }}>
           &nbsp;최고 관리자
         </span>
