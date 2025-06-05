@@ -4,6 +4,9 @@ import { LIKE_POST_REQUEST, UNLIKE_POST_REQUEST } from '../reducers/post_IN';
 import Comment from './Comment';
 import { FaHeart, FaRegHeart, FaRegComment, FaRegPaperPlane, FaRegBookmark, FaEllipsisH } from 'react-icons/fa';
 
+import FollowButton from '../components/FollowButton'
+
+
 const PostCard = ({ post }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user_YG);
@@ -69,7 +72,20 @@ const PostCard = ({ post }) => {
               {minutesAgo < 1 ? '방금 전' : `${minutesAgo}분 전`}
             </div>
           </div>
-          <div style={{ marginLeft: 'auto', position: 'relative' }}>
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>{/*율비 변경*/}
+            {post.User?.id &&
+              user?.id !== post.User.id && (
+                <>
+                  {console.log('FollowButton 디버깅:', {
+                    currentUserId: user?.id,
+                    postUserId: post.User.id,
+                    nickname: post.User.nickname,
+                    typeofPostUserId: typeof post.User.id,
+                  })}
+                  <FollowButton toUserId={Number(post.User.id)} />
+                </>
+              )}
+            {/*율비 추가 */}
             <button style={menuBtnStyle}><FaEllipsisH /></button>
             {/* isMine ? (수정/삭제) : (신고) 메뉴 처리 필요시 추가 */}
           </div>

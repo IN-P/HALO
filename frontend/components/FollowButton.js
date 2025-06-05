@@ -1,60 +1,56 @@
-import React, { useState, useEffect } from "react";
-import axios from 'axios';
+import React from "react";
 import PropTypes from "prop-types";
-import { useAuth } from "../hooks/useAuth";// 전역 로그인 상태 훅
+import { useSelector, useDispatch } from "react-redux";
+import { FOLLOW_REQUEST, UNFOLLOW_REQUEST } from "../reducers/follow_YB";
+import { useAuth } from "../hooks/useAuth";
 
 const FollowButton = ({ toUserId }) => {
-  const { user: currentUser } = useAuth(); // 현재 로그인 유저 정보
-  const [isFollowing, setIsFollowing] = useState(null); //현재 팔로우상태 초기값
-  const [loading, setLoading] = useState(true); //로딩상태
+  const dispatch = useDispatch();
+  const { user: currentUser , loading } = useAuth(); // 로그인 유저
 
-  useEffect(()=>{
-    const fetchFollowStatus = async () =>{
-      if (!currentUser) return;
-      try {
-        const res = await axios.get(`http://localhost:3065/follow/check/${toUserId}`,
-          {withCredentials: true}
-        );
-        setIsFollowing(res.data.isFollowing);
-      }catch(err){
-        console.error("팔로우 상태 확인 실패",err);
-        setIsFollowing(false);
-      }finally{
-        setLoading(false);
-      }
-    };
-    fetchFollowStatus();   
-  }, [toUserId, currentUser]);
+  if (loading) {
+    return null; // 로그인 정보 로딩 중이면 아무것도 렌더링하지 않음
+  }
 
-  const handleFollow = async () => {
-    try {
-      if (isFollowing) {
-        await axios.delete(`http://localhost:3065/follow/following/${toUserId}`,{withCredentials: true});
-      } else {
-        await axios.post(`http://localhost:3065/follow`, { toUserId },{withCredentials: true});
-      }
-      setIsFollowing(!isFollowing);
-    } catch (err) {
-      console.error('팔로우 처리 실패', err.response?.data?.message || err.message);
+  if (!currentUser || currentUser.id === toUserId) {
+    console.log("🚫 자기 자신의 글이거나 로그인 안됨");
+    return null;
+  }
+
+  const followState = useSelector((state) => state.follow_YB || {
+    followingList: [],
+    followLoading: false,
+  });
+
+  // 🔍 follow_YB 상태가 아직 초기화 안 됐을 경우
+  if (!followState) {
+    console.warn("⚠️ follow_YB 상태가 아직 Redux에 초기화되지 않았습니다.");
+    return null;
+  }
+
+  const { followingList, followLoading } = followState;
+  const isFollowing = followingList.includes(toUserId);
+
+  const handleClick = () => {
+     console.log("📤 toUserId 전송:", toUserId); // ✅ 이 줄 추가
+    if (isFollowing) {
+      dispatch({ type: UNFOLLOW_REQUEST, data: toUserId });
+    } else {
+      dispatch({ type: FOLLOW_REQUEST, data: toUserId });
     }
   };
 
-  if (!currentUser || currentUser.id === toUserId) return null;
-  if (loading) return <span>로딩 중...</span>;
+  console.log("✅ FollowButton 렌더링 완료");
 
   return (
-    <button onClick={handleFollow}>
-      {isFollowing ? '언팔로우' : '팔로우'}
+    <button onClick={handleClick} disabled={followLoading} >
+      {isFollowing ? "언팔로우" : "팔로우"}
     </button>
   );
 };
 
 FollowButton.propTypes = {
   toUserId: PropTypes.number.isRequired,
-};
-
-FollowButton.defaultProps = {
-  initialIsFollowing: false,
 };
 
 export default FollowButton;
