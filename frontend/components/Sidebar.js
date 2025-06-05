@@ -12,6 +12,8 @@ import {
   ShopOutlined,
   GiftOutlined
 } from '@ant-design/icons';
+import { useDispatch } from 'react-redux'; //  윤기 추가: 로그아웃 위해 dispatch 사용
+import { LOG_OUT_REQUEST } from '../reducers/user_YG'; //  윤기 추가: 로그아웃 액션
 
 // 재사용 가능한 버튼 컴포넌트
 const SidebarButton = ({ icon, children, onClick }) => {
@@ -49,7 +51,7 @@ const SidebarButton = ({ icon, children, onClick }) => {
 
 const Sidebar = () => {
   const router = useRouter();
-
+  const dispatch = useDispatch(); //  윤기 추가: 로그아웃 디스패치
   return (
     <div style={{
       width: 240,
@@ -93,7 +95,7 @@ const Sidebar = () => {
 
       {/* 하단 버튼 */}
       <div style={{ padding: '0 16px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <SidebarButton icon={<LogoutOutlined />}>Logout</SidebarButton>
+        <SidebarButton icon={<LogoutOutlined />} onClick={() => dispatch({ type: LOG_OUT_REQUEST })}>Logout</SidebarButton>
         <SidebarButton icon={<BulbOutlined />}>Light mode</SidebarButton>
       </div>
     </div>
