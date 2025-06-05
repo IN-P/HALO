@@ -2,7 +2,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const dotenv = require('dotenv');
 const app = require('./app'); 
-const { ChatRoom, ChatMessage, ChatRoomExit, Sequelize } = require('./models'); 
+const { ChatRoom, ChatMessage, ChatRoomExit, Sequelize, User  } = require('./models'); 
 const session = require('express-session'); // 세션 직접 생성
 const sharedSession = require('express-socket.io-session');
 
@@ -124,16 +124,25 @@ io.on('connection', (socket) => {
         }
       }
 
-      await ChatMessage.create({
-        rooms_id: chatRoomInstance.id,
-        sender_id: senderId,
-        content: content,
-        is_read: false
-      });
+      const newMessage = await ChatMessage.create({
+  rooms_id: chatRoomInstance.id,
+  sender_id: senderId,
+  content: content,
+  is_read: false
+});
 
-      console.log('💬 메시지 저장 완료:', { roomId, senderId, content });
+const messageWithUser = await ChatMessage.findByPk(newMessage.id, {
+  include: [{ model: User, attributes: ['id', 'nickname', 'profile_img'] }]
+});
 
-      io.to(roomId).emit('receive_message', data);
+const messageToSend = {
+  ...messageWithUser.toJSON(),
+  roomId // ✅ roomId를 명시적으로 포함
+};
+
+io.to(roomId).emit('receive_message', messageToSend);
+
+console.log('💬 메시지 저장 완료:', messageWithUser.toJSON());
     } catch (err) {
       console.error('❌ 메시지 전송 실패:', err);
     }

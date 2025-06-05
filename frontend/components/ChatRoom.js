@@ -60,7 +60,7 @@ const ChatRoom = ({
     >
       {/* 상단 타이틀 */}
       <h2 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>💬 {selectedUser.nickname}와의 채팅 (내 ID: {me})</span>
+        <span>💬 {selectedUser.nickname}와의 채팅 (내 ID: {me.id})</span>
         <button
           onClick={onClose}
           style={{
@@ -93,8 +93,8 @@ const ChatRoom = ({
         }}
       >
         {log.map((msg, idx) => {
-          const isMine = msg.senderId === me;
-          const sender = userMap[msg.senderId];
+          const isMine = msg.sender_id === me.id || msg.senderId === me.id; // 🟢 여기도 me.id 로 수정!
+          const sender = msg.User;
           return (
             <div
               key={idx}
@@ -107,7 +107,7 @@ const ChatRoom = ({
             >
               {!isMine && (
                 <img
-                  src={sender.profileImage}
+                  src={sender?.profile_img ?? "default.png"}
                   alt="프로필"
                   style={{
                     width: 32,
@@ -140,7 +140,8 @@ const ChatRoom = ({
                     fontSize: 11,
                     color: '#999',
                     marginTop: 2,
-                    textAlign: isMine ? 'right' : 'left',
+                    background: isMine ? '#d1f0ff' : '#f2f2f2',
+                    textAlign: isMine ? 'left' : 'right',
                   }}
                 >
                   {msg.time}

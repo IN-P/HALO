@@ -43,7 +43,7 @@ export const setChatRooms = (payload) => ({ type: SET_CHAT_ROOMS, payload });
 
 // 3. 초기 상태
 const initialState = {
-    me: 1, // 'me'는 현재 로그인한 사용자의 ID로 가정
+    me: null, // 'me'는 현재 로그인한 사용자의 ID로 가정
     selectedUser: null,
     log: [],
     showNewMsgAlert: false,

@@ -13,7 +13,8 @@ import {
   addLog,
   toggleSearchModal,
   setShowNewMsgAlert,
-  exitRoom
+  exitRoom,
+  loadMessagesRequest, // SAGA 액션을 직접 사용하도록 추가
 } from '../reducers/chatReducer_JW';
 
 import socket from '../socket';
@@ -21,7 +22,7 @@ import socket from '../socket';
 const ChatPage = () => {
   const dispatch = useDispatch();
   const {
-    me,
+    me, // 현재 로그인한 사용자 정보 (ID가 필요)
     selectedUser,
     message,
     log,
@@ -33,7 +34,11 @@ const ChatPage = () => {
   const chatBoxRef = useRef();
   const [userMap, setUserMap] = useState({});
 
-  const roomId = selectedUser ? `chat-${[me, selectedUser.id].sort().join('-')}` : null;
+  // ⭐ 변경 1: roomId 계산 로직을 selectedUser가 null이 아닐 때만 유효하게
+  // selectedUser가 존재하고, me.id와 selectedUser.id가 다를 때만 roomId를 생성
+  const roomId = selectedUser && me && (me.id !== selectedUser.id)
+    ? `chat-${[me.id, selectedUser.id].sort((a, b) => a - b).join('-')}`
+    : null; // selectedUser가 null이거나, 자기 자신이라면 roomId도 null
 
   // 1. 최초 1회 - 전체 유저 목록 가져오기
   useEffect(() => {
@@ -56,21 +61,33 @@ const ChatPage = () => {
 
   // 2. socket 리스너: receive_message (딱 1번만 등록)
   const handleReceive = useCallback((data) => {
-    if (!roomId || data.roomId !== roomId) {
-      // 현재 안 보고 있는 채팅방 메시지면 새 메시지 알림만 띄움
+    console.log('➡️ receive_message 이벤트 수신됨 (클라이언트):', data);
+
+    // ⭐ 변경 2: !roomId 조건 추가 (selectedUser가 없어서 roomId가 null인 경우)
+    // 현재 선택된 방이 없거나, 다른 방의 메시지면 알림만 띄움
+    if (!selectedUser || !roomId || data.roomId !== roomId) {
+      console.log('다른 방 메시지이거나 방이 선택되지 않음:', data.roomId, '현재 roomId:', roomId);
       dispatch(setShowNewMsgAlert(true));
       return;
     }
 
-    // 현재 보고 있는 채팅방이면 메시지 로그 추가
-    dispatch(addLog(data));
-  }, [dispatch, roomId]);
+    console.log('현재 방 메시지! log에 추가:', data);
+    const formattedMessage = {
+     ...data, 
+     sender_id: data.sender_id, 
+     User: data.User, 
+  created_at: data.created_at, // 필요하면 추가 (현재는 time을 사용)
+   time: new Date(data.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+   };
+   console.log('현재 방 메시지! log에 추가 후 formattedMessage:', formattedMessage);
+   dispatch(addLog(formattedMessage));
+  }, [dispatch, roomId, selectedUser]); // 의존성 배열에 selectedUser 추가
 
   const handleExitSuccess = useCallback(() => {
     alert('채팅방을 나갔습니다.');
-    dispatch(setSelectedUser(null));
+    dispatch(setSelectedUser(null)); // 채팅방 나간 후 selectedUser 초기화
     dispatch(clearLog());
-    dispatch(toggleSearchModal(false));
+    // dispatch(toggleSearchModal(false)); // 불필요할 수 있음
   }, [dispatch]);
 
   const handleExitFailed = useCallback((data) => {
@@ -89,23 +106,83 @@ const ChatPage = () => {
     };
   }, [handleReceive, handleExitSuccess, handleExitFailed]);
 
-  // 3. roomId가 바뀔 때마다 join_room emit
-  useEffect(() => {
-    if (roomId) {
-      socket.emit('join_room', roomId, me);
-    }
-  }, [roomId, me]);
+  // ⭐ 변경 3: 유저 선택 핸들러 (SearchModal, ChatList에서 공통으로 사용)
+const handleUserSelect = useCallback(async (user) => { // ✅ 수정
+  if (!me || user.id === me.id) {
+    alert('본인과 채팅을 시작할 수 없습니다.');
+    dispatch(setSelectedUser(null));
+    dispatch(clearLog());
+    dispatch(toggleSearchModal(false));
+    return;
+  }
 
-  // 4. 채팅방 목록은 최초 1회만 불러오기
+  try {
+    await axios.post('http://localhost:3065/api/chat', {
+      targetUserId: user.id,
+    }, { withCredentials: true });
+
+    dispatch(setSelectedUser(user));
+    dispatch(toggleSearchModal(false));
+  } catch (error) {
+    console.error('❌ 채팅방 생성 실패:', error);
+    alert(error.response?.data || '채팅방 생성 중 오류가 발생했습니다.');
+  }
+}, [dispatch, me]);
+  
+
+
+  // 3. roomId가 바뀔 때마다 join_room emit 및 과거 메시지 로드
   useEffect(() => {
-    axios.get('http://localhost:3065/api/chat/my-rooms', { withCredentials: true })
-      .then(res => {
-        dispatch(setChatRooms(res.data));
-      })
-      .catch(err => {
-        console.error('❌ 채팅방 목록 불러오기 실패:', err);
-      });
-  }, [dispatch]);
+    if (roomId && me && selectedUser) { // roomId, me, selectedUser 모두 유효할 때 실행
+        dispatch(clearLog()); 
+
+        // 1. 먼저 채팅방 생성/조회 API 호출 (POST /api/chat)
+        axios.post('http://localhost:3065/api/chat', { targetUserId: selectedUser.id }, { withCredentials: true })
+            .then(postResponse => {
+                console.log('✅ 채팅방 생성/조회 성공 (POST /api/chat):', postResponse.data);
+                
+                // 2. 채팅방이 존재하거나 새로 생성되었으면 메시지 로드
+                return axios.get(`http://localhost:3065/api/chat/message/${roomId}`, { withCredentials: true });
+            })
+            .then(getResponse => {
+                console.log('✅ 과거 메시지 로드 성공 (GET /api/chat/message):', getResponse.data);
+                getResponse.data.forEach(msg => dispatch(addLog(msg)));
+                requestAnimationFrame(() => {
+                    if (chatBoxRef.current) {
+                        chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+                    }
+                });
+                // 3. Socket.IO 방 조인 (API 호출 성공 후)
+                socket.emit('join_room', roomId, me); // me 객체 전체를 보내는 게 나중에 userMap 같은 거 없이 nickname 보여줄 때 편함
+                console.log('클라이언트: join_room 요청 보냄', roomId, me);
+
+            })
+            .catch(error => {
+                console.error('❌ 채팅방 또는 메시지 로드 실패:', error);
+                if (error.response) {
+                     alert(error.response.data || '채팅방 로드 중 오류가 발생했습니다.');
+                     dispatch(setSelectedUser(null));
+                     dispatch(clearLog());
+                } else {
+                    alert('알 수 없는 오류가 발생했습니다.');
+                }
+            });
+    }
+}, [roomId, me, selectedUser, dispatch]);
+
+  // 4. 채팅방 목록은 최초 1회 및 변경 시 불러오기 (useSelector로 chatRooms가 관리되므로)
+  useEffect(() => {
+    // me.id가 있을 때만 호출 (로그인 정보 확인)
+    if (me && me.id) {
+      axios.get('http://localhost:3065/api/chat/my-rooms', { withCredentials: true })
+        .then(res => {
+          dispatch(setChatRooms(res.data));
+        })
+        .catch(err => {
+          console.error('❌ 채팅방 목록 불러오기 실패:', err);
+        });
+    }
+  }, [dispatch, me]); // me 의존성 추가 (로그인 정보 받아온 후 실행)
 
   // 5. 스크롤 및 새 메시지 알림 관리
   const isAtBottom = () => {
@@ -122,22 +199,27 @@ const ChatPage = () => {
     if (!chatBoxRef.current || log.length === 0) return;
     const lastMsg = log[log.length - 1];
     const wasAtBottom = isAtBottom();
-    if (lastMsg.senderId === me || wasAtBottom) {
+    // 마지막 메시지가 내가 보낸 것이거나, 이미 스크롤이 최하단에 있었다면 스크롤
+    if (lastMsg.senderId === me.id || wasAtBottom) { // ⭐ me.id로 비교
       requestAnimationFrame(() => {
         chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
       });
       dispatch(setShowNewMsgAlert(false));
     } else {
+      // 새로운 메시지가 왔고 스크롤이 최하단이 아니라면 알림
       dispatch(setShowNewMsgAlert(true));
     }
-  }, [log, me, dispatch]);
+  }, [log, me, dispatch]); // 의존성 배열에 me.id 대신 me 전체로 변경 (객체 비교 주의)
 
   // 6. 메시지 보내기 함수
-  const handleSend = () => {
-    if (!message.trim() || !selectedUser) return;
-    dispatch(sendMsg({ roomId, senderId: me, content: message }));
+  const handleSend = useCallback(() => {
+    // ⭐ 변경 5: me.id가 유효한지 다시 확인
+    if (!message.trim() || !selectedUser || !me || !me.id) return;
+    // ⭐ 변경 6: sendMsg 액션에 roomId, senderId (me.id) 정확히 전달
+    dispatch(sendMsg({ roomId, senderId: me.id, content: message })); // senderId를 me.id로 변경
     dispatch(setMessage(''));
-  };
+  }, [dispatch, message, selectedUser, roomId, me]);
+
 
   return (
     <AppLayout>
@@ -150,7 +232,7 @@ const ChatPage = () => {
       }}>
         <ChatList
           chatRooms={chatRooms}
-          onSelectUser={(user) => dispatch(setSelectedUser(user))}
+          onSelectUser={handleUserSelect} // ⭐ 변경 7: 공통 핸들러 사용
         />
 
         <div style={{
@@ -162,10 +244,7 @@ const ChatPage = () => {
         }}>
           {showSearchModal && (
             <SearchModal
-              onUserSelect={(user) => {
-                dispatch(setSelectedUser(user));
-                dispatch(toggleSearchModal(false));
-              }}
+              onUserSelect={handleUserSelect} // ⭐ 변경 8: 공통 핸들러 사용
               onClose={() => dispatch(toggleSearchModal(false))}
               userMap={userMap}
             />
@@ -175,27 +254,38 @@ const ChatPage = () => {
             <div style={{ margin: 'auto' }}>
               <h2
                 style={{ cursor: 'pointer' }}
-                onClick={() => dispatch(toggleSearchModal(true))}
+                onClick={() => {
+                    // ⭐ 변경 9: 검색 모달 열기 전에 selectedUser 초기화 (혹시 모를 오류 방지)
+                    dispatch(setSelectedUser(null));
+                    dispatch(clearLog());
+                    dispatch(toggleSearchModal(true));
+                }}
               >
                 💬 채팅을 시작하세요
               </h2>
             </div>
           ) : (
+            // ⭐ 변경 10: selectedUser가 있을 때만 ChatRoom 렌더링하도록 확실히
+            // roomId가 null이면 ChatRoom도 렌더링되지 않도록 조건을 추가할 수도 있음.
+            // 하지만 현재 selectedUser가 null이 아니면 roomId도 대부분 유효할 것이므로 괜찮음.
             <div style={{ width: 600, margin: '80px auto 0' }}>
               <ChatRoom
                 me={me}
                 selectedUser={selectedUser}
-                roomId={roomId}
+                roomId={roomId} // roomId가 null이면 ChatRoom 내부에서 적절히 처리해야 함
                 log={log}
                 chatBoxRef={chatBoxRef}
                 message={message}
                 setMessage={(value) => dispatch(setMessage(value))}
                 showNewMsgAlert={showNewMsgAlert}
                 handleScroll={handleScroll}
-                onExit={() => dispatch(exitRoom({ roomId, userId: me }))}
+                onExit={() => dispatch(exitRoom({ roomId, userId: me.id }))} // ⭐ me.id로 전달
                 onSendMessage={handleSend}
                 userMap={userMap}
-                onClose={() => dispatch(setSelectedUser(null))}
+                onClose={() => {
+                    dispatch(setSelectedUser(null)); // 채팅방 닫을 때 selectedUser 초기화
+                    dispatch(clearLog()); // 로그도 초기화
+                }}
               />
             </div>
           )}
