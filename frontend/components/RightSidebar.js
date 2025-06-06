@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'; 
+import { useSelector } from 'react-redux';
 import axios from 'axios';
 
 const RightSidebar = () => {
@@ -90,6 +91,9 @@ const RightSidebar = () => {
         );
     };
 
+    // 로그인 사용자 미니 프로필 데이터 가져오기
+    const { user } = useSelector((state) => state.user_YG);
+
     return (
         <div style={{
             width: 260,
@@ -100,15 +104,19 @@ const RightSidebar = () => {
             display: 'flex', 
             flexDirection: 'column'
         }}>
-            <div style={{
+            {/*미니 프로필 영역*/}
+            <div onClick={() => window.location.href = `http://localhost:3000/profile/${user?.nickname}`} 
+                style={{
                 marginBottom: 24,
                 padding: 16,
                 border: '1px solid #ddd',
                 borderRadius: 8,
-                textAlign: 'center'
+                textAlign: 'center',
+                cursor:"pointer",
             }}>
-                <strong>jaewon</strong>
-                <div style={{ fontSize: 12, color: '#888' }}>@email</div>
+                <strong>{user?.nickname}</strong>
+                <div style={{ fontSize: 12, color: '#888' }}>{user?.email}</div>
+                
             </div>
 
             <div style={{

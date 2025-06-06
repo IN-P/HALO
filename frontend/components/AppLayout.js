@@ -12,7 +12,7 @@ const AppLayout = ({ children }) => {
         {children}
       </div>
       {/* 우측 사이드바 자리 (디자인만 잡아둠) */}
-          <RightSidebar />
+          <RightSidebar/>
       </div>
     
   );
