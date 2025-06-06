@@ -8,12 +8,9 @@ import comment_IN from '../reducers/comment_IN'; // 인
 import bookmark_IN from '../reducers/bookmark_IN';
 import user_YG from '../reducers/user_YG'; // 윤기
 import chatReducer from '../reducers/chatReducer_JW'; // 재원
-<<<<<<< HEAD
 import follow_YB from '../reducers/follow_YB'; // 율비 추가
 import reportReducer from '../reducers/report_YB';
-=======
 import profile_jh from '../reducers/profile_jh'; // 준혁
->>>>>>> c3bad6c4717ec2a5c99cefa17dade66ebf55a0b6
 
 const rootReducer = combineReducers({
   post_IN, // 인
