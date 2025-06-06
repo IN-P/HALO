@@ -53,6 +53,7 @@ const MyMain = ({ data }) => {
       </div>
       <div style={{ maxWidth: "400px" }}>
         <p style={{ wordBreak: "break-word" }}>
+          {data?.UserInfo.introduce}
         </p>
       </div>
     </div>
