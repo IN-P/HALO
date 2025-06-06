@@ -1,12 +1,15 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Col, Row } from "antd";
 import MySettingSidebar from "./MySettingSidebar";
 import MyHeader from "./MyHeader";
 import MyAvatar from "./MyAvatar";
 import MySettingEditForm from "./MySettingEditForm";
 import { CloseOutlined } from '@ant-design/icons';
+import { MySettingBlock } from './MySettingBlock';
+import { useDispatch, useSelector } from "react-redux";
 
 const MySettingPopUp = ({ data, onClose }) => {
+
   useEffect(() => {
     const removePadding = document.getElementById("mainContents");
     const removeMembership = document.getElementById("membership");
@@ -16,6 +19,8 @@ const MySettingPopUp = ({ data, onClose }) => {
     if (removeMembership) { removeMembership.style.display = "none"; }
     if (removeShare) { removeShare.style.display = "none"; }
   }, []);
+
+  const [blockList, setBlockList] = useState(false);
 
   return (
     <div>
@@ -41,17 +46,19 @@ const MySettingPopUp = ({ data, onClose }) => {
             backgroundColor: "#fff",
           }}
         >
-          <div>
-            <div style={{ display: "flex", justifyContent: "end", padding: "1% 1% 0 0" }}>
-              <span style={{ fontSize: "20px", cursor: "pointer", marginLeft: "12px" }} onClick={onClose} ><CloseOutlined /></span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "center", padding: "5% 0 5% 0" }}>
-              <MyAvatar data={data} />
-            </div>
+          {/*
             <div>
-              <MySettingEditForm data={data} />
+              <div style={{ display: "flex", justifyContent: "end", padding: "1% 1% 0 0" }}>
+                <span style={{ fontSize: "20px", cursor: "pointer", marginLeft: "12px" }} onClick={onClose} ><CloseOutlined /></span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "center", padding: "5% 0 5% 0" }}>
+                <MyAvatar data={data} />
+              </div>
+              <div>
+                <MySettingEditForm data={data} />
+              </div>
             </div>
-          </div>
+*/}
         </Col>
       </Row>
     </div>
