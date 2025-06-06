@@ -17,7 +17,7 @@ const StyledBar = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  font-size: 18px;
+  font-size: 24px;
 
   &:hover {
     background-color: #F2F2F2;
@@ -50,7 +50,7 @@ const MySettingEditForm = ({ data }) => {
   // v
   return (
     <div>
-      <StyledBar></StyledBar>
+      <StyledBar>{data?.nickname}</StyledBar>
         <StyledEditBar>
           <div>
             <p style={{fontSize:"18px", fontWeight:"bold"}}>사용자 이름 변경</p>
@@ -72,11 +72,11 @@ const MySettingEditForm = ({ data }) => {
             <Button>변경</Button>
           </div>
         </StyledEditBar>
-      <StyledBar >test@example.com</StyledBar>
-      <StyledBar >010-1234-5678</StyledBar>
-      <StyledBar >안녕하세요 김준혁입니다</StyledBar>
-      <StyledBar >공개</StyledBar>
-      <StyledBar >SSG 랜더스</StyledBar>
+      <StyledBar >{data?.email}</StyledBar>
+      <StyledBar >{data?.UserInfo.phone}</StyledBar>
+      <StyledBar >{data?.UserInfo.introduce}</StyledBar>
+      <StyledBar >{data?.is_private === 1 ? '비공개' : '공개'}</StyledBar>
+      <StyledBar >{data?.Myteam.teamname}</StyledBar>
       <StyledBar >100,000</StyledBar>
     </div>
   )

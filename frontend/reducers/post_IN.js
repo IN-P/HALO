@@ -66,6 +66,9 @@ export const EDIT_POST_FAILURE = 'EDIT_POST_FAILURE';
 
 export const REMOVE_IMAGE = 'REMOVE_IMAGE';
 
+export const UPDATE_BOOKMARK_IN_POST = 'UPDATE_BOOKMARK_IN_POST';
+
+
 // 리듀서
 const postINReducer = (state = initialState, action) =>
   produce(state, (draft) => {
@@ -195,6 +198,20 @@ const postINReducer = (state = initialState, action) =>
       case REMOVE_IMAGE:
         draft.imagePaths.splice(action.index, 1);
         break;
+
+      case UPDATE_BOOKMARK_IN_POST: {
+        const post = draft.mainPosts.find((v) => v.id === action.data.postId);
+        if (post) {
+          if (action.data.bookmarked) {
+            if (!post.Bookmarkers.some((u) => u.id === action.data.userId)) {
+              post.Bookmarkers.push({ id: action.data.userId });
+            }
+          } else {
+            post.Bookmarkers = post.Bookmarkers.filter((u) => u.id !== action.data.userId);
+          }
+        }
+        break;
+      }
 
       default:
         break;
