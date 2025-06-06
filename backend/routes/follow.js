@@ -40,7 +40,7 @@ router.post('/',isLoggedIn, async (req, res, next) => {
 });
 
 
-// 팔로우 삭제 http://localhost:3065/api/following/2
+// 팔로우 삭제 http://localhost:3065/following/2
 router.delete('/following/:toUserId', async (req, res, next) => {
   try {
     const fromUserId = req.user.id;

@@ -7,6 +7,8 @@ import post_IN from '../reducers/post_IN'; // 인
 import comment_IN from '../reducers/comment_IN'; // 인
 import user_YG from '../reducers/user_YG'; // 윤기
 import chatReducer from '../reducers/chatReducer_JW'; // 재원
+import follow_YB from '../reducers/follow_YB'; // 율비 추가
+import reportReducer from '../reducers/report_YB';
 
 const rootReducer = combineReducers({
   post_IN, // 인
@@ -14,6 +16,8 @@ const rootReducer = combineReducers({
   user_YG, // 윤기
   chat: chatReducer, // 재원
   // 다른 리듀서들 추가 가능
+  follow_YB,
+ report_YB: reportReducer,
 });
 
 const configureStore = () => {

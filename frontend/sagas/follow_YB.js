@@ -11,10 +11,10 @@ function followAPI(toUserId) {
   return axios.post(`/follow`, { toUserId }, { withCredentials: true });
 }
 function unfollowAPI(toUserId) {
-  return axios.delete(`following/${toUserId}`, { withCredentials: true });
+  return axios.delete(`/follow/following/${toUserId}`, { withCredentials: true });
 }
 function loadFollowingsAPI() {
-  return axios.get('/followings', { withCredentials: true });
+  return axios.get('/follow/followings', { withCredentials: true });
 }
 
 // ✅ Saga

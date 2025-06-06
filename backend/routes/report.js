@@ -2,11 +2,11 @@ const express = require('express');
 const router = express.Router();
 const { Report, User, TargetType } = require('../models');
 const { where } = require('sequelize');
-
-// 신고 등록 (C)http://localhost:3065/api/report
-router.post('/', async (req, res, next) => {
+const { isLoggedIn } = require('./middlewares');
+// 신고 등록 (C)http://localhost:3065/report
+router.post('/', isLoggedIn,async (req, res, next) => {
   try {
-    console.log('📥 받은 body:', req.body); 
+  
     const { reason, target_type_id, target_id } = req.body;
     const users_id = req.user.id;
 

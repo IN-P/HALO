@@ -1,19 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { LIKE_POST_REQUEST, UNLIKE_POST_REQUEST } from '../reducers/post_IN';
+import {
+  LIKE_POST_REQUEST,
+  UNLIKE_POST_REQUEST,
+  REMOVE_POST_REQUEST,
+  REPORT_POST_REQUEST
+} from '../reducers/post_IN';
+import { BOOKMARK_POST_REQUEST, UNBOOKMARK_POST_REQUEST } from '../reducers/bookmark_IN';
 import Comment from './Comment';
-import { FaHeart, FaRegHeart, FaRegComment, FaRegPaperPlane, FaRegBookmark, FaEllipsisH } from 'react-icons/fa';
-
-import FollowButton from '../components/FollowButton'
-
+import { FaHeart, FaRegHeart, FaRegComment, FaRegPaperPlane, FaRegBookmark, FaBookmark, FaEllipsisH } from 'react-icons/fa';
+import { useRouter } from 'next/router';
+import FollowButton from '../components/FollowButton';
+import ReportModal from './ReportModal'; // 율비
 
 const PostCard = ({ post }) => {
   const dispatch = useDispatch();
+  const router = useRouter();
   const { user } = useSelector((state) => state.user_YG);
+
   const [imageIndex, setImageIndex] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [showReportForm, setShowReportForm] = useState(false); // 율비
+
+  const menuRef = useRef(null);
+
   const liked = post.Likers?.some((u) => u.id === user?.id);
+  const bookmarked = post.Bookmarkers?.some((u) => u.id === user?.id);
   const isMine = post.User?.id === user?.id;
   const minutesAgo = Math.floor((Date.now() - new Date(post.User?.last_active).getTime()) / 60000);
 
@@ -21,16 +35,39 @@ const PostCard = ({ post }) => {
   const prevImage = () => setImageIndex(i => (i > 0 ? i - 1 : post.Images.length - 1));
   const nextImage = () => setImageIndex(i => (i < post.Images.length - 1 ? i + 1 : 0));
 
+  // 메뉴 외부 클릭시 닫기
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (showMenu && menuRef.current && !menuRef.current.contains(e.target)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMenu]);
+
+  // 수정 버튼: 페이지 이동
+  const onEdit = () => {
+    router.push(`/edit/${post.id}`);
+    setShowMenu(false);
+  };
+
+  // 삭제 핸들러
+  const onDelete = () => {
+    if (window.confirm('정말 삭제하시겠습니까?')) {
+      dispatch({ type: REMOVE_POST_REQUEST, data: post.id });
+    }
+  };
+
+  // 신고 핸들러 (간편버전)
+  const onReport = () => {
+    if (window.confirm('정말 신고하시겠습니까?')) {
+      dispatch({ type: REPORT_POST_REQUEST, data: post.id });
+    }
+  };
+
   return (
-    <div style={{
-      display: 'flex',
-      background: '#fff',
-      borderRadius: 18,
-      boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
-      margin: '24px 0',
-      padding: 0,
-      overflow: 'hidden',
-    }}>
+    <div style={cardStyle}>
       {/* 왼쪽: 이미지 슬라이더 */}
       <div style={{ width: 420, position: 'relative', background: '#eee' }}>
         <img
@@ -61,8 +98,8 @@ const PostCard = ({ post }) => {
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
           <img
             src={post.User?.profile_img
-              ? `http://localhost:3065/${post.User.profile_img}`
-              : '/default_profile.png'}
+              ? `http://localhost:3065${post.User.profile_img}`
+              : 'http://localhost:3065/img/profile/default.jpg'}
             alt="프로필"
             style={{ width: 50, height: 50, borderRadius: '50%', objectFit: 'cover', marginRight: 14, border: '2px solid #bbb' }}
           />
@@ -72,26 +109,43 @@ const PostCard = ({ post }) => {
               {minutesAgo < 1 ? '방금 전' : `${minutesAgo}분 전`}
             </div>
           </div>
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>{/*율비 변경*/}
-            {post.User?.id &&
-              user?.id !== post.User.id && (
-                <>
-                  {console.log('FollowButton 디버깅:', {
-                    currentUserId: user?.id,
-                    postUserId: post.User.id,
-                    nickname: post.User.nickname,
-                    typeofPostUserId: typeof post.User.id,
-                  })}
-                  <FollowButton toUserId={Number(post.User.id)} />
-                </>
-              )}
-            {/*율비 추가 */}
-            <button style={menuBtnStyle}><FaEllipsisH /></button>
-            {/* isMine ? (수정/삭제) : (신고) 메뉴 처리 필요시 추가 */}
+          {/* 오른쪽: 팔로우/신고/점점점 메뉴 */}
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+            {/* 팔로우 버튼 (본인 아님 + 유저 존재 시) */}
+            {post.User?.id && user?.id !== post.User.id && (
+              <FollowButton toUserId={Number(post.User.id)} />
+            )}
+            {/* 신고/점점점 메뉴 */}
+            {!isMine ? (
+              <>
+                {/* 신고(모달) */}
+                <button
+                  style={menuBtnStyle}
+                  onClick={() => setShowReportForm(prev => !prev)}
+                >
+                  <FaEllipsisH />
+                </button>
+              </>
+            ) : (
+              <div style={{ position: 'relative' }} ref={menuRef}>
+                {/* 점점점 메뉴(수정/삭제) */}
+                <button style={menuBtnStyle} onClick={() => setShowMenu((v) => !v)}>
+                  <FaEllipsisH />
+                </button>
+                {showMenu && (
+                  <div style={menuDropdownStyle}>
+                    <button style={menuItemStyle} onClick={onEdit}>수정</button>
+                    <button style={menuItemStyle} onClick={() => { onDelete(); setShowMenu(false); }}>삭제</button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
         {/* 게시글 텍스트 */}
-        <div style={{ fontSize: 16, marginBottom: 20 }}>{post.content}</div>
+        <div style={{ fontSize: 16, marginBottom: 20 }}>
+          {post.content}
+        </div>
         {/* 버튼들 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 24, fontSize: 24 }}>
           {/* 좋아요 */}
@@ -114,8 +168,12 @@ const PostCard = ({ post }) => {
             <FaRegPaperPlane />
           </button>
           {/* 북마크 */}
-          <button style={iconBtnStyle}>
-            <FaRegBookmark />
+          <button style={iconBtnStyle} onClick={() => {
+            bookmarked
+              ? dispatch({ type: UNBOOKMARK_POST_REQUEST, data: post.id })
+              : dispatch({ type: BOOKMARK_POST_REQUEST, data: post.id });
+          }}>
+            {bookmarked ? <FaBookmark color="#007bff" /> : <FaRegBookmark />}
           </button>
         </div>
         {/* 좋아요/댓글 수 표시 */}
@@ -128,9 +186,25 @@ const PostCard = ({ post }) => {
             <Comment postId={post.id} currentUserId={user?.id} />
           </div>
         )}
+        {/* 신고 모달(율비) */}
+        {showReportForm && (
+          <div style={{ marginTop: 20 }}>
+            <ReportModal visible={showReportForm} postId={post.id} onClose={() => setShowReportForm(false)} />
+          </div>
+        )}
       </div>
     </div>
   );
+};
+
+const cardStyle = {
+  display: 'flex',
+  background: '#fff',
+  borderRadius: 18,
+  boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
+  margin: '24px 0',
+  padding: 0,
+  overflow: 'hidden',
 };
 
 const arrowBtnStyle = {
@@ -176,6 +250,15 @@ const modalStyle = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
+};
+const menuDropdownStyle = {
+  position: 'absolute', right: 0, top: 36, background: '#fff', boxShadow: '0 2px 8px #0001',
+  borderRadius: 8, zIndex: 10, minWidth: 120
+};
+const menuItemStyle = {
+  display: 'block', width: '100%', padding: '10px 16px',
+  border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer',
+  fontSize: 16, color: '#444'
 };
 
 export default PostCard;

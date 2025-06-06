@@ -3,7 +3,8 @@ import { combineReducers } from 'redux';
 
 import post_IN from './post_IN';
 import user_YG from './user_YG';
-import follow_YB from './follow_YB';; //율비
+import follow_YB from './follow_YB'; //율비
+import reportReducer from './report_YB';
 
 const rootReducer = combineReducers({
   index: (state = {}, action) => {
@@ -18,6 +19,7 @@ const rootReducer = combineReducers({
   post_IN,
   user_YG,
   follow_YB, //율비
+  report_YB: reportReducer,
 });
 
 export default rootReducer;
