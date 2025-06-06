@@ -33,10 +33,12 @@ const playerDrawRouter = require('./routes/playerDraw');   //## 경미
 const adminPlayerRouter = require('./routes/adminPlayer');   //## 경미
 const weatherRouter = require('./routes/weather'); //## 재원
 const chatRouter = require('./routes/chat') //## 재원
-
+const resetPasswordRouter = require('./routes/resetPassword'); //윤기
 
 // .env 적용
 dotenv.config();
+
+app.use('/img', express.static(path.join(__dirname, 'uploads'))); //##윤기 추가
 
 // 미들웨어
 app.use(morgan('dev'));
@@ -92,6 +94,7 @@ app.use('/store/draw', playerDrawRouter);   //## 경미
 app.use('/store/admin', adminPlayerRouter);   //## 경미
 app.use('/api/chat', chatRouter); //## 재원
 app.use('/api/weather', weatherRouter); //## 재원 날씨
+app.use('/user/reset-password', resetPasswordRouter); //윤기 비번재발급
 
 module.exports = app;
 

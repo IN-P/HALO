@@ -62,7 +62,7 @@ router.post('/', async (req, res, next) => {
       email_chk: 0,
       is_private: 0, //공개계정
       balance: 0,
-      profile_img: 'https://i.pinimg.com/originals/2f/55/97/2f559707c3b04a1964b37856f00ad608.jpg',
+      profile_img: '/img/profile/default.jpg', //바뀜
       user_status_id: 1,    // 일반계정
       membership_id: 1,     // 브론즈
       myteam_id: 1,         // "응원팀 없음"

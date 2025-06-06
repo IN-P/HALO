@@ -61,6 +61,7 @@ router.post('/', isLoggedIn, async (req, res, next) => {
         { model: User, attributes: ['id', 'nickname'] },
         { model: Comment, include: [{ model: User, attributes: ['id', 'nickname'] }] },
         { model: User, as: 'Likers', attributes: ['id'] },
+        { model: User, as: 'Bookmarkers', attributes: ['id'] },
       ],
     });
 
@@ -79,12 +80,19 @@ router.post('/images', isLoggedIn, upload.array('image'), (req, res) => {
 // 게시글 삭제
 router.delete('/:postId', isLoggedIn, async (req, res, next) => {
   try {
+    // 1. 해당 게시글의 모든 댓글 하드 삭제
+    await Comment.destroy({
+      where: { post_id: req.params.postId }
+    });
+
+    // 2. 게시글 하드 삭제
     await Post.destroy({
       where: {
         id: req.params.postId,
         user_id: req.user.id,
       },
     });
+
     res.status(200).json({ PostId: parseInt(req.params.postId, 10) });
   } catch (error) {
     console.error(error);
@@ -175,6 +183,7 @@ router.post('/:postId/retweet', isLoggedIn, async (req, res, next) => {
         { model: User, attributes: ['id', 'nickname'] },
         { model: Image },
         { model: User, as: 'Likers', attributes: ['id'] },
+        { model: User, as: 'Bookmarkers', attributes: ['id'] },
         {
           model: Post,
           as: 'Retweet',

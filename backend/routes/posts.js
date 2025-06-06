@@ -19,38 +19,22 @@ router.get('/', async (req, res, next) => {
         [Comment, 'createdAt', 'DESC'],
       ],
       include: [
-        {
-          model: User,
-          attributes: ['id', 'nickname', 'profile_img'],
-        },
-        {
-          model: Image,
-        },
+        { model: User, attributes: ['id', 'nickname', 'profile_img'] },
+        { model: Image },
         {
           model: Comment,
           include: [
-            {
-              model: User,
-              attributes: ['id', 'nickname'],
-            },
+            { model: User, attributes: ['id', 'nickname'] },
           ],
         },
-        {
-          model: User,
-          as: 'Likers',
-          attributes: ['id'],
-        },
+        { model: User, as: 'Likers', attributes: ['id'] },
+        { model: User, as: 'Bookmarkers', attributes: ['id'] },
         {
           model: Post,
           as: 'Retweet',
           include: [
-            {
-              model: User,
-              attributes: ['id', 'nickname'],
-            },
-            {
-              model: Image,
-            },
+            { model: User, attributes: ['id', 'nickname'] },
+            { model: Image },
           ],
         },
       ],
