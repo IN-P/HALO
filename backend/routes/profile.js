@@ -19,7 +19,7 @@ router.get("/:nickname", async (req, res, next) => {
 
     const fullUser = await User.findOne({
     where: { id: userId },
-    attributes: ["nickname", "profile_img", "theme_mode", "is_private", "myteam_id", "role", "email"],
+    attributes: ["id", "nickname", "profile_img", "theme_mode", "is_private", "myteam_id", "role", "email"],
     include: [
       { model: UserInfo },
       { model: Post },

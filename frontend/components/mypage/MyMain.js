@@ -5,13 +5,16 @@ import { Card } from "antd";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
 
-const MyMain = ({ data }) => {
+const MyMain = ({ data, isMyProfile }) => {
   return (
     <div>
       <div style={{ paddingBottom: "10px" }}>
         <span style={{ fontSize: "22px", fontWeight: "bold" }}>
-          {data?.nickname}
+          {data?.nickname}&nbsp;
         </span>
+        {!isMyProfile && (
+          <span><button>팔로우</button>&nbsp;<button>차단</button></span>
+        )}
         <span style={{ fontSIze: "16px", color: "#9F9F9F" }}>
           &nbsp;{data?.role||""}
         </span>
@@ -53,7 +56,7 @@ const MyMain = ({ data }) => {
       </div>
       <div style={{ maxWidth: "400px" }}>
         <p style={{ wordBreak: "break-word" }}>
-          {data?.UserInfo.introduce}
+          {data?.UserInfo?.introduce}
         </p>
       </div>
     </div>
