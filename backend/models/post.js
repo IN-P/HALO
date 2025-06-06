@@ -27,7 +27,7 @@ module.exports = (sequelize,DataTypes)=>{
     charset:'utf8mb4',
     collate:'utf8mb4_general_ci'
   }); 
- 
+
   Post.associate = (db)=>{
     db.Post.hasMany(db.Image, { foreignKey: 'post_id' }); 
     db.Post.hasMany(db.Comment, { foreignKey: 'post_id' }); 

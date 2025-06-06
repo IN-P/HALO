@@ -8,17 +8,17 @@ const { isLoggedIn } = require('./middlewares');
 
 // uploads 폴더 생성
 try {
-  fs.accessSync('uploads');
+  fs.accessSync('uploads/post');
 } catch (error) {
-  console.log('📁 uploads 폴더 생성');
-  fs.mkdirSync('uploads');
+  console.log('📁 uploads/post 폴더가 없어서 생성합니다.');
+  fs.mkdirSync('uploads/post', { recursive: true });
 }
 
 // multer 설정
 const upload = multer({
   storage: multer.diskStorage({
     destination(req, file, done) {
-      done(null, 'uploads');
+      done(null, 'uploads/post');
     },
     filename(req, file, done) {
       const ext = path.extname(file.originalname);
@@ -30,7 +30,7 @@ const upload = multer({
 });
 
 // 게시글 등록
-router.post('/', isLoggedIn, upload.none(), async (req, res, next) => {
+router.post('/', isLoggedIn, async (req, res, next) => {
   try {
     const hashtags = req.body.content.match(/#[^\s#]+/g);
     const post = await Post.create({
@@ -47,15 +47,10 @@ router.post('/', isLoggedIn, upload.none(), async (req, res, next) => {
       await post.addHashtags(result.map((v) => v[0]));
     }
 
-    if (req.body.image) {
-      if (Array.isArray(req.body.image)) {
-        const images = await Promise.all(
-          req.body.image.map((src) => Image.create({ src }))
-        );
-        await post.addImages(images);
-      } else {
-        const image = await Image.create({ src: req.body.image });
-        await post.addImages(image);
+    if (req.body.images) {
+      const images = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
+      for (const src of images) {
+        await Image.create({ src, post_id: post.id });
       }
     }
 
@@ -66,6 +61,7 @@ router.post('/', isLoggedIn, upload.none(), async (req, res, next) => {
         { model: User, attributes: ['id', 'nickname'] },
         { model: Comment, include: [{ model: User, attributes: ['id', 'nickname'] }] },
         { model: User, as: 'Likers', attributes: ['id'] },
+        { model: User, as: 'Bookmarkers', attributes: ['id'] },
       ],
     });
 
@@ -84,12 +80,19 @@ router.post('/images', isLoggedIn, upload.array('image'), (req, res) => {
 // 게시글 삭제
 router.delete('/:postId', isLoggedIn, async (req, res, next) => {
   try {
+    // 1. 해당 게시글의 모든 댓글 하드 삭제
+    await Comment.destroy({
+      where: { post_id: req.params.postId }
+    });
+
+    // 2. 게시글 하드 삭제
     await Post.destroy({
       where: {
         id: req.params.postId,
         user_id: req.user.id,
       },
     });
+
     res.status(200).json({ PostId: parseInt(req.params.postId, 10) });
   } catch (error) {
     console.error(error);
@@ -180,6 +183,7 @@ router.post('/:postId/retweet', isLoggedIn, async (req, res, next) => {
         { model: User, attributes: ['id', 'nickname'] },
         { model: Image },
         { model: User, as: 'Likers', attributes: ['id'] },
+        { model: User, as: 'Bookmarkers', attributes: ['id'] },
         {
           model: Post,
           as: 'Retweet',

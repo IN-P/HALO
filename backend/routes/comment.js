@@ -50,7 +50,18 @@ router.post('/:commentId/reply', isLoggedIn, async (req, res, next) => {
       depth: a.depth + 1,
     }));
     paths.push({ upper_id: parent.id, lower_id: reply.id, depth: 1 });
-    await CommentPath.bulkCreate(paths);
+
+    const keySet = new Set();
+    const uniquePaths = [];
+    for (const row of paths) {
+      const key = `${row.upper_id}-${row.lower_id}`;
+      if (!keySet.has(key)) {
+        uniquePaths.push(row);
+        keySet.add(key);
+      }
+    }    
+    
+    await CommentPath.bulkCreate(uniquePaths);
 
     res.status(201).json(reply);
   } catch (error) {
@@ -79,7 +90,49 @@ router.get('/post/:postId/tree', async (req, res, next) => {
       }
     });
 
-    res.status(200).json(roots);
+    // 삭제된 댓글은 content를 대체
+    const cleanComment = (comment) => {
+      if (comment.is_deleted) {
+        comment.content = '삭제된 댓글입니다.';
+      }
+      if (comment.replies) {
+        comment.replies = comment.replies.map(cleanComment);
+      }
+      return comment;
+    };
+
+    const cleanedTree = roots.map(cleanComment);
+    res.status(200).json(cleanedTree);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+
+// 댓글 수정
+router.patch('/:commentId', isLoggedIn, async (req, res, next) => {
+  try {
+    const comment = await Comment.findByPk(req.params.commentId);
+    if (!comment) return res.status(404).send('댓글이 존재하지 않습니다.');
+    if (comment.user_id !== req.user.id) return res.status(403).send('수정 권한이 없습니다.');
+
+    await comment.update({ content: req.body.content });
+    res.status(200).json({ CommentId: comment.id, content: req.body.content });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+
+// 댓글 삭제 (실제 삭제 or soft delete 방식 가능)
+router.delete('/:commentId', isLoggedIn, async (req, res, next) => {
+  try {
+    const comment = await Comment.findByPk(req.params.commentId);
+    if (!comment) return res.status(404).send('댓글이 존재하지 않습니다.');
+    if (comment.user_id !== req.user.id) return res.status(403).send('삭제 권한이 없습니다.');
+
+    await comment.update({ is_deleted: true });
+    res.status(200).json({ CommentId: comment.id });
   } catch (error) {
     console.error(error);
     next(error);
