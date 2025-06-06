@@ -100,7 +100,7 @@ router.delete('/:postId', isLoggedIn, async (req, res, next) => {
   }
 });
 
-// 게시글 수정
+// 게시글 수정 (이미지까지)
 router.patch('/:postId', isLoggedIn, async (req, res, next) => {
   const hashtags = req.body.content.match(/#[^\s#]+/g);
   try {
@@ -110,6 +110,8 @@ router.patch('/:postId', isLoggedIn, async (req, res, next) => {
     );
 
     const post = await Post.findByPk(req.params.postId);
+
+    // Hashtag도 동기화
     if (hashtags) {
       const result = await Promise.all(
         hashtags.map((tag) =>
@@ -117,6 +119,27 @@ router.patch('/:postId', isLoggedIn, async (req, res, next) => {
         )
       );
       await post.setHashtags(result.map((v) => v[0]));
+    }
+
+    // 이미지도 동기화 (여기 추가)
+    if (req.body.images) {
+      // 배열 보정
+      const images = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
+      const existingImages = await post.getImages();
+      const existingSrcs = existingImages.map(img => img.src);
+
+      // #1. 삭제될 이미지
+      const toRemove = existingImages.filter(img => !images.includes(img.src));
+      await Promise.all(toRemove.map(img => img.destroy()));
+
+      // #2. 새로 추가된 이미지
+      const toAdd = images.filter(src => !existingSrcs.includes(src));
+      for (const src of toAdd) {
+        const exists = await Image.findOne({ where: { src, post_id: post.id } });
+        if (!exists) {
+          await Image.create({ src, post_id: post.id });
+        }
+      }
     }
 
     res.status(200).json({ PostId: post.id, content: req.body.content });

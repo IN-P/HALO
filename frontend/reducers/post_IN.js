@@ -63,6 +63,7 @@ export const REMOVE_POST_FAILURE = 'REMOVE_POST_FAILURE';
 export const EDIT_POST_REQUEST = 'EDIT_POST_REQUEST';
 export const EDIT_POST_SUCCESS = 'EDIT_POST_SUCCESS';
 export const EDIT_POST_FAILURE = 'EDIT_POST_FAILURE';
+export const EDIT_POST_RESET = 'EDIT_POST_RESET';
 
 export const REMOVE_IMAGE = 'REMOVE_IMAGE';
 
@@ -118,7 +119,7 @@ const postINReducer = (state = initialState, action) =>
       case UPLOAD_IMAGES_SUCCESS:
         draft.uploadImagesLoading = false;
         draft.uploadImagesDone = true;
-        draft.imagePaths = draft.imagePaths.concat(action.data);
+        draft.imagePaths = action.data;
         break;
       case UPLOAD_IMAGES_FAILURE:
         draft.uploadImagesLoading = false;
@@ -187,13 +188,20 @@ const postINReducer = (state = initialState, action) =>
         draft.editPostLoading = false;
         draft.editPostDone = true;
         const post = draft.mainPosts.find((v) => v.id === action.data.PostId);
-        if (post) post.content = action.data.content;
+        if (post) {
+          post.content = action.data.content;
+          post.Images = action.data.Images;
+          post.visibility = action.data.visibility;
+        }
         break;
       }
       case EDIT_POST_FAILURE:
         draft.editPostLoading = false;
         draft.editPostError = action.error;
         break;
+      case EDIT_POST_RESET:
+        draft.editPostDone = false;
+        break;        
 
       case REMOVE_IMAGE:
         draft.imagePaths.splice(action.index, 1);
