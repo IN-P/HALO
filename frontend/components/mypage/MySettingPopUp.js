@@ -4,8 +4,9 @@ import MySettingSidebar from "./MySettingSidebar";
 import MyHeader from "./MyHeader";
 import MyAvatar from "./MyAvatar";
 import MySettingEditForm from "./MySettingEditForm";
+import { CloseOutlined } from '@ant-design/icons';
 
-const MySettingPopUp = ({ data }) => {
+const MySettingPopUp = ({ data, onClose }) => {
   useEffect(() => {
     const removePadding = document.getElementById("mainContents");
     const removeMembership = document.getElementById("membership");
@@ -42,13 +43,12 @@ const MySettingPopUp = ({ data }) => {
         >
           <div>
             <div style={{ display: "flex", justifyContent: "end", padding: "1% 1% 0 0" }}>
-              <MyHeader data={data} />
+              <span style={{ fontSize: "20px", cursor: "pointer", marginLeft: "12px" }} onClick={onClose} ><CloseOutlined /></span>
             </div>
             <div style={{ display: "flex", justifyContent: "center", padding: "5% 0 5% 0" }}>
               <MyAvatar data={data} />
             </div>
             <div>
-              {data?.nickname}
               <MySettingEditForm data={data} />
             </div>
           </div>

@@ -5,7 +5,7 @@ import MyHeader from "../../components/mypage/MyHeader";
 import MyAvatar from "../../components/mypage/MyAvatar";
 import MyMain from "../../components/mypage/MyMain";
 import MyPost from "../../components/mypage/MyPost";
-import MySetting from "../../components/mypage/MySetting";
+import MySettingPopUp from "../../components/mypage/MySettingPopUp";
 import { InboxOutlined, NumberOutlined, TagOutlined } from "@ant-design/icons";
 
 import { useDispatch, useSelector } from "react-redux";
@@ -18,7 +18,6 @@ import MyBookmark from "../../components/mypage/MyBookmark";
 
 const ProfilePage = () => {
   // c
-  
   const router = useRouter();
   const { nickname } = router.query;
   console.log("INSERTING NICKNAME :"+ nickname);
@@ -45,9 +44,12 @@ const ProfilePage = () => {
   // v
   return (
     <AppLayout>
+      {showSetting ? (
+        <MySettingPopUp onClose={() => setShowSetting(false)} data={data} />
+      ) : (
       <div>
         <div style={{ display: "flex", justifyContent: "end", padding: "1% 1% 0 0" }}>
-          <MyHeader data={data} />
+          <MyHeader data={data} onClickSetting={() => setShowSetting(true)} />
         </div>
         <div style={{ display: "flex", justifyContent: "center" }}>
           <MyAvatar data={data} />
@@ -74,6 +76,7 @@ const ProfilePage = () => {
         <MyPost data={data} />
         <MyBookmark data={data} />
       </div>
+      )}
     </AppLayout>
   );
 };
