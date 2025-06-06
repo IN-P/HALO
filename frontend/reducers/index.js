@@ -2,15 +2,13 @@ import { HYDRATE } from 'next-redux-wrapper';
 import { combineReducers } from 'redux';
 import post_IN from './post_IN';
 import user_YG from './user_YG';
-<<<<<<< HEAD
 import follow_YB from './follow_YB'; //율비
 import reportReducer from './report_YB';
-=======
 import profile_jh from './profile_jh';
 import bookmark_IN from './bookmark_IN';
 import comment_IN from './comment_IN';
+import block from './block';//율비
 
->>>>>>> c3bad6c4717ec2a5c99cefa17dade66ebf55a0b6
 
 const rootReducer = combineReducers({
   index: (state = {}, action) => {
@@ -25,13 +23,11 @@ const rootReducer = combineReducers({
   profile_jh,
   post_IN,
   user_YG,
-<<<<<<< HEAD
   follow_YB, //율비
+  block,//율비
   report_YB: reportReducer,
-=======
   bookmark_IN,
   comment_IN,
->>>>>>> c3bad6c4717ec2a5c99cefa17dade66ebf55a0b6
 });
 
 export default rootReducer;

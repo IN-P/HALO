@@ -11,6 +11,7 @@ import chatReducer from '../reducers/chatReducer_JW'; // 재원
 import follow_YB from '../reducers/follow_YB'; // 율비 추가
 import reportReducer from '../reducers/report_YB';
 import profile_jh from '../reducers/profile_jh'; // 준혁
+import block from '../reducers/block'// 율비 추가
 
 const rootReducer = combineReducers({
   post_IN, // 인
@@ -22,6 +23,7 @@ const rootReducer = combineReducers({
   // 다른 리듀서들 추가 가능
   follow_YB,
  report_YB: reportReducer,
+  block, // 율비
 });
 
 const configureStore = () => {
