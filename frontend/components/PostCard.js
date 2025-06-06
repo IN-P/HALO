@@ -10,6 +10,8 @@ import { BOOKMARK_POST_REQUEST, UNBOOKMARK_POST_REQUEST } from '../reducers/book
 import Comment from './Comment';
 import { FaHeart, FaRegHeart, FaRegComment, FaRegPaperPlane, FaRegBookmark, FaBookmark, FaEllipsisH } from 'react-icons/fa';
 import { useRouter } from 'next/router';
+import FollowButton from '../components/FollowButton';
+import ReportModal from './ReportModal'; // 율비
 
 const PostCard = ({ post }) => {
   const dispatch = useDispatch();
@@ -20,6 +22,7 @@ const PostCard = ({ post }) => {
   const [showImageModal, setShowImageModal] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showReportForm, setShowReportForm] = useState(false); // 율비
 
   const menuRef = useRef(null);
 
@@ -56,7 +59,7 @@ const PostCard = ({ post }) => {
     }
   };
 
-  // 신고 핸들러
+  // 신고 핸들러 (간편버전)
   const onReport = () => {
     if (window.confirm('정말 신고하시겠습니까?')) {
       dispatch({ type: REPORT_POST_REQUEST, data: post.id });
@@ -106,21 +109,34 @@ const PostCard = ({ post }) => {
               {minutesAgo < 1 ? '방금 전' : `${minutesAgo}분 전`}
             </div>
           </div>
-          {/* 점점점 메뉴 */}
-          <div style={{ marginLeft: 'auto', position: 'relative' }} ref={menuRef}>
-            <button style={menuBtnStyle} onClick={() => setShowMenu((v) => !v)}>
-              <FaEllipsisH />
-            </button>
-            {showMenu && (
-              <div style={menuDropdownStyle}>
-                {isMine ? (
-                  <>
-                    {/* 수정: 페이지 이동 */}
+          {/* 오른쪽: 팔로우/신고/점점점 메뉴 */}
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+            {/* 팔로우 버튼 (본인 아님 + 유저 존재 시) */}
+            {post.User?.id && user?.id !== post.User.id && (
+              <FollowButton toUserId={Number(post.User.id)} />
+            )}
+            {/* 신고/점점점 메뉴 */}
+            {!isMine ? (
+              <>
+                {/* 신고(모달) */}
+                <button
+                  style={menuBtnStyle}
+                  onClick={() => setShowReportForm(prev => !prev)}
+                >
+                  <FaEllipsisH />
+                </button>
+              </>
+            ) : (
+              <div style={{ position: 'relative' }} ref={menuRef}>
+                {/* 점점점 메뉴(수정/삭제) */}
+                <button style={menuBtnStyle} onClick={() => setShowMenu((v) => !v)}>
+                  <FaEllipsisH />
+                </button>
+                {showMenu && (
+                  <div style={menuDropdownStyle}>
                     <button style={menuItemStyle} onClick={onEdit}>수정</button>
                     <button style={menuItemStyle} onClick={() => { onDelete(); setShowMenu(false); }}>삭제</button>
-                  </>
-                ) : (
-                  <button style={menuItemStyle} onClick={() => { onReport(); setShowMenu(false); }}>신고</button>
+                  </div>
                 )}
               </div>
             )}
@@ -168,6 +184,12 @@ const PostCard = ({ post }) => {
         {showComments && (
           <div style={{ marginTop: 20 }}>
             <Comment postId={post.id} currentUserId={user?.id} />
+          </div>
+        )}
+        {/* 신고 모달(율비) */}
+        {showReportForm && (
+          <div style={{ marginTop: 20 }}>
+            <ReportModal visible={showReportForm} postId={post.id} onClose={() => setShowReportForm(false)} />
           </div>
         )}
       </div>
