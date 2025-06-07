@@ -181,8 +181,10 @@ router.patch('/:postId/like', isLoggedIn, async (req, res, next) => {
   try {
     const post = await Post.findByPk(req.params.postId);
     if (!post) return res.status(404).send('게시글이 존재하지 않습니다.');
-    await post.addLikers(req.user.id);
-    res.status(200).json({ PostId: post.id, UserId: req.user.id });
+    const originId = post.regram_id || post.id;
+    const originPost = (originId === post.id) ? post : await Post.findByPk(originId);
+    await originPost.addLikers(req.user.id);
+    res.status(200).json({ PostId: originPost.id, UserId: req.user.id });
   } catch (error) {
     console.error(error);
     next(error);
@@ -194,41 +196,45 @@ router.delete('/:postId/like', isLoggedIn, async (req, res, next) => {
   try {
     const post = await Post.findByPk(req.params.postId);
     if (!post) return res.status(403).send('게시글이 존재하지 않습니다.');
-    await post.removeLikers(req.user.id);
-    res.status(200).json({ PostId: post.id, UserId: req.user.id });
+    const originId = post.regram_id || post.id;
+    const originPost = (originId === post.id) ? post : await Post.findByPk(originId);
+    await originPost.removeLikers(req.user.id);
+    res.status(200).json({ PostId: originPost.id, UserId: req.user.id });
   } catch (error) {
     console.error(error);
     next(error);
   }
 });
 
-// 리트윗
-router.post('/:postId/retweet', isLoggedIn, async (req, res, next) => {
+
+// 리그램
+router.post('/:postId/regram', isLoggedIn, async (req, res, next) => {
   try {
-    const targetPost = await Post.findOne({
-      where: { id: req.params.postId },
-      include: [{ model: Post, as: 'Retweet' }],
-    });
-
+    // 원글 존재 확인
+    const targetPost = await Post.findOne({ where: { id: req.params.postId } });
     if (!targetPost) return res.status(403).send('원본 게시글이 존재하지 않습니다.');
-    if (req.user.id === targetPost.user_id || (targetPost.Retweet && targetPost.Retweet.user_id === req.user.id)) {
-      return res.status(403).send('자기 글은 리트윗할 수 없습니다.');
+    // 자기 글 리그램 금지
+    if (req.user.id === targetPost.user_id) {
+      return res.status(403).send('자기 글은 리그램할 수 없습니다.');
     }
-
-    const retweetTargetId = targetPost.retweet_id || targetPost.id;
-    const existingRetweet = await Post.findOne({
-      where: { user_id: req.user.id, retweet_id: retweetTargetId },
+    // 이미 리그램한 경우 금지 (원하면)
+    const existingRegram = await Post.findOne({
+      where: { user_id: req.user.id, regram_id: targetPost.id }
     });
-    if (existingRetweet) return res.status(403).send('이미 리트윗한 게시글입니다.');
+    if (existingRegram) return res.status(403).send('이미 리그램한 게시글입니다.');
 
-    const retweet = await Post.create({
+    // 리그램 생성
+    const regram = await Post.create({
       user_id: req.user.id,
-      retweet_id: retweetTargetId,
-      content: 'retweet',
+      regram_id: targetPost.id,
+      content: req.body.content || '', // 코멘트 허용 시
+      visibility: req.body.isPublic ? 'public' : 'private',
     });
 
-    const fullRetweet = await Post.findOne({
-      where: { id: retweet.id },
+    // 원글의 이미지, 해시태그 등 필요시 복사 로직 추가
+
+    const fullRegram = await Post.findOne({
+      where: { id: regram.id },
       include: [
         { model: User, attributes: ['id', 'nickname'] },
         { model: Image },
@@ -236,7 +242,7 @@ router.post('/:postId/retweet', isLoggedIn, async (req, res, next) => {
         { model: User, as: 'Bookmarkers', attributes: ['id'] },
         {
           model: Post,
-          as: 'Retweet',
+          as: 'Regram',
           include: [
             { model: User, attributes: ['id', 'nickname'] },
             { model: Image },
@@ -245,7 +251,7 @@ router.post('/:postId/retweet', isLoggedIn, async (req, res, next) => {
       ],
     });
 
-    res.status(201).json(fullRetweet);
+    res.status(201).json(fullRegram);
   } catch (error) {
     console.error(error);
     next(error);
@@ -257,8 +263,10 @@ router.patch('/:postId/bookmark', isLoggedIn, async (req, res, next) => {
   try {
     const post = await Post.findByPk(req.params.postId);
     if (!post) return res.status(403).send('게시글이 존재하지 않습니다.');
-    await post.addBookmarkers(req.user.id);
-    res.status(200).json({ PostId: post.id, UserId: req.user.id });
+    const originId = post.regram_id || post.id;
+    const originPost = (originId === post.id) ? post : await Post.findByPk(originId);
+    await originPost.addBookmarkers(req.user.id);
+    res.status(200).json({ PostId: originPost.id, UserId: req.user.id });
   } catch (error) {
     console.error(error);
     next(error);
@@ -270,8 +278,10 @@ router.delete('/:postId/bookmark', isLoggedIn, async (req, res, next) => {
   try {
     const post = await Post.findByPk(req.params.postId);
     if (!post) return res.status(403).send('게시글이 존재하지 않습니다.');
-    await post.removeBookmarkers(req.user.id);
-    res.status(200).json({ PostId: post.id, UserId: req.user.id });
+    const originId = post.regram_id || post.id;
+    const originPost = (originId === post.id) ? post : await Post.findByPk(originId);
+    await originPost.removeBookmarkers(req.user.id);
+    res.status(200).json({ PostId: originPost.id, UserId: req.user.id });
   } catch (error) {
     console.error(error);
     next(error);

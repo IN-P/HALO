@@ -8,7 +8,7 @@ import profile_jh from './profile_jh';
 import bookmark_IN from './bookmark_IN';
 import comment_IN from './comment_IN';
 import hashtag_IN from './hashtag_IN';
-import retweet_IN from './retweet_IN';
+import regram_IN from './regram_IN';
 
 const rootReducer = combineReducers({
   index: (state = {}, action) => {
@@ -24,7 +24,7 @@ const rootReducer = combineReducers({
   bookmark_IN,
   comment_IN,
   hashtag_IN,
-  retweet_IN,
+  regram_IN,
   follow_YB,
   report_YB: reportReducer,
   user_YG,

@@ -31,7 +31,7 @@ router.get('/', async (req, res, next) => {
         { model: User, as: 'Bookmarkers', attributes: ['id'] },
         {
           model: Post,
-          as: 'Retweet',
+          as: 'Regram',     // ← 여기!
           include: [
             { model: User, attributes: ['id', 'nickname'] },
             { model: Image },
