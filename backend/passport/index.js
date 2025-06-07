@@ -5,7 +5,9 @@
 
 const passport = require('passport');
 const local = require('./local'); // local strategy 정의
+const google = require('./google'); //윤기추가
 const { User } = require('../models');
+const kakao = require('./kakao'); //윤기추가
 
 module.exports = () => {
   //  로그인 시: user.id만 세션에 저장
@@ -29,4 +31,6 @@ module.exports = () => {
 
   
   local(); // local 전략 실행 (passport.use(localStrategy) 등록)
+  google(passport); //윤기추가
+  kakao(passport); //윤기추가
 };
