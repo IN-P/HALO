@@ -4,8 +4,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
   ADD_POST_REQUEST, ADD_POST_RESET,
   EDIT_POST_REQUEST, EDIT_POST_RESET,
-  UPLOAD_IMAGES_REQUEST, UPLOAD_IMAGES_SUCCESS,
-  REMOVE_IMAGE,
+  UPLOAD_IMAGES_REQUEST,
+  REMOVE_IMAGE, RESET_IMAGE_PATHS 
 } from '../reducers/post_IN';
 import { useRouter } from 'next/router';
 
@@ -52,7 +52,7 @@ const PostForm = ({ editMode = false, originPost }) => {
       setContent(originPost.content || '');
       setOldImages(Array.isArray(originPost.Images) ? originPost.Images.map(img => img.src) : []);
       setIsPublic(originPost.visibility === 'public');
-      dispatch({ type: UPLOAD_IMAGES_SUCCESS, data: [] });
+      dispatch({ type: RESET_IMAGE_PATHS });
     }
   }, [editMode, originPost, dispatch]);
 
@@ -63,6 +63,7 @@ const PostForm = ({ editMode = false, originPost }) => {
     const formData = new FormData();
     files.forEach(f => formData.append('image', f));
     dispatch({ type: UPLOAD_IMAGES_REQUEST, data: formData });
+    e.target.value = '';
   }, [dispatch]);
   const onRemoveImage = useCallback(index => dispatch({ type: REMOVE_IMAGE, index }), [dispatch]);
   const onRemoveOldImage = idx => setOldImages(prev => prev.filter((_, i) => i !== idx));

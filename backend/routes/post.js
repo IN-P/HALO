@@ -36,17 +36,20 @@ router.post('/', isLoggedIn, async (req, res, next) => {
     const post = await Post.create({
       content: req.body.content,
       user_id: req.user.id,
+      visibility: req.body.isPublic ? 'public' : 'private',
     });
 
+    // 해시태그 등록/연결
     if (hashtags) {
       const result = await Promise.all(
-        hashtags.map((tag) =>
+        hashtags.map(tag =>
           Hashtag.findOrCreate({ where: { name: tag.slice(1).toLowerCase() } })
         )
       );
-      await post.addHashtags(result.map((v) => v[0]));
+      await post.addHashtags(result.map(v => v[0]));
     }
 
+    // 이미지 등록
     if (req.body.images) {
       const images = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
       for (const src of images) {
@@ -62,6 +65,7 @@ router.post('/', isLoggedIn, async (req, res, next) => {
         { model: Comment, include: [{ model: User, attributes: ['id', 'nickname'] }] },
         { model: User, as: 'Likers', attributes: ['id'] },
         { model: User, as: 'Bookmarkers', attributes: ['id'] },
+        { model: Hashtag, attributes: ['id', 'name'] },
       ],
     });
 
@@ -74,18 +78,17 @@ router.post('/', isLoggedIn, async (req, res, next) => {
 
 // 이미지 업로드
 router.post('/images', isLoggedIn, upload.array('image'), (req, res) => {
-  res.json(req.files.map((v) => v.filename));
+  res.json(req.files.map(v => v.filename));
 });
 
 // 게시글 삭제
 router.delete('/:postId', isLoggedIn, async (req, res, next) => {
   try {
-    // 1. 해당 게시글의 모든 댓글 하드 삭제
-    await Comment.destroy({
-      where: { post_id: req.params.postId }
-    });
-
-    // 2. 게시글 하드 삭제
+    // 0. 이미지 삭제
+    await Image.destroy({ where: { post_id: req.params.postId } });
+    // 1. 댓글 삭제
+    await Comment.destroy({ where: { post_id: req.params.postId } });
+    // 2. 게시글 삭제
     await Post.destroy({
       where: {
         id: req.params.postId,
@@ -100,39 +103,40 @@ router.delete('/:postId', isLoggedIn, async (req, res, next) => {
   }
 });
 
-// 게시글 수정 (이미지까지)
+// 게시글 수정 (해시태그/이미지 동기화)
 router.patch('/:postId', isLoggedIn, async (req, res, next) => {
   const hashtags = req.body.content.match(/#[^\s#]+/g);
   try {
     await Post.update(
-      { content: req.body.content },
+      { content: req.body.content, visibility: req.body.isPublic ? 'public' : 'private' },
       { where: { id: req.params.postId, user_id: req.user.id } }
     );
 
     const post = await Post.findByPk(req.params.postId);
 
-    // Hashtag도 동기화
+    // 해시태그 동기화
     if (hashtags) {
       const result = await Promise.all(
-        hashtags.map((tag) =>
+        hashtags.map(tag =>
           Hashtag.findOrCreate({ where: { name: tag.slice(1).toLowerCase() } })
         )
       );
-      await post.setHashtags(result.map((v) => v[0]));
+      await post.setHashtags(result.map(v => v[0]));
+    } else {
+      await post.setHashtags([]); // 해시태그 없으면 연결 해제
     }
 
-    // 이미지도 동기화 (여기 추가)
+    // 이미지 동기화
     if (req.body.images) {
-      // 배열 보정
       const images = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
       const existingImages = await post.getImages();
       const existingSrcs = existingImages.map(img => img.src);
 
-      // #1. 삭제될 이미지
+      // 삭제될 이미지
       const toRemove = existingImages.filter(img => !images.includes(img.src));
       await Promise.all(toRemove.map(img => img.destroy()));
 
-      // #2. 새로 추가된 이미지
+      // 새로 추가된 이미지
       const toAdd = images.filter(src => !existingSrcs.includes(src));
       for (const src of toAdd) {
         const exists = await Image.findOne({ where: { src, post_id: post.id } });
@@ -143,6 +147,29 @@ router.patch('/:postId', isLoggedIn, async (req, res, next) => {
     }
 
     res.status(200).json({ PostId: post.id, content: req.body.content });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+
+// 해시태그별 게시글 조회
+router.get('/hashtag/:hashtag', async (req, res, next) => {
+  try {
+    const tag = await Hashtag.findOne({ where: { name: req.params.hashtag.toLowerCase() } });
+    if (!tag) return res.status(404).send('없는 해시태그');
+    const posts = await tag.getPosts({
+      include: [
+        { model: User, attributes: ['id', 'nickname'] },
+        { model: Image },
+        { model: Comment, include: [{ model: User, attributes: ['id', 'nickname'] }] },
+        { model: User, as: 'Likers', attributes: ['id'] },
+        { model: User, as: 'Bookmarkers', attributes: ['id'] },
+        { model: Hashtag, attributes: ['id', 'name'] },
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+    res.status(200).json(posts);
   } catch (error) {
     console.error(error);
     next(error);
