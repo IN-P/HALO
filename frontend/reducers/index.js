@@ -13,7 +13,7 @@ import block from './block';//율비
 
 
 import hashtag_IN from './hashtag_IN';
-import retweet_IN from './retweet_IN';
+import regram_IN from './regram_IN';
 
 
 const rootReducer = combineReducers({
@@ -30,7 +30,7 @@ const rootReducer = combineReducers({
   bookmark_IN,
   comment_IN,
   hashtag_IN,
-  retweet_IN,
+  regram_IN,
   follow_YB,
   report_YB: reportReducer,
   user_YG,

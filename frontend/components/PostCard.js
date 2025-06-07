@@ -4,9 +4,9 @@ import {
   LIKE_POST_REQUEST, UNLIKE_POST_REQUEST, REMOVE_POST_REQUEST, REPORT_POST_REQUEST,
 } from '../reducers/post_IN';
 import { BOOKMARK_POST_REQUEST, UNBOOKMARK_POST_REQUEST } from '../reducers/bookmark_IN';
-import { RETWEET_REQUEST } from '../reducers/retweet_IN';
+import { REGRAM_REQUEST } from '../reducers/regram_IN';
 import Comment from './Comment';
-import { FaHeart, FaRegHeart, FaRegComment, FaRegPaperPlane, FaRegBookmark, FaBookmark, FaEllipsisH, FaRetweet } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaRegComment, FaBookmark, FaRegBookmark, FaEllipsisH, FaRetweet } from 'react-icons/fa';
 import { useRouter } from 'next/router';
 import FollowButton from '../components/FollowButton';
 import ReportModal from './ReportModal';
@@ -25,14 +25,31 @@ const PostCard = ({ post }) => {
   const [showReportForm, setShowReportForm] = useState(false);
   const menuRef = useRef(null);
 
-  const liked = post.Likers?.some((u) => u.id === user?.id);
-  const bookmarked = post.Bookmarkers?.some((u) => u.id === user?.id);
+  // ===== 리그램/원본 분기처리 =====
+  const isRegram = !!post.regram_id;
+  const origin = post.Regram;
+  const isPureRegram = isRegram && (!post.content || post.content.trim() === '');
+  // 버튼/카운트 등은 항상 "원본글" 기준으로
+  const basePost = isPureRegram && origin ? origin : post;
+  // 단, 댓글/수정/삭제는 내 글 기준(post.id)
   const isMine = post.User?.id === user?.id;
-  const minutesAgo = Math.floor((Date.now() - new Date(post.User?.last_active).getTime()) / 60000);
 
-  const prevImage = () => setImageIndex(i => (i > 0 ? i - 1 : post.Images.length - 1));
-  const nextImage = () => setImageIndex(i => (i < post.Images.length - 1 ? i + 1 : 0));
+  // 각종 상태
+  const liked = basePost.Likers?.some((u) => u.id === user?.id);
+  const bookmarked = basePost.Bookmarkers?.some((u) => u.id === user?.id);
 
+  // 이미지 표시도 분기
+  const images = isPureRegram && origin ? origin.Images : post.Images;
+  const [currentImages, setCurrentImages] = useState(images || []);
+  useEffect(() => { setCurrentImages(images || []); }, [images]);
+  const prevImage = () => setImageIndex(i => (i > 0 ? i - 1 : currentImages.length - 1));
+  const nextImage = () => setImageIndex(i => (i < currentImages.length - 1 ? i + 1 : 0));
+
+  // 시간 계산 (활동 안 넣었으면 createdAt 사용)
+  const baseDate = post.User?.last_active ? new Date(post.User.last_active) : new Date(post.createdAt);
+  const minutesAgo = Math.floor((Date.now() - baseDate.getTime()) / 60000);
+
+  // 메뉴바 외부 클릭 닫기
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (showMenu && menuRef.current && !menuRef.current.contains(e.target)) {
@@ -43,47 +60,50 @@ const PostCard = ({ post }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showMenu]);
 
-  const onEdit = () => {
-    router.push(`/edit/${post.id}`);
-    setShowMenu(false);
-  };
+  // 수정/삭제/신고/리그램
+  const onEdit = () => { router.push(`/edit/${post.id}`); setShowMenu(false); };
+  const onDelete = () => { if (window.confirm('정말 삭제하시겠습니까?')) dispatch({ type: REMOVE_POST_REQUEST, data: post.id }); };
+  const onReport = () => { if (window.confirm('정말 신고하시겠습니까?')) dispatch({ type: REPORT_POST_REQUEST, data: post.id }); };
+  const onRegram = () => { dispatch({ type: REGRAM_REQUEST, data: { postId: basePost.id, content: '', isPublic: true }, }); };
 
-  const onDelete = () => {
-    if (window.confirm('정말 삭제하시겠습니까?')) {
-      dispatch({ type: REMOVE_POST_REQUEST, data: post.id });
-    }
-  };
-
-  const onReport = () => {
-    if (window.confirm('정말 신고하시겠습니까?')) {
-      dispatch({ type: REPORT_POST_REQUEST, data: post.id });
-    }
-  };
-
-  const onRetweet = () => {
-    dispatch({ type: RETWEET_REQUEST, data: post.id });
-  };
+  // 본문 내용 렌더링 함수
+  const renderContent = (content) =>
+    content
+      ? content.split(/(#[^\s#]+)/g).map((part, i) =>
+          part.startsWith('#') ? (
+            <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: '#007bff' }}>
+              {part}
+            </a>
+          ) : (
+            part
+          )
+        )
+      : null;
 
   return (
     <div style={cardStyle}>
       {/* 왼쪽 이미지 영역 */}
       <div style={{ ...IMAGE_SIZE, position: 'relative', background: '#eee', flexShrink: 0 }}>
-        <img
-          src={`http://localhost:3065/uploads/post/${post.Images?.[imageIndex]?.src}`}
-          alt=""
-          style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#eee', cursor: 'pointer' }}
-          onClick={() => setShowImageModal(true)}
-        />
-        {post.Images && post.Images.length > 1 && (
+        {currentImages.length > 0 ? (
+          <img
+            src={`http://localhost:3065/uploads/post/${currentImages[imageIndex]?.src}`}
+            alt=""
+            style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#eee', cursor: 'pointer' }}
+            onClick={() => setShowImageModal(true)}
+          />
+        ) : (
+          <div style={{ width: '100%', height: '100%', background: '#f3f3f3' }} />
+        )}
+        {currentImages.length > 1 && (
           <>
             <button onClick={prevImage} style={{ ...arrowBtnStyle, left: 16 }}>←</button>
             <button onClick={nextImage} style={{ ...arrowBtnStyle, right: 16, left: 'auto' }}>→</button>
           </>
         )}
-        {showImageModal && (
+        {showImageModal && currentImages[imageIndex] && (
           <div style={modalStyle} onClick={() => setShowImageModal(false)}>
             <img
-              src={`http://localhost:3065/uploads/post/${post.Images?.[imageIndex]?.src}`}
+              src={`http://localhost:3065/uploads/post/${currentImages[imageIndex]?.src}`}
               alt=""
               style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: 12 }}
             />
@@ -92,19 +112,32 @@ const PostCard = ({ post }) => {
       </div>
 
       {/* 오른쪽: 본문+댓글 전체 */}
-      <div
-        style={{
-          flex: 1,
-          height: IMAGE_SIZE.height,
-          display: 'flex',
-          flexDirection: 'column',
-          background: '#fff',
-          minWidth: 390,
-          boxSizing: 'border-box',
-          padding: '20px 24px',
-          overflowX: 'hidden',
-        }}
-      >
+      <div style={{
+        flex: 1,
+        height: IMAGE_SIZE.height,
+        display: 'flex',
+        flexDirection: 'column',
+        background: '#fff',
+        minWidth: 390,
+        boxSizing: 'border-box',
+        padding: '20px 24px',
+        overflowX: 'hidden',
+      }}>
+        {/* 상단: 리그램 표시 */}
+        {isRegram && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            marginBottom: 12,
+            color: '#0088ff',
+            fontWeight: 600,
+            fontSize: 15,
+          }}>
+            <FaRetweet style={{ marginRight: 5 }} />
+            재게시했습니다
+          </div>
+        )}
+
         {/* 작성자+상단 메뉴 */}
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8, minHeight: 54 }}>
           <img
@@ -142,97 +175,92 @@ const PostCard = ({ post }) => {
           </div>
         </div>
 
-        {/* 리트윗된 게시글 미리보기 */}
-        {post.Retweet && (
-          <div style={{
-            border: '1px solid #eee',
-            background: '#f8f8fa',
-            borderRadius: 8,
-            padding: 16,
-            marginBottom: 16,
-            fontSize: 15,
-            color: '#444'
-          }}>
-            <div style={{ fontWeight: 600, marginBottom: 8 }}>
-              {post.Retweet.User?.nickname}님의 게시글
+        {/* 본문/미리보기 - 리그램 분기 */}
+        {isRegram && isPureRegram && origin ? (
+          // 리그램(내 코멘트X): 원본글만
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontWeight: 600, color: '#888', marginBottom: 5 }}>
+              {origin.User?.nickname}님의 게시글
             </div>
-            <div>
-              {post.Retweet.content.split(/(#[^\s#]+)/g).map((part, i) =>
-                part.startsWith('#') ? (
-                  <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: '#007bff' }}>
-                    {part}
-                  </a>
-                ) : (
-                  part
-                )
+            <div style={{ fontSize: 17, lineHeight: 1.6 }}>
+              {renderContent(origin.content)}
+            </div>
+          </div>
+        ) : isRegram && origin ? (
+          // 리그램(코멘트 있음): 내 코멘트 + 원본 미리보기 박스
+          <>
+            <div style={{
+              fontSize: 17, lineHeight: 1.6, marginBottom: 12,
+              minHeight: 60, maxHeight: 130, overflowY: 'auto'
+            }}>
+              {renderContent(post.content)}
+            </div>
+            <div style={{
+              border: '1px solid #eee',
+              background: '#f8f8fa',
+              borderRadius: 8,
+              padding: 16,
+              marginBottom: 12,
+              fontSize: 15,
+              color: '#444'
+            }}>
+              <div style={{ fontWeight: 600, marginBottom: 8 }}>
+                {origin.User?.nickname}님의 게시글
+              </div>
+              <div>
+                {renderContent(origin.content)}
+              </div>
+              {origin.Images && origin.Images.length > 0 && (
+                <img src={`http://localhost:3065/uploads/post/${origin.Images[0].src}`}
+                  style={{ width: 180, borderRadius: 8, marginTop: 10 }} alt="리그램 원본 이미지" />
               )}
             </div>
-            {post.Retweet.Images && post.Retweet.Images.length > 0 && (
-              <img src={`http://localhost:3065/uploads/post/${post.Retweet.Images[0].src}`}
-                style={{ width: 180, borderRadius: 8, marginTop: 10 }} alt="리트윗 이미지" />
-            )}
+          </>
+        ) : (
+          // 일반글
+          <div style={{
+            fontSize: 17, lineHeight: 1.6, marginBottom: 12,
+            minHeight: 60, maxHeight: 130, overflowY: 'auto'
+          }}>
+            {renderContent(post.content)}
           </div>
         )}
 
-        {/* 본문 내용 */}
-        <div
-          style={{
-            flex: '0 0 130px',
-            maxHeight: 130,
-            overflowY: 'auto',
-            marginBottom: 12,
-            fontSize: 17,
-            lineHeight: 1.6,
-            paddingRight: 4,
-            minHeight: 60,
-          }}
-        >
-          {post.content.split(/(#[^\s#]+)/g).map((part, i) =>
-            part.startsWith('#') ? (
-              <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: '#007bff' }}>
-                {part}
-              </a>
-            ) : (
-              part
-            )
-          )}
-        </div>
-
-        {/* 좋아요/댓글/아이콘 영역 */}
+        {/* 좋아요/댓글/리그램/북마크 (항상 원본 기준) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 22, fontSize: 26, marginBottom: 8 }}>
           <button
             style={iconBtnStyle}
             onClick={() => liked
-              ? dispatch({ type: UNLIKE_POST_REQUEST, data: post.id })
-              : dispatch({ type: LIKE_POST_REQUEST, data: post.id })}
+              ? dispatch({ type: UNLIKE_POST_REQUEST, data: basePost.id })
+              : dispatch({ type: LIKE_POST_REQUEST, data: basePost.id })}
           >
             {liked ? <FaHeart color="red" /> : <FaRegHeart />}
           </button>
           <button style={iconBtnStyle} onClick={() => setShowComments(v => !v)}>
             <FaRegComment />
           </button>
-          <button style={iconBtnStyle}>
-            <FaRegPaperPlane />
+          <button style={iconBtnStyle} onClick={onRegram}>
+            <FaRetweet color={isRegram ? "#00aaff" : undefined} />
           </button>
-          <button style={iconBtnStyle} onClick={onRetweet}>
-            <FaRetweet />
-          </button>
+          <span style={{ fontSize: 16, color: "#0088ff" }}>
+            {basePost.Regrams?.length || 0}회 재게시
+          </span>
           <button
             style={iconBtnStyle}
             onClick={() => bookmarked
-              ? dispatch({ type: UNBOOKMARK_POST_REQUEST, data: post.id })
-              : dispatch({ type: BOOKMARK_POST_REQUEST, data: post.id })}
+              ? dispatch({ type: UNBOOKMARK_POST_REQUEST, data: basePost.id })
+              : dispatch({ type: BOOKMARK_POST_REQUEST, data: basePost.id })}
           >
             {bookmarked ? <FaBookmark color="#007bff" /> : <FaRegBookmark />}
           </button>
         </div>
 
-        {/* 좋아요/댓글 수 */}
+        {/* 좋아요/댓글 수 (원본 기준) */}
         <div style={{ fontSize: 15, color: '#666', marginBottom: 8 }}>
-          {post.Likers?.length || 0} likes • {post.Comments?.length || 0} comments
+          {basePost.Likers?.length || 0} likes • {basePost.Comments?.length || 0} comments
         </div>
 
-        {/* 댓글 영역 (토글) */}
+        {/* 댓글 (내 글 기준) */}
         {showComments && (
           <div
             style={{
