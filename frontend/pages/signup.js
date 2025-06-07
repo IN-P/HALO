@@ -37,7 +37,6 @@ const SignupPage = () => {
     });
   };
 
-  // 회원가입 성공 시
   useEffect(() => {
     if (signUpDone) {
       alert('회원가입 성공');
@@ -45,7 +44,6 @@ const SignupPage = () => {
     }
   }, [signUpDone]);
 
-  // 에러 처리
   useEffect(() => {
     if (signUpError) {
       alert(signUpError);
@@ -54,11 +52,11 @@ const SignupPage = () => {
 
   return (
     <div className="container">
-      <div className="left">
+      <div className="left-panel">
         <h1>Join Us</h1>
         <h2>Halo</h2>
       </div>
-      <div className="right">
+      <div className="right-panel">
         <h2>Sign Up</h2>
         <form onSubmit={handleSignup}>
           <input
@@ -89,7 +87,7 @@ const SignupPage = () => {
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
           />
-          <label>
+          <label className="agree">
             <input
               type="checkbox"
               checked={agree}
@@ -110,44 +108,60 @@ const SignupPage = () => {
       </div>
       <style jsx>{`
         .container {
+          background: url('http://localhost:3065/img/view/signup.png') no-repeat center center fixed;
+          background-size: cover;
           display: flex;
           height: 100vh;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0 60px;
         }
-        .left {
-          flex: 1;
-          background: url('/baseball-signup.png') center/cover no-repeat;
-          padding: 50px;
+
+        .left-panel {
           color: white;
+          font-weight: bold;
+          font-size: 2.5rem;
         }
-        .right {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
+
+        .right-panel {
+          background-color: rgba(255, 255, 255, 0.95);
           padding: 40px;
+          border-radius: 16px;
+          width: 400px;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         }
+
         form {
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: 12px;
         }
-        input,
-        label {
-          padding: 10px;
-          border-radius: 5px;
+
+        input {
+          padding: 12px;
           border: 1px solid #ccc;
+          border-radius: 6px;
         }
+
         button {
-          padding: 10px;
-          background-color: #4A7EFF;
+          padding: 12px;
+          background-color: #00C896;
           color: white;
           border: none;
-          border-radius: 5px;
+          border-radius: 6px;
+          font-weight: bold;
           cursor: pointer;
         }
+
         .link {
-          color: blue;
+          color: #007bff;
           cursor: pointer;
+          font-weight: 500;
+        }
+
+        .agree {
+          font-size: 0.9rem;
+          text-align: left;
         }
       `}</style>
     </div>

@@ -25,7 +25,7 @@ const Home = () => {
   return (
     <AppLayout >
       <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <div style={{ width: '60%' }}>
+        <div style={{ width: '70%' }}>
           {/* 검색 바 */}
           <input
             type="text"
