@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { isLoggedIn } = require("./middlewares");
 const { User, Achievement, Badge, UserInfo, Follow, Myteam, Post, UserPoint, UserPayment, ActiveLog } = require("../models");
-
+const { Block } = require("../models");//율비
 
 // nickname으로 userId 값 불러온 후 정보 가져오기
 router.get("/:nickname", async (req, res, next) => {
@@ -50,6 +50,20 @@ router.get("/:nickname", async (req, res, next) => {
     data.Followers = data.Followers.length;
     data.Followings = data.Followings.length;
     data.Achievements = user.Achievements?.length || 0;
+      //////////// 율비 isBlocked 여부 추가
+    if (req.user) {
+      const me = req.user.id;
+      const blocked = await Block.findOne({
+        where: {
+          from_user_id: me,
+          to_user_id: fullUser.id,
+        },
+      });
+      data.isBlocked = !!blocked;
+    } else {
+      data.isBlocked = false;
+    }
+    //////////////////////////////
     res.status(200).json(data);
   } else {
     res.status(404).json("존재하지 않는 계정입니다") }

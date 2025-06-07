@@ -13,6 +13,8 @@ import report_YB from '../reducers/report_YB';
 import user_YG from '../reducers/user_YG'; 
 import chatReducer from '../reducers/chatReducer_JW'; 
 import profile_jh from '../reducers/profile_jh';
+import reportReducer from '../reducers/report_YB';
+import block from '../reducers/block'// 율비 추가
 
 const rootReducer = combineReducers({
   post_IN,
@@ -21,7 +23,8 @@ const rootReducer = combineReducers({
   retweet_IN,
   bookmark_IN,
   follow_YB,
-  report_YB,
+ report_YB: reportReducer,
+  block, // 율비
   user_YG, 
   profile_jh,
   chat: chatReducer,
