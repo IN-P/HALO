@@ -359,6 +359,12 @@ router.patch('/restore', async (req, res, next) => {
 });
 
 
+router.get('/', async (req, res) => {
+  if (req.isAuthenticated()) {
+    return res.json(req.user); // 현재 로그인한 유저 정보 전달
+  }
+  return res.status(401).json({ message: '로그인 필요' });
+});
 
 
 

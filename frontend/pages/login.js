@@ -80,8 +80,12 @@ const LoginPage = () => {
           </span>
         </p>
         <div className="social">
-          <button disabled>Continue with Google</button>
-          <button disabled>Continue with Google</button>
+          <button onClick={() => window.location.href = 'http://localhost:3065/auth/google'}>
+            Continue with Google
+          </button>
+           <button onClick={() => window.location.href = 'http://localhost:3065/auth/kakao'}>
+            Continue with Kakao
+          </button>
         </div>
         <p className="recovery">
           계정이 복구하실껀가요{' '}
