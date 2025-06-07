@@ -89,8 +89,8 @@ function* removePost(action) {
   }
 }
 
-function editPostAPI({ postId, content }) {
-  return axios.patch(`http://localhost:3065/post/${postId}`, { content }, { withCredentials: true });
+function editPostAPI({ postId, content, images, isPublic }) {
+  return axios.patch(`http://localhost:3065/post/${postId}`, { content, images, isPublic }, { withCredentials: true });
 }
 function* editPost(action) {
   try {

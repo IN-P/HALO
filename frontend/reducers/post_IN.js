@@ -63,8 +63,14 @@ export const REMOVE_POST_FAILURE = 'REMOVE_POST_FAILURE';
 export const EDIT_POST_REQUEST = 'EDIT_POST_REQUEST';
 export const EDIT_POST_SUCCESS = 'EDIT_POST_SUCCESS';
 export const EDIT_POST_FAILURE = 'EDIT_POST_FAILURE';
+export const EDIT_POST_RESET = 'EDIT_POST_RESET';
+
+export const RESET_IMAGE_PATHS = 'RESET_IMAGE_PATHS';
 
 export const REMOVE_IMAGE = 'REMOVE_IMAGE';
+
+export const UPDATE_BOOKMARK_IN_POST = 'UPDATE_BOOKMARK_IN_POST';
+
 
 // 리듀서
 const postINReducer = (state = initialState, action) =>
@@ -115,12 +121,15 @@ const postINReducer = (state = initialState, action) =>
       case UPLOAD_IMAGES_SUCCESS:
         draft.uploadImagesLoading = false;
         draft.uploadImagesDone = true;
-        draft.imagePaths = draft.imagePaths.concat(action.data);
+        draft.imagePaths = Array.from(new Set(draft.imagePaths.concat(action.data)));
         break;
       case UPLOAD_IMAGES_FAILURE:
         draft.uploadImagesLoading = false;
         draft.uploadImagesError = action.error;
         break;
+      case RESET_IMAGE_PATHS:
+        draft.imagePaths = [];
+        break;        
 
       case LIKE_POST_REQUEST:
         draft.likePostLoading = true;
@@ -184,17 +193,38 @@ const postINReducer = (state = initialState, action) =>
         draft.editPostLoading = false;
         draft.editPostDone = true;
         const post = draft.mainPosts.find((v) => v.id === action.data.PostId);
-        if (post) post.content = action.data.content;
+        if (post) {
+          post.content = action.data.content;
+          post.Images = action.data.Images;
+          post.visibility = action.data.visibility;
+        }
         break;
       }
       case EDIT_POST_FAILURE:
         draft.editPostLoading = false;
         draft.editPostError = action.error;
         break;
+      case EDIT_POST_RESET:
+        draft.editPostDone = false;
+        break;        
 
       case REMOVE_IMAGE:
         draft.imagePaths.splice(action.index, 1);
         break;
+
+      case UPDATE_BOOKMARK_IN_POST: {
+        const post = draft.mainPosts.find((v) => v.id === action.data.postId);
+        if (post) {
+          if (action.data.bookmarked) {
+            if (!post.Bookmarkers.some((u) => u.id === action.data.userId)) {
+              post.Bookmarkers.push({ id: action.data.userId });
+            }
+          } else {
+            post.Bookmarkers = post.Bookmarkers.filter((u) => u.id !== action.data.userId);
+          }
+        }
+        break;
+      }
 
       default:
         break;

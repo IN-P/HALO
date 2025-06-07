@@ -34,6 +34,7 @@ const adminPlayerRouter = require('./routes/adminPlayer');   //## 경미
 const weatherRouter = require('./routes/weather'); //## 재원
 const chatRouter = require('./routes/chat') //## 재원
 const resetPasswordRouter = require('./routes/resetPassword'); //윤기
+const authRouter = require('./routes/auth'); // 윤기 간편 로그인 라우터 추가
 
 // .env 적용
 dotenv.config();
@@ -53,7 +54,11 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   secret: process.env.COOKIE_SECRET,
-  cookie: { httpOnly: true, secure: false },
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production', //  추가됨
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', //  추가됨
+  },
 }));
 
 // 반드시 session 뒤에 호출! 이것도 추가입니다
@@ -95,6 +100,7 @@ app.use('/store/admin', adminPlayerRouter);   //## 경미
 app.use('/api/chat', chatRouter); //## 재원
 app.use('/api/weather', weatherRouter); //## 재원 날씨
 app.use('/user/reset-password', resetPasswordRouter); //윤기 비번재발급
+app.use('/auth', authRouter); //윤기추가 /auth/google, /auth/google/callback 용
 
 module.exports = app;
 
