@@ -12,26 +12,21 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  //  이미 로그인된 상태면 메인으로 리다이렉트
   useEffect(() => {
     if (isLogin) {
       router.replace('/');
     }
   }, [isLogin]);
 
-  // 로그인 요청
   const handleLogin = (e) => {
     e.preventDefault();
-    if (!email || !password) {
-      return alert('이메일과 비밀번호를 모두 입력해주세요.');
-    }
+    if (!email || !password) return alert('이메일과 비밀번호를 모두 입력해주세요.');
     dispatch({
       type: LOG_IN_REQUEST,
       data: { email, password },
     });
   };
 
-  // 로그인 성공 시 이동
   useEffect(() => {
     if (logInDone) {
       alert('로그인 성공');
@@ -39,20 +34,23 @@ const LoginPage = () => {
     }
   }, [logInDone]);
 
-  // 로그인 실패 시 에러 표시
   useEffect(() => {
-    if (logInError) {
-      alert(logInError);
-    }
+    if (logInError) alert(logInError);
   }, [logInError]);
 
   return (
     <div className="container">
-      <div className="left">
+      {/* 좌측 상단 Welcome + Halo 로고 */}
+      <div className="branding">
         <h1>Welcome</h1>
-        <h2>Halo</h2>
+        <div className="logo-box">
+          <img src="/img/logo.png" alt="Halo 로고" />
+          <h2>Halo</h2>
+        </div>
       </div>
-      <div className="right">
+
+      {/* 로그인 박스 */}
+      <div className="login-box">
         <h2>Login</h2>
         <form onSubmit={handleLogin}>
           <input
@@ -73,84 +71,169 @@ const LoginPage = () => {
             {logInLoading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+
         <p>
           Don’t have an account?{' '}
           <span className="link" onClick={() => router.push('/signup')}>
             Sign up
           </span>
         </p>
+
         <div className="social">
-          <button onClick={() => window.location.href = 'http://localhost:3065/auth/google'}>
+          <button className="google" onClick={() => window.location.href = 'http://localhost:3065/auth/google'}>
             Continue with Google
           </button>
-           <button onClick={() => window.location.href = 'http://localhost:3065/auth/kakao'}>
+          <button className="kakao" onClick={() => window.location.href = 'http://localhost:3065/auth/kakao'}>
             Continue with Kakao
           </button>
         </div>
+
         <p className="recovery">
           계정이 복구하실껀가요{' '}
           <span className="link" onClick={() => alert('계정 복구 페이지는 추후 구현 예정')}>
             계정복구
           </span>
         </p>
-          <p className="recovery">
+        <p className="recovery">
           비밀번호를 잊으셨나요?{' '}
           <span
             className="link"
-            onClick={() => window.open('/reset-password-popup', '비밀번호 재발급', 'width=500,height=600')}
+            onClick={() =>
+              window.open('/reset-password-popup', '비밀번호 재발급', 'width=500,height=600')
+            }
           >
             비밀번호 재발급
           </span>
-      </p>
+        </p>
       </div>
+
       <style jsx>{`
         .container {
-          display: flex;
+          position: relative;
+          background: url('http://localhost:3065/img/view/login.png') no-repeat center center fixed;
+          background-size: cover;
           height: 100vh;
+          width: 100%;
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
         }
-        .left {
-          flex: 1;
-          background: url('/baseball-login.png') center/cover no-repeat;
-          padding: 50px;
+
+        .branding {
+          position: absolute;
+          top: 40px;
+          left: 60px;
           color: white;
         }
-        .right {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          padding: 40px;
+
+        .branding h1 {
+          font-size: 3rem;
+          margin: 0;
+          font-weight: bold;
         }
+
+        .logo-box {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-top: 10px;
+        }
+
+        .logo-box img {
+          width: 40px;
+          height: 40px;
+        }
+
+        .logo-box h2 {
+          font-size: 1.8rem;
+          margin: 0;
+        }
+
+        .login-box {
+          background-color: rgba(255, 255, 255, 0.9);
+          border-radius: 16px;
+          padding: 40px;
+          width: 380px;
+          margin-right: 80px;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+          text-align: center;
+        }
+
+        .login-box h2 {
+          margin-bottom: 20px;
+          font-size: 1.8rem;
+        }
+
         form {
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: 12px;
         }
+
         input {
-          padding: 10px;
-          border-radius: 5px;
+          padding: 12px;
+          border-radius: 6px;
           border: 1px solid #ccc;
+          font-size: 1rem;
         }
+
         button {
-          padding: 10px;
-          background-color: #4A7EFF;
+          padding: 12px;
+          font-size: 1rem;
+          background-color: #222;
           color: white;
           border: none;
-          border-radius: 5px;
+          border-radius: 6px;
           cursor: pointer;
         }
+
+        button:hover {
+          background-color: #333;
+        }
+
         .social {
-          margin-top: 10px;
+          margin-top: 15px;
           display: flex;
+          flex-direction: column;
           gap: 10px;
         }
+
+        .google {
+          background-color: #4285F4;
+        }
+
+        .kakao {
+          background-color: #FEE500;
+          color: #3c1e1e;
+        }
+
         .recovery {
-          color: red;
+          color: #c00;
+          font-size: 0.9rem;
           margin-top: 10px;
         }
+
         .link {
-          color: blue;
+          color: #0070f3;
+          text-decoration: underline;
           cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+          .container {
+            justify-content: center;
+          }
+
+          .branding {
+            top: 20px;
+            left: 20px;
+            font-size: 0.9rem;
+          }
+
+          .login-box {
+            margin-right: 0;
+            width: 90%;
+          }
         }
       `}</style>
     </div>
