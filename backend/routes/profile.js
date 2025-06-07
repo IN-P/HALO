@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { isLoggedIn } = require("./middlewares");
-const { User, Achievement, Badge, UserInfo, Follow, Myteam, Post, UserPoint, UserPayment, ActiveLog } = require("../models");
+const { User, Block, Achievement, Badge, UserInfo, Follow, Myteam, Post, UserPoint, UserPayment, ActiveLog } = require("../models");
 
 
 // nickname으로 userId 값 불러온 후 정보 가져오기
@@ -33,7 +33,9 @@ router.get("/:nickname", async (req, res, next) => {
       { model: Achievement, attributes: ['id', 'name', 'description'], through: { attributes: ['createdAt', 'updatedAt'], }, },
       { model: Badge, attributes: ['id', 'name', 'description'], through: { attributes: ['createdAt', 'updatedAt'], }, },
       { model: Myteam, attributes: ['id', 'teamname', 'teamcolor', 'region'], },
-      
+      { model: Block, as: 'Blockeds', include: [
+        { model: User, as: 'Blocked', attributes: ['id', 'nickname', 'profile_img'], } ] },
+        
       // 민감한 정보
       { model: UserPoint },
       { model: UserPayment },

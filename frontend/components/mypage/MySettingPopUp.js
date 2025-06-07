@@ -5,8 +5,9 @@ import MyHeader from "./MyHeader";
 import MyAvatar from "./MyAvatar";
 import MySettingEditForm from "./MySettingEditForm";
 import { CloseOutlined } from '@ant-design/icons';
-import { MySettingBlock } from './MySettingBlock';
 import { useDispatch, useSelector } from "react-redux";
+import MySettingBlock from './MySettingBlock';
+import MySettingAchievement from "./MySettingAchievement";
 
 const MySettingPopUp = ({ data, onClose }) => {
 
@@ -19,8 +20,6 @@ const MySettingPopUp = ({ data, onClose }) => {
     if (removeMembership) { removeMembership.style.display = "none"; }
     if (removeShare) { removeShare.style.display = "none"; }
   }, []);
-
-  const [blockList, setBlockList] = useState(false);
 
   return (
     <div>
@@ -38,27 +37,27 @@ const MySettingPopUp = ({ data, onClose }) => {
         >
           <MySettingSidebar />
         </Col>
-        <Col
-          span={18}
-          style={{
-            height: "100vh",
-            overflowY: "auto",
-            backgroundColor: "#fff",
-          }}
-        >
-          {/*
-            <div>
-              <div style={{ display: "flex", justifyContent: "end", padding: "1% 1% 0 0" }}>
-                <span style={{ fontSize: "20px", cursor: "pointer", marginLeft: "12px" }} onClick={onClose} ><CloseOutlined /></span>
+        <Col span={18} style={{ height: "100vh", overflowY: "auto", backgroundColor: "#fff", }} >
+        <div>
+        </div>
+        <div>
+          <div style={{ display: "flex", justifyContent: "end", padding: "1% 1% 0 0" }}>
+            <span style={{ fontSize: "20px", cursor: "pointer", marginLeft: "12px" }} onClick={onClose} ><CloseOutlined /></span>
+            {/* 프로필 메인
               </div>
               <div style={{ display: "flex", justifyContent: "center", padding: "5% 0 5% 0" }}>
-                <MyAvatar data={data} />
+              <MyAvatar data={data} />
               </div>
               <div>
-                <MySettingEditForm data={data} />
+              <MySettingEditForm data={data} />
+              */}
               </div>
+              {/* 차단 목록 
+              <MySettingBlock data={data}/>
+              */}
+              {/**/}
+              <MySettingAchievement />
             </div>
-*/}
         </Col>
       </Row>
     </div>

@@ -50,17 +50,21 @@ const ProfilePage = () => {
   // v
   return (
   <AppLayout>
+    {/* 본인의 프로필인지 확인 */}
     {showSetting && isMyProfile ? (
       <MySettingPopUp onClose={() => setShowSetting(false)} data={data} />
     ) : (
       <div>
         <div style={{ display: "flex", justifyContent: "end", padding: "1% 1% 0 0" }}>
+          {/* 프로필 헤더 아이콘 */}
           <MyHeader data={data} onClickSetting={() => setShowSetting(true)} isMyProfile={isMyProfile} />
         </div>
         <div style={{ display: "flex", justifyContent: "center" }}>
+          {/* 프로필 이미지 */}
           <MyAvatar data={data} />
           <div style={{ width: "30px" }} />
-          <MyMain data={data} isMyProfile={isMyProfile} />
+          {/* 프로필 영역 */}
+          <MyMain data={data} isMyProfile={isMyProfile} loginUser={user} />
         </div>
         <hr style={{ marginTop: "3%" }} />
         <div style={{ display: "flex", justifyContent: "center", gap: "100px" }}>

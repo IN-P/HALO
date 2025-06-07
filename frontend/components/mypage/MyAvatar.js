@@ -5,8 +5,7 @@ import { CameraOutlined } from "@ant-design/icons";
 const MyAvatar = ({ data }) => {
   if (!data || !data.profile_img) {
     return (
-      <div
-        style={{
+      <div style={{
           width: 256,
           height: 256,
           borderRadius: "50%",
@@ -17,8 +16,7 @@ const MyAvatar = ({ data }) => {
           alignItems: "center",
           fontSize: 48,
           color: "#aaa",
-        }}
-      >
+        }} >
         <CameraOutlined />
       </div>
     );
