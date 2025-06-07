@@ -65,6 +65,8 @@ export const EDIT_POST_SUCCESS = 'EDIT_POST_SUCCESS';
 export const EDIT_POST_FAILURE = 'EDIT_POST_FAILURE';
 export const EDIT_POST_RESET = 'EDIT_POST_RESET';
 
+export const RESET_IMAGE_PATHS = 'RESET_IMAGE_PATHS';
+
 export const REMOVE_IMAGE = 'REMOVE_IMAGE';
 
 export const UPDATE_BOOKMARK_IN_POST = 'UPDATE_BOOKMARK_IN_POST';
@@ -119,12 +121,15 @@ const postINReducer = (state = initialState, action) =>
       case UPLOAD_IMAGES_SUCCESS:
         draft.uploadImagesLoading = false;
         draft.uploadImagesDone = true;
-        draft.imagePaths = action.data;
+        draft.imagePaths = Array.from(new Set(draft.imagePaths.concat(action.data)));
         break;
       case UPLOAD_IMAGES_FAILURE:
         draft.uploadImagesLoading = false;
         draft.uploadImagesError = action.error;
         break;
+      case RESET_IMAGE_PATHS:
+        draft.imagePaths = [];
+        break;        
 
       case LIKE_POST_REQUEST:
         draft.likePostLoading = true;

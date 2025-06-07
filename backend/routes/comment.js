@@ -75,7 +75,10 @@ router.get('/post/:postId/tree', async (req, res, next) => {
   try {
     const comments = await Comment.findAll({
       where: { post_id: req.params.postId },
-      include: [{ model: User, attributes: ['id', 'nickname'] }],
+      include: [
+        { model: User, attributes: ['id', 'nickname'] },
+        { model: Comment, as: 'Parent', include: [{ model: User, attributes: ['id', 'nickname'] }] }
+      ],
       order: [['id', 'ASC']],
     });
 
