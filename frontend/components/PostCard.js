@@ -119,9 +119,9 @@ const PostCard = ({ post }) => {
             </div>
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-            {post.User?.id && user?.id !== post.User.id && (
+            {/* {post.User?.id && user?.id !== post.User.id && (
               <FollowButton toUserId={Number(post.User.id)} />
-            )}
+            )} */}
             {!isMine ? (
               <button style={menuBtnStyle} onClick={() => setShowReportForm(prev => !prev)}>
                 <FaEllipsisH />
