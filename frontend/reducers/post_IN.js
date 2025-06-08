@@ -28,13 +28,12 @@ export const initialState = {
   removePostLoading: false,
   removePostDone: false,
   removePostError: null,
-  
+
   editPostLoading: false,
   editPostDone: false,
   editPostError: null,
 };
 
-// 액션 타입
 export const LOAD_POSTS_REQUEST = 'LOAD_POSTS_REQUEST';
 export const LOAD_POSTS_SUCCESS = 'LOAD_POSTS_SUCCESS';
 export const LOAD_POSTS_FAILURE = 'LOAD_POSTS_FAILURE';
@@ -65,17 +64,26 @@ export const EDIT_POST_SUCCESS = 'EDIT_POST_SUCCESS';
 export const EDIT_POST_FAILURE = 'EDIT_POST_FAILURE';
 export const EDIT_POST_RESET = 'EDIT_POST_RESET';
 
+export const REGRAM_SUCCESS = 'REGRAM_IN/REGRAM_SUCCESS';
+export const REGRAM_REQUEST = 'REGRAM_IN/REGRAM_REQUEST';
+export const REGRAM_FAILURE = 'REGRAM_IN/REGRAM_FAILURE';
+export const REGRAM_RESET   = 'REGRAM_IN/REGRAM_RESET';
+
 export const RESET_IMAGE_PATHS = 'RESET_IMAGE_PATHS';
 
 export const REMOVE_IMAGE = 'REMOVE_IMAGE';
 
-export const UPDATE_BOOKMARK_IN_POST = 'UPDATE_BOOKMARK_IN_POST';
+export const UPDATE_COMMENT_COUNT_IN_POST = 'UPDATE_COMMENT_COUNT_IN_POST';
+
+export const BOOKMARK_POST_SUCCESS = 'BOOKMARK_POST_SUCCESS';
+
+export const UNBOOKMARK_POST_SUCCESS = 'UNBOOKMARK_POST_SUCCESS';
 
 
-// 리듀서
 const postINReducer = (state = initialState, action) =>
   produce(state, (draft) => {
     switch (action.type) {
+
       case LOAD_POSTS_REQUEST:
         draft.loadPostsLoading = true;
         draft.loadPostsError = null;
@@ -129,7 +137,10 @@ const postINReducer = (state = initialState, action) =>
         break;
       case RESET_IMAGE_PATHS:
         draft.imagePaths = [];
-        break;        
+        break;
+      case REMOVE_IMAGE:
+        draft.imagePaths.splice(action.index, 1);
+        break;
 
       case LIKE_POST_REQUEST:
         draft.likePostLoading = true;
@@ -139,9 +150,22 @@ const postINReducer = (state = initialState, action) =>
       case LIKE_POST_SUCCESS: {
         draft.likePostLoading = false;
         draft.likePostDone = true;
-        const post = draft.mainPosts.find((v) => v.id === action.data.PostId);
-        if (post && !post.Likers.some((v) => v.id === action.data.UserId)) {
-          post.Likers.push({ id: action.data.UserId });
+        if (action.data.basePost) {
+          const updated = action.data.basePost;
+          const baseId = updated.id;
+          const base = draft.mainPosts.find((v) => v.id === baseId);
+          if (base) {
+            base.Likers = updated.Likers || [];
+            base.Bookmarkers = updated.Bookmarkers || [];
+            base.Regrams = updated.Regrams || [];
+          }
+          draft.mainPosts.forEach((v) => {
+            if (v.regram_id === baseId && v.Regram) {
+              v.Regram.Likers = updated.Likers || [];
+              v.Regram.Bookmarkers = updated.Bookmarkers || [];
+              v.Regram.Regrams = updated.Regrams || [];
+            }
+          });
         }
         break;
       }
@@ -158,15 +182,109 @@ const postINReducer = (state = initialState, action) =>
       case UNLIKE_POST_SUCCESS: {
         draft.unlikePostLoading = false;
         draft.unlikePostDone = true;
-        const post = draft.mainPosts.find((v) => v.id === action.data.PostId);
-        if (post) {
-          post.Likers = post.Likers.filter((v) => v.id !== action.data.UserId);
+        if (action.data.basePost) {
+          const updated = action.data.basePost;
+          const baseId = updated.id;
+          const base = draft.mainPosts.find((v) => v.id === baseId);
+          if (base) {
+            base.Likers = updated.Likers || [];
+            base.Bookmarkers = updated.Bookmarkers || [];
+            base.Regrams = updated.Regrams || [];
+          }
+          draft.mainPosts.forEach((v) => {
+            if (v.regram_id === baseId && v.Regram) {
+              v.Regram.Likers = updated.Likers || [];
+              v.Regram.Bookmarkers = updated.Bookmarkers || [];
+              v.Regram.Regrams = updated.Regrams || [];
+
+            }
+          });
         }
         break;
       }
       case UNLIKE_POST_FAILURE:
         draft.unlikePostLoading = false;
         draft.unlikePostError = action.error;
+        break;
+
+      case BOOKMARK_POST_SUCCESS: {
+        if (action.data.basePost) {
+          const updated = action.data.basePost;
+          const baseId = updated.id;
+          const base = draft.mainPosts.find((v) => v.id === baseId);
+          if (base) {
+            base.Likers = updated.Likers || [];
+            base.Bookmarkers = updated.Bookmarkers || [];
+            base.Regrams = updated.Regrams || [];
+          }
+          draft.mainPosts.forEach((v) => {
+            if (v.regram_id === baseId && v.Regram) {
+              v.Regram.Likers = updated.Likers || [];
+              v.Regram.Bookmarkers = updated.Bookmarkers || [];
+              v.Regram.Regrams = updated.Regrams || [];
+            }
+          });
+        }
+        break;
+      }
+      case UNBOOKMARK_POST_SUCCESS: {
+        if (action.data.basePost) {
+          const updated = action.data.basePost;
+          const baseId = updated.id;
+          const base = draft.mainPosts.find((v) => v.id === baseId);
+          if (base) {
+            base.Likers = updated.Likers || [];
+            base.Bookmarkers = updated.Bookmarkers || [];
+            base.Regrams = updated.Regrams || [];
+          }
+          draft.mainPosts.forEach((v) => {
+            if (v.regram_id === baseId && v.Regram) {
+              v.Regram.Likers = updated.Likers || [];
+              v.Regram.Bookmarkers = updated.Bookmarkers || [];
+              v.Regram.Regrams = updated.Regrams || [];
+            }
+          });
+        }
+        break;
+      }
+
+      case REGRAM_REQUEST:
+        draft.regramLoading = true;
+        draft.regramDone = false;
+        draft.regramError = null;
+        break;
+      case REGRAM_SUCCESS: {
+        draft.regramLoading = false;
+        draft.regramDone = true;
+        if (action.data.fullRegram) {
+          draft.mainPosts.unshift(action.data.fullRegram); 
+        }
+        if (action.data.basePost) {
+          const updated = action.data.basePost;
+          const baseId = updated.id;
+          const base = draft.mainPosts.find((v) => v.id === baseId);
+          if (base) {
+            base.Likers = updated.Likers || [];
+            base.Bookmarkers = updated.Bookmarkers || [];
+            base.Regrams = updated.Regrams || [];
+          }
+          draft.mainPosts.forEach((v) => {
+            if (v.regram_id === baseId && v.Regram) {
+              v.Regram.Likers = updated.Likers || [];
+              v.Regram.Bookmarkers = updated.Bookmarkers || [];
+              v.Regram.Regrams = updated.Regrams || [];
+            }
+          });
+        }
+        break;
+      }
+      case REGRAM_FAILURE:
+        draft.regramLoading = false;
+        draft.regramError = action.error;
+        break;
+      case REGRAM_RESET:
+        draft.regramDone = false;
+        draft.regramError = null;
         break;
 
       case REMOVE_POST_REQUEST:
@@ -206,23 +324,17 @@ const postINReducer = (state = initialState, action) =>
         break;
       case EDIT_POST_RESET:
         draft.editPostDone = false;
-        break;        
-
-      case REMOVE_IMAGE:
-        draft.imagePaths.splice(action.index, 1);
         break;
 
-      case UPDATE_BOOKMARK_IN_POST: {
-        const post = draft.mainPosts.find((v) => v.id === action.data.postId);
-        if (post) {
-          if (action.data.bookmarked) {
-            if (!post.Bookmarkers.some((u) => u.id === action.data.userId)) {
-              post.Bookmarkers.push({ id: action.data.userId });
-            }
-          } else {
-            post.Bookmarkers = post.Bookmarkers.filter((u) => u.id !== action.data.userId);
+      case UPDATE_COMMENT_COUNT_IN_POST: {
+        draft.mainPosts.forEach((p) => {
+          if (p.id === action.data.postId) {
+            p.Comments = Array(action.data.commentCount).fill({});
           }
-        }
+          if (p.regram_id === action.data.postId && p.Regram) {
+            p.Regram.Comments = Array(action.data.commentCount).fill({});
+          }
+        });
         break;
       }
 

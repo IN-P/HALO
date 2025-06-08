@@ -84,11 +84,12 @@ router.post('/images', isLoggedIn, upload.array('image'), (req, res) => {
 // 게시글 삭제
 router.delete('/:postId', isLoggedIn, async (req, res, next) => {
   try {
-    // 0. 이미지 삭제
+    // 1. 삭제될 포스트 찾기
+    const post = await Post.findByPk(req.params.postId);
+
+    // 2. 기존 삭제 로직
     await Image.destroy({ where: { post_id: req.params.postId } });
-    // 1. 댓글 삭제
     await Comment.destroy({ where: { post_id: req.params.postId } });
-    // 2. 게시글 삭제
     await Post.destroy({
       where: {
         id: req.params.postId,
@@ -96,14 +97,30 @@ router.delete('/:postId', isLoggedIn, async (req, res, next) => {
       },
     });
 
-    res.status(200).json({ PostId: parseInt(req.params.postId, 10) });
+    // 3. 만약 리그램글이면, 원본글 최신 상태까지 응답!
+    let basePost = null;
+    if (post && post.regram_id) {
+      basePost = await Post.findOne({
+        where: { id: post.regram_id },
+        include: [
+          { model: User, as: 'Likers', attributes: ['id'] },
+          { model: User, as: 'Bookmarkers', attributes: ['id'] },
+          { model: Post, as: 'Regrams', attributes: ['id'] }, // ★
+        ]
+      });
+    }
+
+    res.status(200).json({
+      PostId: parseInt(req.params.postId, 10),
+      ...(basePost && { basePost }), // basePost 있으면 같이 보내줌
+    });
   } catch (error) {
     console.error(error);
     next(error);
   }
 });
 
-// 게시글 수정 (해시태그/이미지 동기화)
+// 게시글 수정
 router.patch('/:postId', isLoggedIn, async (req, res, next) => {
   const hashtags = req.body.content.match(/#[^\s#]+/g);
   try {
@@ -123,7 +140,7 @@ router.patch('/:postId', isLoggedIn, async (req, res, next) => {
       );
       await post.setHashtags(result.map(v => v[0]));
     } else {
-      await post.setHashtags([]); // 해시태그 없으면 연결 해제
+      await post.setHashtags([]);
     }
 
     // 이미지 동기화
@@ -176,48 +193,70 @@ router.get('/hashtag/:hashtag', async (req, res, next) => {
   }
 });
 
-// 좋아요 추가
+// 좋아요 추가 (항상 원본글에만)
 router.patch('/:postId/like', isLoggedIn, async (req, res, next) => {
   try {
     const post = await Post.findByPk(req.params.postId);
     if (!post) return res.status(404).send('게시글이 존재하지 않습니다.');
+    // 원본글 찾기
     const originId = post.regram_id || post.id;
     const originPost = (originId === post.id) ? post : await Post.findByPk(originId);
+
     await originPost.addLikers(req.user.id);
-    res.status(200).json({ PostId: originPost.id, UserId: req.user.id });
+
+    // 원본글의 최신 정보 포함해서 응답!
+    const fullOrigin = await Post.findOne({
+      where: { id: originPost.id },
+      include: [
+        { model: User, as: 'Likers', attributes: ['id'] },
+        { model: User, as: 'Bookmarkers', attributes: ['id'] },
+        { model: Post, as: 'Regrams' }, // 리그램 카운트용
+        { model: Comment, attributes: ['id'] },
+      ]
+    });
+
+    res.status(200).json({ basePost: fullOrigin });
   } catch (error) {
     console.error(error);
     next(error);
   }
 });
 
-// 좋아요 취소
+// 좋아요 취소 (항상 원본글에만)
 router.delete('/:postId/like', isLoggedIn, async (req, res, next) => {
   try {
     const post = await Post.findByPk(req.params.postId);
     if (!post) return res.status(403).send('게시글이 존재하지 않습니다.');
     const originId = post.regram_id || post.id;
     const originPost = (originId === post.id) ? post : await Post.findByPk(originId);
+
     await originPost.removeLikers(req.user.id);
-    res.status(200).json({ PostId: originPost.id, UserId: req.user.id });
+
+    const fullOrigin = await Post.findOne({
+      where: { id: originPost.id },
+      include: [
+        { model: User, as: 'Likers', attributes: ['id'] },
+        { model: User, as: 'Bookmarkers', attributes: ['id'] },
+        { model: Post, as: 'Regrams' },
+        { model: Comment, attributes: ['id'] },
+      ]
+    });
+
+    res.status(200).json({ basePost: fullOrigin });
   } catch (error) {
     console.error(error);
     next(error);
   }
 });
 
-
-// 리그램
+// 리그램 (리그램 자체는 새 글이 생기는거라 그대로 두되, 카운트는 원본글 기준)
 router.post('/:postId/regram', isLoggedIn, async (req, res, next) => {
   try {
-    // 원글 존재 확인
     const targetPost = await Post.findOne({ where: { id: req.params.postId } });
     if (!targetPost) return res.status(403).send('원본 게시글이 존재하지 않습니다.');
-    // 자기 글 리그램 금지
     if (req.user.id === targetPost.user_id) {
       return res.status(403).send('자기 글은 리그램할 수 없습니다.');
     }
-    // 이미 리그램한 경우 금지 (원하면)
     const existingRegram = await Post.findOne({
       where: { user_id: req.user.id, regram_id: targetPost.id }
     });
@@ -227,12 +266,22 @@ router.post('/:postId/regram', isLoggedIn, async (req, res, next) => {
     const regram = await Post.create({
       user_id: req.user.id,
       regram_id: targetPost.id,
-      content: req.body.content || '', // 코멘트 허용 시
+      content: req.body.content || '',
       visibility: req.body.isPublic ? 'public' : 'private',
     });
 
-    // 원글의 이미지, 해시태그 등 필요시 복사 로직 추가
+    // 원본글 최신 데이터 포함 응답
+    const fullOrigin = await Post.findOne({
+      where: { id: targetPost.id },
+      include: [
+        { model: User, as: 'Likers', attributes: ['id'] },
+        { model: User, as: 'Bookmarkers', attributes: ['id'] },
+        { model: Post, as: 'Regrams' },
+        { model: Comment, attributes: ['id'] },
+      ]
+    });
 
+    // 새 리그램글 정보도 같이 보내주면 프론트에서 리그램글 바로 보여줄 수 있음
     const fullRegram = await Post.findOne({
       where: { id: regram.id },
       include: [
@@ -251,37 +300,61 @@ router.post('/:postId/regram', isLoggedIn, async (req, res, next) => {
       ],
     });
 
-    res.status(201).json(fullRegram);
+    res.status(201).json({ fullRegram, basePost: fullOrigin });
   } catch (error) {
     console.error(error);
     next(error);
   }
 });
 
-// 북마크 추가
+// 북마크 추가 (항상 원본글에만)
 router.patch('/:postId/bookmark', isLoggedIn, async (req, res, next) => {
   try {
     const post = await Post.findByPk(req.params.postId);
     if (!post) return res.status(403).send('게시글이 존재하지 않습니다.');
     const originId = post.regram_id || post.id;
     const originPost = (originId === post.id) ? post : await Post.findByPk(originId);
+
     await originPost.addBookmarkers(req.user.id);
-    res.status(200).json({ PostId: originPost.id, UserId: req.user.id });
+
+    const fullOrigin = await Post.findOne({
+      where: { id: originPost.id },
+      include: [
+        { model: User, as: 'Likers', attributes: ['id'] },
+        { model: User, as: 'Bookmarkers', attributes: ['id'] },
+        { model: Post, as: 'Regrams' },
+        { model: Comment, attributes: ['id'] },
+      ]
+    });
+
+    res.status(200).json({ basePost: fullOrigin });
   } catch (error) {
     console.error(error);
     next(error);
   }
 });
 
-// 북마크 취소
+// 북마크 취소 (항상 원본글에만)
 router.delete('/:postId/bookmark', isLoggedIn, async (req, res, next) => {
   try {
     const post = await Post.findByPk(req.params.postId);
     if (!post) return res.status(403).send('게시글이 존재하지 않습니다.');
     const originId = post.regram_id || post.id;
     const originPost = (originId === post.id) ? post : await Post.findByPk(originId);
+
     await originPost.removeBookmarkers(req.user.id);
-    res.status(200).json({ PostId: originPost.id, UserId: req.user.id });
+
+    const fullOrigin = await Post.findOne({
+      where: { id: originPost.id },
+      include: [
+        { model: User, as: 'Likers', attributes: ['id'] },
+        { model: User, as: 'Bookmarkers', attributes: ['id'] },
+        { model: Post, as: 'Regrams' },
+        { model: Comment, attributes: ['id'] },
+      ]
+    });
+
+    res.status(200).json({ basePost: fullOrigin });
   } catch (error) {
     console.error(error);
     next(error);

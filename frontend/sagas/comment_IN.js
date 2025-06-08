@@ -6,6 +6,7 @@ import {
   EDIT_COMMENT_REQUEST, EDIT_COMMENT_SUCCESS, EDIT_COMMENT_FAILURE,
   REMOVE_COMMENT_REQUEST, REMOVE_COMMENT_SUCCESS, REMOVE_COMMENT_FAILURE,
 } from '../reducers/comment_IN';
+import { UPDATE_COMMENT_COUNT_IN_POST } from '../reducers/post_IN';
 
 // 트리 전체 불러오기
 function loadCommentsAPI(postId) {
@@ -29,9 +30,12 @@ function addCommentAPI(data) {
 }
 function* addComment(action) {
   try {
-    yield call(addCommentAPI, action.data);
-    // 등록 후 트리 새로고침
+    const res = yield call(addCommentAPI, action.data);
     yield put({ type: LOAD_COMMENTS_REQUEST, postId: action.data.postId });
+    yield put({ 
+      type: UPDATE_COMMENT_COUNT_IN_POST, 
+      data: { postId: res.data.postId, commentCount: res.data.commentCount } 
+    });
     yield put({ type: ADD_COMMENT_SUCCESS });
   } catch (error) {
     yield put({ type: ADD_COMMENT_FAILURE, error: error.response?.data || error.message });
@@ -59,9 +63,12 @@ function removeCommentAPI(id) {
 }
 function* removeComment(action) {
   try {
-    yield call(removeCommentAPI, action.data.commentId);
-    // 삭제 후 트리 새로고침
+    const res = yield call(removeCommentAPI, action.data.commentId);
     yield put({ type: LOAD_COMMENTS_REQUEST, postId: action.data.postId });
+    yield put({ 
+      type: UPDATE_COMMENT_COUNT_IN_POST, 
+      data: { postId: res.data.postId, commentCount: res.data.commentCount } 
+    });
     yield put({ type: REMOVE_COMMENT_SUCCESS });
   } catch (error) {
     yield put({ type: REMOVE_COMMENT_FAILURE, error: error.response?.data || error.message });

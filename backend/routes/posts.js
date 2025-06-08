@@ -16,6 +16,8 @@ router.get('/', async (req, res, next) => {
       limit: 10,
       order: [
         ['createdAt', 'DESC'],
+        [Image, 'id', 'ASC'], 
+        [{ model: Post, as: 'Regram' }, Image, 'id', 'ASC'],
         [Comment, 'createdAt', 'DESC'],
       ],
       include: [
@@ -29,12 +31,16 @@ router.get('/', async (req, res, next) => {
         },
         { model: User, as: 'Likers', attributes: ['id'] },
         { model: User, as: 'Bookmarkers', attributes: ['id'] },
+        { model: Post, as: 'Regrams', attributes: ['id'] },
         {
           model: Post,
-          as: 'Regram',     // ← 여기!
+          as: 'Regram',
           include: [
             { model: User, attributes: ['id', 'nickname'] },
             { model: Image },
+            { model: User, as: 'Likers', attributes: ['id'] },
+            { model: User, as: 'Bookmarkers', attributes: ['id'] },
+            { model: Post, as: 'Regrams', attributes: ['id'] },
           ],
         },
       ],
