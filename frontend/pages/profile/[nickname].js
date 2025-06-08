@@ -5,7 +5,8 @@ import MyHeader from "../../components/mypage/MyHeader";
 import MyAvatar from "../../components/mypage/MyAvatar";
 import MyMain from "../../components/mypage/MyMain";
 import MyPost from "../../components/mypage/MyPost";
-import MySettingPopUp from "../../components/mypage/MySettingPopUp";
+import MySettingMain from "../../components/mypage/MySettingMain";
+import ProfilePost from "../../components/mypage/ProfilePost";
 import { InboxOutlined, NumberOutlined, TagOutlined } from "@ant-design/icons";
 
 import { useDispatch, useSelector } from "react-redux";
@@ -47,12 +48,17 @@ const ProfilePage = () => {
 
   if (removePadding) { removePadding.style.padding = "0"; } }, []);
 
+
+  // 정보 변경 후 데이터 다시 로드
+  const fetchUserInfo = () => {
+  dispatch({ type: LOAD_USER_INFO_REQUEST, data: nickname }); };
+
   // v
   return (
   <AppLayout>
     {/* 본인의 프로필인지 확인 */}
     {showSetting && isMyProfile ? (
-      <MySettingPopUp onClose={() => setShowSetting(false)} data={data} />
+      <MySettingMain onClose={() => setShowSetting(false)} data={data}  reload={fetchUserInfo} />
     ) : (
       <div>
         <div style={{ display: "flex", justifyContent: "end", padding: "1% 1% 0 0" }}>
@@ -66,14 +72,8 @@ const ProfilePage = () => {
           {/* 프로필 영역 */}
           <MyMain data={data} isMyProfile={isMyProfile} loginUser={user} />
         </div>
-        <hr style={{ marginTop: "3%" }} />
-        <div style={{ display: "flex", justifyContent: "center", gap: "100px" }}>
-          <span><InboxOutlined />&nbsp;게시물</span>
-          <span><TagOutlined />&nbsp;북마크</span>
-          <span><NumberOutlined />&nbsp;태그됨</span>
-        </div>
-        <MyPost data={data} />
-        <MyBookmark data={data} />
+        {/* POST 표시 구역 */}
+        <ProfilePost data={data} isMyProfile={isMyProfile} />
       </div>
     )}
   </AppLayout>
