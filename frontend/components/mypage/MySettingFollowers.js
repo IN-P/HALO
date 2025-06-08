@@ -7,7 +7,7 @@ const MySettingFollowings = ({ data }) => {
     <>
       <div style={{ marginTop: '3%', textAlign: 'center' }}>
         <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: 0 }}>
-          나를 팔로우 중인 사용자
+          나를 팔로우 한 사용자
         </h2>
       </div>
 

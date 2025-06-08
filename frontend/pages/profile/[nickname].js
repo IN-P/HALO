@@ -5,8 +5,7 @@ import MyHeader from "../../components/mypage/MyHeader";
 import MyAvatar from "../../components/mypage/MyAvatar";
 import MyMain from "../../components/mypage/MyMain";
 import MyPost from "../../components/mypage/MyPost";
-import MySettingMain from "../../components/mypage/MySettingMain";
-import MySettingPopUp from "../../components/mypage/MySettingPopUp"; // main 브랜치 쪽
+import MySettingMain from "../../components/mypage/MySettingMain"; // main 브랜치 쪽
 import ProfilePost from "../../components/mypage/ProfilePost";
 import { InboxOutlined, NumberOutlined, TagOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
@@ -54,7 +53,6 @@ const ProfilePage = () => {
       {showSetting && isMyProfile ? (
         <>
           <MySettingMain onClose={() => setShowSetting(false)} data={data} reload={fetchUserInfo} />
-          <MySettingPopUp onClose={() => setShowSetting(false)} data={data} /> {/* main 쪽 컴포넌트도 같이 유지 */}
         </>
       ) : (
         <div>
@@ -72,15 +70,7 @@ const ProfilePage = () => {
               onRefetch={() => setRefetchTrigger((prev) => prev + 1)}
             />
           </div>
-          <hr style={{ marginTop: "3%" }} />
-          <div style={{ display: "flex", justifyContent: "center", gap: "100px" }}>
-            <span><InboxOutlined />&nbsp;게시물</span>
-            <span><TagOutlined />&nbsp;북마크</span>
-            <span><NumberOutlined />&nbsp;태그됨</span>
-          </div>
           <ProfilePost data={data} isMyProfile={isMyProfile} />
-          <MyPost data={data} />
-          <MyBookmark data={data} />
         </div>
       )}
     </AppLayout>

@@ -20,25 +20,24 @@ router.get("/:nickname", async (req, res, next) => {
       where: { id: userId },
       attributes: ["id", "nickname", "profile_img", "theme_mode", "is_private", "myteam_id", "role", "email"],
       include: [
-        { model: UserInfo },
-        { model: Post },
-        { model: Follow, as: 'Followings', include: [
-          { model: User, as: 'Followers', attributes: ['id', 'nickname', 'profile_img'], }
-        ], },
-        { model: Follow, as: 'Followers', include: [
-          { model: User, as: 'Followings', attributes: ['id', 'nickname', 'profile_img'], }
-        ], },
-        { model: Post, as: 'BookmarkedPosts', attributes: ['id', 'content', 'createdAt'], through: { attributes: [] }, },
-        { model: Achievement, attributes: ['id', 'name', 'description'], through: { attributes: ['createdAt', 'updatedAt'], }, },
-        { model: Badge, attributes: ['id', 'name', 'img', 'description'], through: { attributes: ['createdAt', 'updatedAt'], }, },
-        { model: Myteam, attributes: ['id', 'teamname', 'teamcolor', 'region'], },
-        { model: Block, as: 'Blockeds', include: [
-          { model: User, as: 'Blocked', attributes: ['id', 'nickname', 'profile_img'], }
-        ] },
-        { model: ActiveLog },
-        // 민감한 정보
-        { model: UserPoint },
-        { model: UserPayment },
+      { model: UserInfo },
+      { model: Post },
+      { model: Follow, as: 'Followings', include: [
+        { model: User, as: 'Followers', attributes: ['id', 'nickname', 'profile_img'], }
+      ], },
+      { model: Follow, as: 'Followers', include: [
+        { model: User, as: 'Followings', attributes: ['id', 'nickname', 'profile_img'], },
+      ], },
+      { model: Post, as: 'BookmarkedPosts', attributes: ['id', 'content', 'createdAt'], through: { attributes: [] }, },
+      { model: Achievement, attributes: ['id', 'name', 'description'], through: { attributes: ['createdAt', 'updatedAt'], }, },
+      { model: Badge, attributes: ['id', 'name', 'img', 'description'], through: { attributes: ['createdAt', 'updatedAt'], }, },
+      { model: Myteam, attributes: ['id', 'teamname', 'teamcolor', 'region'], },
+      { model: Block, as: 'Blockeds', include: [
+        { model: User, as: 'Blocked', attributes: ['id', 'nickname', 'profile_img'], } ] },
+      { model: ActiveLog },
+      // 민감한 정보
+      { model: UserPoint },
+      { model: UserPayment },
       ],
     })
 
@@ -49,9 +48,6 @@ router.get("/:nickname", async (req, res, next) => {
 
     if (fullUser) {
       const data = fullUser.toJSON();
-      data.Followers = data.Followers.length;
-      data.Followings = data.Followings.length;
-      data.Achievements = user.Achievements?.length || 0;
       //////////// 율비 isBlocked 여부 추가
       if (req.user) {
         const me = req.user.id;

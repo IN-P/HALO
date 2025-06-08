@@ -72,12 +72,12 @@ const MySettingEditForm = ({ data, reload }) => {
   // 휴대폰
   const [editPhoneOpen, setPhoneEditOpen] = useState(false);
   const togglePhone = () => { setPhoneEditOpen(prev => !prev); };
-  const [newPhone, setNewPhone] = useState(data?.UserInfo.phone || "");
+  const [newPhone, setNewPhone] = useState(data?.UserInfo?.phone || "");
 
   // 소개문
   const [editIntroduceOpen, setIntroduceEditOpen] = useState(false);
   const toggleIntroduce = () => { setIntroduceEditOpen(prev => !prev); };
-  const [newIntroduce, setNewIntroduce] = useState(data?.UserInfo.introduce || "");
+  const [newIntroduce, setNewIntroduce] = useState(data?.UserInfo?.introduce || "");
 
   // 공개 설정
   const [editPrivacyOpen, setPrivacyEditOpen] = useState(false);
@@ -142,7 +142,7 @@ const MySettingEditForm = ({ data, reload }) => {
         </StyledEditBar>
       )}
 
-
+      {/* 이메일 */}
       <StyledBar onClick={toggleEmail}>{data?.email}</StyledBar>
       {editEmailOpen && (
         <StyledEditBar>
@@ -187,7 +187,7 @@ const MySettingEditForm = ({ data, reload }) => {
       )}
       
       {/* 휴대전화 */}
-      <StyledBar onClick={togglePhone}>{data?.UserInfo.phone || "전화번호 없음"}</StyledBar>
+      <StyledBar onClick={togglePhone}>{data?.UserInfo?.phone || "전화번호 없음"}</StyledBar>
       {editPhoneOpen && (
         <StyledEditBar>
           <Title>휴대전화번호 변경</Title>
@@ -229,10 +229,10 @@ const MySettingEditForm = ({ data, reload }) => {
 
       {/* 소개문 */}
       <StyledBar onClick={toggleIntroduce}>
-        {data?.UserInfo.introduce
-          ? data.UserInfo.introduce.length > 30
-            ? data.UserInfo.introduce.slice(0, 30) + "..."
-            : data.UserInfo.introduce
+        {data?.UserInfo?.introduce
+          ? data.UserInfo?.introduce.length > 30
+            ? data.UserInfo?.introduce.slice(0, 30) + "..."
+            : data.UserInfo?.introduce
           : "소개문을 입력해주세요"}
       </StyledBar>
       {editIntroduceOpen && (
