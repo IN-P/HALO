@@ -15,6 +15,7 @@ import {
   setShowNewMsgAlert,
   exitRoom,
   loadMessagesRequest, // SAGA 액션을 직접 사용하도록 추가
+  updateChatRoomLastMessage,
 } from '../reducers/chatReducer_JW';
 
 import socket from '../socket';
@@ -33,6 +34,17 @@ const ChatPage = () => {
 
   const chatBoxRef = useRef();
   const [userMap, setUserMap] = useState({});
+
+const handleReadUpdate = useCallback((readMessageIdsRaw) => {
+  const readMessageIds = Array.isArray(readMessageIdsRaw) ? readMessageIdsRaw : [readMessageIdsRaw];
+
+  console.log('handleReadUpdate 호출됨:', readMessageIds, '타입:', readMessageIds.map(id => typeof id));
+
+  dispatch({
+    type: 'UPDATE_READ_STATUS',
+    payload: { readMessageIds }
+  });
+}, [dispatch]);
 
   // ⭐ 변경 1: roomId 계산 로직을 selectedUser가 null이 아닐 때만 유효하게
   // selectedUser가 존재하고, me.id와 selectedUser.id가 다를 때만 roomId를 생성
@@ -63,8 +75,13 @@ const ChatPage = () => {
   const handleReceive = useCallback((data) => {
     console.log('➡️ receive_message 이벤트 수신됨 (클라이언트):', data);
 
-    // ⭐ 변경 2: !roomId 조건 추가 (selectedUser가 없어서 roomId가 null인 경우)
-    // 현재 선택된 방이 없거나, 다른 방의 메시지면 알림만 띄움
+     dispatch(updateChatRoomLastMessage({
+    roomId: data.roomId,
+    lastMessage: data.content,
+    lastTime: new Date(data.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+    unreadCountDelta: (!selectedUser || roomId !== data.roomId) ? 1 : 0,
+  }));
+
     if (!selectedUser || !roomId || data.roomId !== roomId) {
       console.log('다른 방 메시지이거나 방이 선택되지 않음:', data.roomId, '현재 roomId:', roomId);
       dispatch(setShowNewMsgAlert(true));
@@ -76,8 +93,9 @@ const ChatPage = () => {
      ...data, 
      sender_id: data.sender_id, 
      User: data.User, 
-  created_at: data.created_at, // 필요하면 추가 (현재는 time을 사용)
+  created_at: data.created_at, 
    time: new Date(data.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+ is_read: data.is_read
    };
    console.log('현재 방 메시지! log에 추가 후 formattedMessage:', formattedMessage);
    dispatch(addLog(formattedMessage));
@@ -98,16 +116,18 @@ const ChatPage = () => {
     socket.on('receive_message', handleReceive);
     socket.on('exit_room_success', handleExitSuccess);
     socket.on('exit_room_failed', handleExitFailed);
+    socket.on('read_update', handleReadUpdate);
 
     return () => {
       socket.off('receive_message', handleReceive);
       socket.off('exit_room_success', handleExitSuccess);
       socket.off('exit_room_failed', handleExitFailed);
+      socket.off('read_update', handleReadUpdate);
     };
-  }, [handleReceive, handleExitSuccess, handleExitFailed]);
+  }, [handleReceive, handleExitSuccess, handleExitFailed, handleReadUpdate]);
 
   // ⭐ 변경 3: 유저 선택 핸들러 (SearchModal, ChatList에서 공통으로 사용)
-const handleUserSelect = useCallback(async (user) => { // ✅ 수정
+const handleUserSelect = useCallback(async (user) => { 
   if (!me || user.id === me.id) {
     alert('본인과 채팅을 시작할 수 없습니다.');
     dispatch(setSelectedUser(null));
@@ -117,9 +137,18 @@ const handleUserSelect = useCallback(async (user) => { // ✅ 수정
   }
 
   try {
-    await axios.post('http://localhost:3065/api/chat', {
+    const res = await axios.post('http://localhost:3065/api/chat', {
       targetUserId: user.id,
     }, { withCredentials: true });
+
+    console.log('✅ POST /api/chat 응답:', res);
+
+    dispatch(updateChatRoomLastMessage({
+      roomId: `chat-${[me.id, user.id].sort((a, b) => a - b).join('-')}`,
+      lastMessage: '', // 그대로 두거나 유지 (원하면 ''로 두기)
+      lastTime: '', // 그대로 두거나 유지 (원하면 ''로 두기)
+      unreadCountDelta: -9999, // 강제로 0 처리됨 (reducer에서 Math.max(0, unreadCount + delta))
+    }));
 
     dispatch(setSelectedUser(user));
     dispatch(toggleSearchModal(false));
@@ -146,14 +175,14 @@ const handleUserSelect = useCallback(async (user) => { // ✅ 수정
             })
             .then(getResponse => {
                 console.log('✅ 과거 메시지 로드 성공 (GET /api/chat/message):', getResponse.data);
-                getResponse.data.forEach(msg => dispatch(addLog(msg)));
+                getResponse.data.reverse().forEach(msg => dispatch(addLog(msg)));
                 requestAnimationFrame(() => {
                     if (chatBoxRef.current) {
                         chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
                     }
                 });
                 // 3. Socket.IO 방 조인 (API 호출 성공 후)
-                socket.emit('join_room', roomId, me); // me 객체 전체를 보내는 게 나중에 userMap 같은 거 없이 nickname 보여줄 때 편함
+                socket.emit('join_room', roomId, me.id);
                 console.log('클라이언트: join_room 요청 보냄', roomId, me);
 
             })
@@ -283,9 +312,11 @@ const handleUserSelect = useCallback(async (user) => { // ✅ 수정
                 onSendMessage={handleSend}
                 userMap={userMap}
                 onClose={() => {
+                  socket.emit('leave_room', me.id);
                     dispatch(setSelectedUser(null)); // 채팅방 닫을 때 selectedUser 초기화
                     dispatch(clearLog()); // 로그도 초기화
                 }}
+                onReadUpdate={handleReadUpdate}
               />
             </div>
           )}

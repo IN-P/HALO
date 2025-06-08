@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { useEffect,useCallback  } from 'react';
+import socket from '../socket';
 
 const ChatRoom = ({
   me,
@@ -11,36 +12,55 @@ const ChatRoom = ({
   showNewMsgAlert,
   handleScroll,
   onExit,
-  onSendMessage, // 이제 이 onSendMessage를 사용할 거야
+  onSendMessage, 
   userMap,
   onClose,
+  onReadUpdate,
 }) => {
 
-  // ESC 키 누르면 닫기 기능
+  
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
-        onClose(); // ESC 누르면 닫기 실행
+        onClose(); 
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown); // 정리
+      window.removeEventListener('keydown', handleKeyDown); 
     };
   }, [onClose]);
 
-  // ⭐ 기존 ChatRoom 내부의 handleSend 함수는 이제 필요 없으므로 삭제했어.
-  //    pages/chat.js에서 전달받은 onSendMessage를 직접 호출할 거야.
+  useEffect(() => {
+  const handleReadUpdate = (data) => {
+    console.log('✅ read_update 수신:', data);
 
-  // 나가기 버튼 클릭 시 확인 알림창 띄우기
+    const { roomId: updateRoomId, readMessageIds } = data;
+
+    // 현재 ChatRoom의 roomId 와 일치할 때만 업데이트
+    if (updateRoomId === roomId && onReadUpdate) {
+      onReadUpdate(readMessageIds);
+    }
+  };
+
+  socket.on('read_update', handleReadUpdate);
+
+  return () => {
+    socket.off('read_update', handleReadUpdate);
+  };
+}, [roomId, onReadUpdate]);
+
+
+
+
   const handleExitConfirm = () => {
     const confirmExit = window.confirm('채팅방을 나가시면 현재 사용자에게만 메시지 기록이 모두 모두 삭제됩니다. 정말 나가시겠습니까?');
     if (confirmExit) {
-      onExit(); // 사용자가 '확인'을 누르면 onExit 함수 호출 (Redux 액션 디스패치)
+      onExit(); 
     }
-    // '취소'를 누르면 아무것도 하지 않음
+
   };
 
   return (
@@ -62,7 +82,10 @@ const ChatRoom = ({
       <h2 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span>💬 {selectedUser.nickname}와의 채팅 (내 ID: {me.id})</span>
         <button
-          onClick={onClose}
+          onClick={() => {
+    socket.emit('leave_room', me.id);   // ✅ 서버에 leave_room 보내서 currentRoomId null 처리
+    onClose();   // 기존 onClose 로직 (화면 닫기)
+  }}
           style={{
             padding: '4px 10px',
             background: '#eee',
@@ -92,64 +115,87 @@ const ChatRoom = ({
           background: '#fafafa',
         }}
       >
-        {log.map((msg, idx) => {
-          const isMine = msg.sender_id === me.id || msg.senderId === me.id; // 🟢 여기도 me.id 로 수정!
-          const sender = msg.User;
-          return (
-            <div
-              key={idx}
-              style={{
-                display: 'flex',
-                justifyContent: isMine ? 'flex-end' : 'flex-start',
-                alignItems: 'flex-start',
-                margin: '6px 0',
-              }}
-            >
-              {!isMine && (
-                <img
-                  src={sender?.profile_img ?? "default.png"}
-                  alt="프로필"
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    marginRight: 8,
-                    marginLeft: 4,
-                  }}
-                />
-              )}
-              <div style={{ maxWidth: '70%' }}>
-                {!isMine && (
-                  <div style={{ fontSize: 12, fontWeight: 'bold', color: '#555', marginBottom: 2 }}>
-                    {sender.nickname}
-                  </div>
-                )}
-                <div
-                  style={{
-                    display: 'inline-block',
-                    padding: '8px 12px',
-                    borderRadius: 12,
-                    background: isMine ? '#d1f0ff' : '#f2f2f2',
-                    color: '#000',
-                  }}
-                >
-                  {msg.content}
-                </div>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: '#999',
-                    marginTop: 2,
-                    background: isMine ? '#d1f0ff' : '#f2f2f2',
-                    textAlign: isMine ? 'left' : 'right',
-                  }}
-                >
-                  {msg.time}
-                </div>
-              </div>
-            </div>
-          );
-        })}
+{log.map((msg, idx) => {
+  console.log('msg.id:', msg.id, typeof msg.id, 'msg.is_read:', msg.is_read);
+  console.log('렌더링 시 메시지:', msg);
+  const isMine = msg.sender_id === me.id || msg.senderId === me.id;
+  const sender = msg.User;
+
+  return (
+    <div
+      key={idx}
+      style={{
+        display: 'flex',
+        justifyContent: isMine ? 'flex-end' : 'flex-start',
+        alignItems: 'flex-start',
+        margin: '6px 0',
+      }}
+    >
+      {!isMine && sender && (
+        <img
+          src={sender?.profile_img ?? "default.png"}
+          alt="프로필"
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            marginRight: 8,
+            marginLeft: 4,
+          }}
+        />
+      )}
+
+      <div style={{ maxWidth: '70%' }}>
+        {!isMine && sender && (
+          <div style={{ fontSize: 12, fontWeight: 'bold', color: '#555', marginBottom: 2 }}>
+            {sender.nickname}
+          </div>
+        )}
+
+        {/* 여기 수정된 부분 */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: isMine ? 'flex-end' : 'flex-start',
+          gap: 6 // 말풍선과 숫자 간격
+        }}>
+  {/* 숫자 먼저 표시 (왼쪽) */}
+  {isMine && (msg.is_read === 0 || msg.is_read === false) && (
+    <div style={{ fontSize: 10, color: 'red', marginTop: 4 }}>
+    1
+  </div>
+  )}
+
+  {/* 말풍선 */}
+  <div
+    style={{
+      display: 'inline-block',
+      padding: '8px 12px',
+      borderRadius: 12,
+      background: isMine ? '#d1f0ff' : '#f2f2f2',
+      color: '#000',
+    }}
+  >
+    {msg.content}
+  </div>
+</div>
+
+        {/* 시간 */}
+        <div
+          style={{
+            fontSize: 11,
+            color: '#999',
+            marginTop: 2,
+            background: isMine ? '#d1f0ff' : '#f2f2f2',
+            textAlign: isMine ? 'left' : 'right',
+          }}
+        >
+          {msg.time}
+        </div>
+      </div>
+    </div>
+  );
+})}
       </div>
 
       {/* 새 메시지 알림 */}
@@ -181,7 +227,7 @@ const ChatRoom = ({
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyPress={(e) => {
-            if (e.key === 'Enter') onSendMessage(); // ⭐ onSendMessage로 변경!
+            if (e.key === 'Enter') onSendMessage(); 
           }}
           placeholder="메시지를 입력하세요"
           style={{
@@ -193,7 +239,7 @@ const ChatRoom = ({
           }}
         />
         <button
-          onClick={onSendMessage} // ⭐ onSendMessage로 변경!
+          onClick={onSendMessage} 
           style={{
             padding: '12px 20px',
             fontSize: '16px',

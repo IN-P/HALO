@@ -1,9 +1,10 @@
 const http = require('http');
+const { sequelize } = require('./models');
 const { Server } = require('socket.io');
 const dotenv = require('dotenv');
 const app = require('./app'); 
 const { ChatRoom, ChatMessage, ChatRoomExit, Sequelize, User  } = require('./models'); 
-const session = require('express-session'); // 세션 직접 생성
+const session = require('express-session'); 
 const sharedSession = require('express-socket.io-session');
 
 // .env 로드
@@ -33,13 +34,30 @@ io.use(sharedSession(sessionMiddleware, {
   autoSave: true,
 }));
 
+const socketMap = {};
 // ✅ 소켓 연결 시
 io.on('connection', (socket) => {
   console.log('🟢 유저 접속:', socket.id);
 
-  // 채팅방 참여
+  socket.on('login', (userId) => {
+    socket.userId = userId;
+    socketMap[userId] = { socketId: socket.id, currentRoomId: null };
+    console.log(`✅ 유저 로그인 등록됨 → userId=${userId}, socket.id=${socket.id}`);
+  });
+
+  socket.on('leave_room', (userId) => {
+    if (socketMap[userId]) {
+      socketMap[userId].currentRoomId = null;
+      console.log(`🚪 유저 ${userId} 채팅방 나감 → currentRoomId null 처리`);
+    }
+  });
+
+  // 수정된 join_room 전체
   socket.on('join_room', async (roomId, userId) => {
     socket.join(roomId);
+    if (socketMap[userId]) {
+      socketMap[userId].currentRoomId = roomId;
+    }
     console.log(`🔗 ${socket.id} joined room ${roomId}`);
 
     try {
@@ -61,7 +79,8 @@ io.on('connection', (socket) => {
         return;
       }
 
-      const updatedCount = await ChatMessage.update(
+      // ⭐⭐ 핵심: update 먼저 처리
+      await ChatMessage.update(
         { is_read: true },
         {
           where: {
@@ -71,7 +90,30 @@ io.on('connection', (socket) => {
           }
         }
       );
-      console.log(`✅ 유저 ${userId} 안읽은 메시지 읽음 처리 완료 (${updatedCount[0]}건)`);
+
+      // 그 다음 SELECT → 최신 readMessageIds 조회
+      const updatedMessages = await ChatMessage.findAll({
+        where: {
+          rooms_id: chatRoom.id,
+          sender_id: { [Sequelize.Op.ne]: userId },
+          is_read: true
+        },
+        attributes: ['id']
+      });
+
+      const readMessageIds = updatedMessages.map(msg => msg.id);
+
+      const senderUserId = (userId === sortedUser1Id) ? sortedUser2Id : sortedUser1Id;
+
+      if (socketMap[senderUserId]) {
+        const senderSocketId = socketMap[senderUserId].socketId;
+        io.to(senderSocketId).emit('read_update', {
+          roomId,
+          readerId: userId,
+          readMessageIds
+        });
+        console.log(`[SERVER] read_update emit → senderUserId=${senderUserId}, readMessageIds=${readMessageIds}`);
+      }
     } catch (err) {
       console.error('❌ join_room 중 에러 발생:', err);
     }
@@ -121,89 +163,99 @@ io.on('connection', (socket) => {
             user2_id_active: true
           });
           console.log(`🔄 누락된 ChatRoomExit 복구됨 (room ${chatRoomInstance.id})`);
+        } else {
+          const fieldToUpdate = (senderId === sortedUser1Id)
+            ? 'user1_id_active'
+            : (senderId === sortedUser2Id)
+              ? 'user2_id_active'
+              : null;
+
+          const exitedAtField = (fieldToUpdate === 'user1_id_active') ? 'user1_exited_at' : 'user2_exited_at';
+
+          if (fieldToUpdate) {
+            await exitInfo.update({
+              [fieldToUpdate]: true,
+              [exitedAtField]: null
+            });
+            console.log(`✅ ChatRoomExit active 복구됨 (senderId=${senderId})`);
+          }
         }
       }
 
       const newMessage = await ChatMessage.create({
-  rooms_id: chatRoomInstance.id,
-  sender_id: senderId,
-  content: content,
-  is_read: false
-});
+        rooms_id: chatRoomInstance.id,
+        sender_id: senderId,
+        content: content,
+        is_read: false
+      });
 
-const messageWithUser = await ChatMessage.findByPk(newMessage.id, {
-  include: [{ model: User, attributes: ['id', 'nickname', 'profile_img'] }]
-});
+      const messageWithUser = await ChatMessage.findByPk(newMessage.id, {
+        include: [{ model: User, attributes: ['id', 'nickname', 'profile_img'] }]
+      });
 
-const messageToSend = {
-  ...messageWithUser.toJSON(),
-  roomId // ✅ roomId를 명시적으로 포함
-};
+      const messageToSend = {
+        ...messageWithUser.toJSON(),
+        roomId,
+        is_read: false
+      };
 
-io.to(roomId).emit('receive_message', messageToSend);
+      io.to(socket.id).emit('receive_message', messageToSend);
 
-console.log('💬 메시지 저장 완료:', messageWithUser.toJSON());
-    } catch (err) {
-      console.error('❌ 메시지 전송 실패:', err);
-    }
-  });
+      const receiverUserId = (senderId === sortedUser1Id) ? sortedUser2Id : sortedUser1Id;
 
-  // 채팅방 나가기
-  socket.on('exit_room', async ({ roomId, userId }) => {
-    console.log(`[EXIT_ROOM] 요청: ${roomId}, 유저 ${userId}`);
-    try {
-      const parts = roomId.split('-');
-      const user1Id = parseInt(parts[1]);
-      const user2Id = parseInt(parts[2]);
-      const sortedUser1Id = Math.min(user1Id, user2Id);
-      const sortedUser2Id = Math.max(user1Id, user2Id);
+      if (socketMap[receiverUserId]) {
+        const receiverSocketId = socketMap[receiverUserId].socketId;
+        const receiverCurrentRoomId = socketMap[receiverUserId].currentRoomId;
 
-      const chatRoom = await ChatRoom.findOne({
-        where: {
-          [Sequelize.Op.or]: [
-            { user1_id: sortedUser1Id, user2_id: sortedUser2Id },
-            { user1_id: sortedUser2Id, user2_id: sortedUser1Id }
-          ]
+        if (receiverCurrentRoomId === roomId) {
+          const unreadMessagesBeforeUpdate = await ChatMessage.findAll({
+            where: {
+              rooms_id: chatRoomInstance.id,
+              sender_id: { [Sequelize.Op.ne]: receiverUserId },
+              is_read: false
+            },
+            attributes: ['id']
+          });
+
+          const readMessageIds = unreadMessagesBeforeUpdate.map(msg => msg.id);
+
+          await ChatMessage.update(
+            { is_read: true },
+            {
+              where: {
+                rooms_id: chatRoomInstance.id,
+                sender_id: { [Sequelize.Op.ne]: receiverUserId },
+                is_read: false
+              }
+            }
+          );
+
+          io.to(receiverSocketId).emit('read_update', {
+            roomId,
+            readerId: receiverUserId,
+            readMessageIds
+          });
+
+          io.to(socket.id).emit('read_update', {
+            roomId,
+            readerId: receiverUserId,
+            readMessageIds
+          });
+
+          io.to(receiverSocketId).emit('receive_message', messageToSend);
+
+          console.log(`✅ send_message 후 read_update emit → receiver=${receiverUserId}, readMessageIds=${readMessageIds}`);
+          console.log(`📩 유저 ${receiverUserId}는 현재 방 열어놔서 receive_message + read_update 둘 다 emit`);
+        } else {
+          io.to(receiverSocketId).emit('receive_message', messageToSend);
+          console.log(`📩 유저 ${receiverUserId}에게 직접 receive_message 전송`);
         }
-      });
-
-      if (!chatRoom) {
-        console.log(`[EXIT_ROOM] 채팅방 없음`);
-        socket.emit('exit_room_failed', { message: '채팅방을 찾을 수 없습니다.' });
-        return;
+      } else {
+        console.log(`⚠️ 유저 ${receiverUserId}는 현재 socketMap에 없음 → 직접 전송 불가`);
       }
-
-      const exitInfo = await ChatRoomExit.findOne({
-        where: { chat_rooms_id: chatRoom.id }
-      });
-
-      if (!exitInfo) {
-        socket.emit('exit_room_failed', { message: '채팅방 정보가 없습니다.' });
-        return;
-      }
-
-      const fieldToUpdate = (userId === sortedUser1Id)
-        ? 'user1_id_active'
-        : (userId === sortedUser2Id)
-          ? 'user2_id_active'
-          : null;
-
-      if (!fieldToUpdate) {
-        socket.emit('exit_room_failed', { message: '채팅방 참여자가 아닙니다.' });
-        return;
-      }
-
-      await exitInfo.update({ [fieldToUpdate]: false });
-      console.log(`🚪 유저 ${userId}가 채팅방 ${chatRoom.id}에서 나감`);
-      socket.emit('exit_room_success', { roomId, userId });
     } catch (err) {
-      console.error('[EXIT_ROOM] 에러:', err);
-      socket.emit('exit_room_failed', { message: '서버 오류 발생' });
+      console.error('❌ send_message 중 에러 발생:', err);
     }
-  });
-
-  socket.on('disconnect', () => {
-    console.log('🔴 유저 연결 해제:', socket.id);
   });
 });
 

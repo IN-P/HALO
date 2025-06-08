@@ -15,6 +15,14 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,       
       defaultValue: 1,        
     },
+    user1_exited_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    user2_exited_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   }, {
     tableName: 'chat_room_exit', 
     timestamps: false, 

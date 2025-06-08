@@ -22,6 +22,8 @@ export const EXIT_ROOM_FAILURE = 'EXIT_ROOM_FAILURE';
 
 export const SET_CHAT_ROOMS = 'SET_CHAT_ROOMS';
 
+export const UPDATE_CHAT_ROOM_LAST_MESSAGE = 'UPDATE_CHAT_ROOM_LAST_MESSAGE';
+
 // 2. 액션 생성자
 export const setMe = (payload) => ({ type: SET_ME, payload });
 export const setSelectedUser = (payload) => ({ type: SET_SELECTED_USER, payload });
@@ -40,6 +42,11 @@ export const joinRoom = (payload) => ({ type: JOIN_ROOM_REQUEST, payload });
 export const exitRoom = (payload) => ({ type: EXIT_ROOM_REQUEST, payload });
 
 export const setChatRooms = (payload) => ({ type: SET_CHAT_ROOMS, payload });
+
+export const updateChatRoomLastMessage = (payload) => ({
+  type: UPDATE_CHAT_ROOM_LAST_MESSAGE,
+  payload, // { roomId, lastMessage, lastTime, unreadCountDelta }
+});
 
 // 3. 초기 상태
 const initialState = {
@@ -91,7 +98,6 @@ const chatReducer = (state = initialState, action) => {
         case JOIN_ROOM_SUCCESS:
             return state; // JOIN_ROOM_SUCCESS 시에는 chatRooms에 추가하는 로직이 필요할 수도 있음 (새 채팅 시작 시)
         
-        // ⭐ 이 부분 수정!
         case EXIT_ROOM_SUCCESS:
             // action.data는 { roomId, userId } 형태일 것이므로, 해당 roomId를 가진 채팅방을 chatRooms에서 제거
             return {
@@ -101,6 +107,43 @@ const chatReducer = (state = initialState, action) => {
                 log: [], // 나가면 채팅 기록 초기화
             };
         // ⭐ 여기까지 수정!
+
+        case UPDATE_CHAT_ROOM_LAST_MESSAGE:
+  return {
+    ...state,
+    chatRooms: state.chatRooms.map((room) => {
+      if (room.roomId === action.payload.roomId) {
+        return {
+          ...room,
+          lastMessage: action.payload.lastMessage,
+          lastTime: action.payload.lastTime,
+          unreadCount: Math.max(0, room.unreadCount + (action.payload.unreadCountDelta || 0)),
+        };
+      }
+      return room;
+    }),
+  };
+case 'UPDATE_READ_STATUS':
+    console.log('[REDUCER] UPDATE_READ_STATUS', action.payload);
+  const readMessageIdsSet = new Set(action.payload.readMessageIds.map(Number));
+
+  return {
+    ...state,
+    log: state.log.map((msg) =>
+      readMessageIdsSet.has(Number(msg.id))
+        ? { ...msg, is_read: true }
+        : msg
+    ),
+    chatRooms: state.chatRooms.map((room) => {
+      if (room.roomId === action.payload.roomId) {
+        return {
+          ...room,
+          unreadCount: Math.max(0, room.unreadCount - readMessageIdsSet.size),
+        };
+      }
+      return room;
+    }),
+  };
             
         case JOIN_ROOM_FAILURE:
         case EXIT_ROOM_FAILURE:

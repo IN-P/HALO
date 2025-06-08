@@ -4,9 +4,9 @@ const router = express.Router();
 const { Op } = require('sequelize'); // Sequelize Op 사용을 위해 필요
 
 // 필요한 모델들 불러오기 (컨트롤러 없이 라우트에서 직접 사용)
-const { ChatRoom, User, ChatMessage, ChatRoomExit } = require('../models');
+const { ChatRoom, User, ChatMessage, ChatRoomExit,Sequelize } = require('../models');
 const { isLoggedIn } = require('./middlewares'); // 로그인 미들웨어
-
+const { io, socketMap } = require('../server');
 
 //1. 채팅방 관련 라우트
 //1.1 새로운 채팅방 생성 또는 기존 채팅방 조회 (POST /)
@@ -135,21 +135,57 @@ router.patch('/:chatRoomId/exit', isLoggedIn, async (req, res, next) => {
       console.log(`[PATCH /:chatRoomId/exit] ChatRoomExit 레코드 생성: chat_rooms_id=${chatRoomId}`);
     }
 
+    const exitedAt = new Date(); // exitedAt은 미리 생성
+
     if (chatRoom.user1_id === userId) {
-      chatRoomExit.user1_id_active = false;
-      console.log(`[PATCH /:chatRoomId/exit] user1_id_active를 false로 설정`);
+      // user1이 나가는 경우
+      await ChatRoomExit.update({
+        user1_id_active: false,
+        user1_exited_at: exitedAt, // 여기에 직접 명시
+      }, {
+        where: { chat_rooms_id: chatRoomId },
+        // fields: ['user1_id_active', 'user1_exited_at'], // 필요없을 가능성 높음 (만약 문제 발생 시 다시 추가 고려)
+      });
+      console.log(`[PATCH /:chatRoomId/exit] user1_id_active false 설정, user1_exited_at=${exitedAt}`);
     } else if (chatRoom.user2_id === userId) {
-      chatRoomExit.user2_id_active = false;
-      console.log(`[PATCH /:chatRoomId/exit] user2_id_active를 false로 설정`);
+      // user2가 나가는 경우
+      await ChatRoomExit.update({
+        user2_id_active: false,
+        user2_exited_at: exitedAt, // 여기에 직접 명시
+      }, {
+        where: { chat_rooms_id: chatRoomId },
+        // fields: ['user2_id_active', 'user2_exited_at'], // 필요없을 가능성 높음
+      });
+      console.log(`[PATCH /:chatRoomId/exit] user2_id_active false 설정, user2_exited_at=${exitedAt}`);
     } else {
       console.log(`[PATCH /:chatRoomId/exit] 권한 없음: userId=${userId}는 해당 채팅방에 참여하고 있지 않음.`);
       return res.status(403).send('해당 채팅방에 참여하고 있지 않아.');
     }
 
-    await chatRoomExit.save();
-    console.log(`[PATCH /:chatRoomId/exit] ChatRoomExit 상태 저장 완료.`);
+    console.log(`[PATCH /:chatRoomId/exit] ChatRoomExit 상태 업데이트 완료.`);
 
-    res.status(200).json({ message: '채팅방을 나갔어.', chatRoomExit });
+    // 업데이트된 ChatRoomExit 정보를 다시 조회하여 최신 상태 확인
+    const updatedChatRoomExit = await ChatRoomExit.findOne({ where: { chat_rooms_id: chatRoomId } });
+    console.log(`[PATCH /:chatRoomId/exit] 업데이트된 ChatRoomExit 상태 조회 완료:`, updatedChatRoomExit.toJSON());
+
+    // 두 사용자 모두 나갔는지 확인
+    if (updatedChatRoomExit.user1_id_active === false && updatedChatRoomExit.user2_id_active === false) {
+      console.log(`[PATCH /:chatRoomId/exit] 유저 2명 모두 나감 → 채팅방 및 메시지 삭제 시작.`);
+
+      // 먼저 ChatMessages 삭제
+      await ChatMessage.destroy({ where: { rooms_id: chatRoomId } });
+      console.log(`[PATCH /:chatRoomId/exit] ChatMessages 삭제 완료.`);
+
+      // ChatRoomExit 삭제
+      await ChatRoomExit.destroy({ where: { chat_rooms_id: chatRoomId } });
+      console.log(`[PATCH /:chatRoomId/exit] ChatRoomExit 삭제 완료.`);
+
+      // ChatRoom 삭제
+      await ChatRoom.destroy({ where: { id: chatRoomId } });
+      console.log(`[PATCH /:chatRoomId/exit] ChatRoom 삭제 완료.`);
+    }
+
+    res.status(200).json({ message: '채팅방을 나갔어.', chatRoomExit: updatedChatRoomExit });
   } catch (error) {
     console.error('❌ [PATCH /:chatRoomId/exit] 채팅방 나가기 에러:', error);
     next(error);
@@ -177,9 +213,11 @@ router.patch('/:chatRoomId/rejoin', isLoggedIn, async (req, res, next) => {
 
     if (chatRoom.user1_id === userId) {
       chatRoomExit.user1_id_active = true;
+      chatRoomExit.user1_exited_at = null;
       console.log(`[PATCH /:chatRoomId/rejoin] user1_id_active를 true로 설정`);
     } else if (chatRoom.user2_id === userId) {
       chatRoomExit.user2_id_active = true;
+      chatRoomExit.user2_exited_at = null;
       console.log(`[PATCH /:chatRoomId/rejoin] user2_id_active를 true로 설정`);
     } else {
       console.log(`[PATCH /:chatRoomId/rejoin] 권한 없음: userId=${userId}는 해당 채팅방에 참여하고 있지 않음.`);
@@ -224,6 +262,19 @@ router.post('/message', isLoggedIn, async (req, res, next) => {
 
     const roomId = `chat-${[chatRoom.user1_id, chatRoom.user2_id].sort((a, b) => a - b).join('-')}`;
 
+    console.log(`[POST /message] senderId=${senderId}, chatRoom.user1_id=${chatRoom.user1_id}, chatRoom.user2_id=${chatRoom.user2_id}`);
+    console.log(`[POST /message] senderId typeof=${typeof senderId}, senderId=${JSON.stringify(senderId)}`);
+
+await ChatRoomExit.update(
+  chatRoom.user1_id === senderId
+    ? { user1_id_active: true, user1_exited_at: null }
+    : { user2_id_active: true, user2_exited_at: null },
+  {
+    where: { chat_rooms_id: roomsId }
+  }
+);
+console.log(`[POST /message] ChatRoomExit active 상태 복구 처리 완료 (senderId=${senderId}).`);
+
     // 1. 메시지 저장
     const newMessage = await ChatMessage.create({
       sender_id: senderId,
@@ -231,6 +282,8 @@ router.post('/message', isLoggedIn, async (req, res, next) => {
       content,
     });
     console.log(`[POST /message] 메시지 DB 저장 완료: ID ${newMessage.id}`);
+
+    
 
 
     // 2. 저장된 메시지에 발신자(User) 정보를 포함하여 다시 조회
@@ -347,31 +400,65 @@ router.get('/message/:roomId', isLoggedIn, async (req, res, next) => {
 
     console.log(`[GET /message/:roomId] 메시지 조회 시작: rooms_id=${roomIdAsNumber}`); // 4번 로그
 
-    const messages = await ChatMessage.findAll({
-      where: {
-        rooms_id: roomIdAsNumber, // roomId 대신 roomIdAsNumber 사용
-        is_deleted: false,
-      },
-      include: [{ model: User, attributes: ['id', 'nickname','profile_img'] }],
-      order: [['created_at', 'ASC']],
-      limit,
-      offset,
-    });
+    const chatRoomExit = await ChatRoomExit.findOne({
+  where: { chat_rooms_id: roomIdAsNumber }
+});
 
-    console.log(`[GET /message/:roomId] 메시지 ${messages.length}개 조회 완료. 읽음 처리 시작.`); // 5번 로그
+// 나간 시점 (exitedAt) 가져오기
+let exitedAt = null;
+if (chatRoomExit) {
+  if (chatRoom.user1_id === userId) {
+    exitedAt = chatRoomExit.user1_exited_at;
+  } else if (chatRoom.user2_id === userId) {
+    exitedAt = chatRoomExit.user2_exited_at;
+  }
+}
 
-    // 메시지를 읽음 처리 (상대방이 보낸 메시지 중 내가 읽지 않은 것)
-    await ChatMessage.update(
-      { is_read: true },
-      {
-        where: {
-          rooms_id: roomIdAsNumber, // roomId 대신 roomIdAsNumber 사용
-          sender_id: { [Op.ne]: userId },
-          is_read: false,
-        },
-      }
-    );
+const messageWhere = {
+  rooms_id: roomIdAsNumber,
+  is_deleted: false,
+};
 
+await ChatMessage.update(
+  { is_read: true },
+  {
+    where: {
+      rooms_id: roomIdAsNumber,
+      sender_id: { [Op.ne]: userId },
+      is_read: false,
+    },
+  }
+);
+
+console.log(`[GET /message/:roomId] 읽음 처리 완료.`);
+
+const messages = await ChatMessage.findAll({
+  where: messageWhere,
+  include: [{ model: User, attributes: ['id', 'nickname','profile_img'] }],
+  order: [['created_at', 'DESC']],
+  limit,
+  offset,
+});
+console.log(`[GET /message/:roomId] 최신 메시지 ${messages.length}개 조회 완료.`);
+
+const readMessageIds = messages
+  .filter(msg => msg.is_read === true && msg.sender_id !== userId)
+  .map(msg => msg.id);
+
+// sender 쪽에 read_update emit 보내기
+const senderUserId = (userId === chatRoom.user1_id) ? chatRoom.user2_id : chatRoom.user1_id;
+
+if (socketMap && socketMap[senderUserId]) {
+  const senderSocketId = socketMap[senderUserId].socketId;
+  io.to(senderSocketId).emit('read_update', {
+    roomId,
+    readerId: userId,
+    readMessageIds
+  });
+  console.log(`[GET /message/:roomId] read_update emit → senderUserId=${senderUserId}, readMessageIds=${readMessageIds}`);
+} else {
+  console.log(`[GET /message/:roomId] senderUserId=${senderUserId} 는 socketMap 에 없음 → read_update emit 안함`);
+}
     console.log(`[GET /message/:roomId] 읽음 처리 완료. 응답 전송.`); // 6번 로그
 
     res.status(200).json(messages);
@@ -494,11 +581,27 @@ router.get('/my-rooms', isLoggedIn, async (req, res) => {
           { user1_id: me },
           { user2_id: me }
         ]
-      }
+      },
+      include: [
+    {
+      model: ChatRoomExit,
+      required: true, // INNER JOIN → 반드시 ChatRoomExit가 있어야만 나옴
+    }
+  ]
     });
     console.log(`[GET /my-rooms] DB에서 ${rooms.length}개의 채팅방 기본 정보 조회.`);
 
-    const result = await Promise.all(rooms.map(async (room) => {
+    const filteredRooms = rooms.filter(room => {
+  const exitInfo = room.ChatRoomExit;
+  if (room.user1_id === me) {
+    return exitInfo.user1_id_active === 1;
+  } else {
+    return exitInfo.user2_id_active === 1;
+  }
+});
+console.log(`[GET /my-rooms] 필터링 후 ${filteredRooms.length}개의 채팅방 유지.`);
+
+    const result = await Promise.all(filteredRooms.map(async (room) => {
       const isUser1 = room.user1_id === me;
       const partnerId = isUser1 ? room.user2_id : room.user1_id;
 
