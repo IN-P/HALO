@@ -5,7 +5,7 @@ import {
   ADD_POST_REQUEST, ADD_POST_RESET,
   EDIT_POST_REQUEST, EDIT_POST_RESET,
   UPLOAD_IMAGES_REQUEST,
-  REMOVE_IMAGE, RESET_IMAGE_PATHS 
+  REMOVE_IMAGE, RESET_IMAGE_PATHS
 } from '../reducers/post_IN';
 import { useRouter } from 'next/router';
 
@@ -70,16 +70,19 @@ const PostForm = ({ editMode = false, originPost }) => {
   const onTogglePublic = useCallback(checked => setIsPublic(checked), []);
 
   const onSubmit = useCallback(() => {
-console.log('oldImages:', oldImages); //
-console.log('imagePaths:', imagePaths); //
     if (!content.trim()) return message.warning('내용을 입력해주세요!');
+
     if (editMode) {
+      // 순서 유지하면서 중복 제거 (oldImages 앞, imagePaths 뒤)
+      const combinedImages = [...oldImages, ...imagePaths];
+      const uniqueImages = combinedImages.filter((img, idx) => combinedImages.indexOf(img) === idx);
+
       dispatch({
         type: EDIT_POST_REQUEST,
         data: {
           postId: originPost.id,
           content,
-          images: Array.from(new Set([...oldImages, ...imagePaths])),
+          images: uniqueImages,
           isPublic,
         },
       });
