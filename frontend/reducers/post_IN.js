@@ -70,15 +70,19 @@ export const REGRAM_FAILURE = 'REGRAM_IN/REGRAM_FAILURE';
 export const REGRAM_RESET   = 'REGRAM_IN/REGRAM_RESET';
 
 export const RESET_IMAGE_PATHS = 'RESET_IMAGE_PATHS';
-
 export const REMOVE_IMAGE = 'REMOVE_IMAGE';
-
 export const UPDATE_COMMENT_COUNT_IN_POST = 'UPDATE_COMMENT_COUNT_IN_POST';
 
 export const BOOKMARK_POST_SUCCESS = 'BOOKMARK_POST_SUCCESS';
-
 export const UNBOOKMARK_POST_SUCCESS = 'UNBOOKMARK_POST_SUCCESS';
 
+const updateBasePostFields = (base, updated) => {
+  if (!base || !updated) return;
+  base.Likers = updated.Likers ? [...updated.Likers] : [];
+  base.Bookmarkers = updated.Bookmarkers ? [...updated.Bookmarkers] : [];
+  base.Regrams = updated.Regrams ? [...updated.Regrams] : [];
+  if (updated.Images) base.Images = [...updated.Images];
+};
 
 const postINReducer = (state = initialState, action) =>
   produce(state, (draft) => {
@@ -154,16 +158,10 @@ const postINReducer = (state = initialState, action) =>
           const updated = action.data.basePost;
           const baseId = updated.id;
           const base = draft.mainPosts.find((v) => v.id === baseId);
-          if (base) {
-            base.Likers = updated.Likers || [];
-            base.Bookmarkers = updated.Bookmarkers || [];
-            base.Regrams = updated.Regrams || [];
-          }
+          updateBasePostFields(base, updated);
           draft.mainPosts.forEach((v) => {
             if (v.regram_id === baseId && v.Regram) {
-              v.Regram.Likers = updated.Likers || [];
-              v.Regram.Bookmarkers = updated.Bookmarkers || [];
-              v.Regram.Regrams = updated.Regrams || [];
+              updateBasePostFields(v.Regram, updated);
             }
           });
         }
@@ -186,17 +184,10 @@ const postINReducer = (state = initialState, action) =>
           const updated = action.data.basePost;
           const baseId = updated.id;
           const base = draft.mainPosts.find((v) => v.id === baseId);
-          if (base) {
-            base.Likers = updated.Likers || [];
-            base.Bookmarkers = updated.Bookmarkers || [];
-            base.Regrams = updated.Regrams || [];
-          }
+          updateBasePostFields(base, updated);
           draft.mainPosts.forEach((v) => {
             if (v.regram_id === baseId && v.Regram) {
-              v.Regram.Likers = updated.Likers || [];
-              v.Regram.Bookmarkers = updated.Bookmarkers || [];
-              v.Regram.Regrams = updated.Regrams || [];
-
+              updateBasePostFields(v.Regram, updated);
             }
           });
         }
@@ -212,16 +203,10 @@ const postINReducer = (state = initialState, action) =>
           const updated = action.data.basePost;
           const baseId = updated.id;
           const base = draft.mainPosts.find((v) => v.id === baseId);
-          if (base) {
-            base.Likers = updated.Likers || [];
-            base.Bookmarkers = updated.Bookmarkers || [];
-            base.Regrams = updated.Regrams || [];
-          }
+          updateBasePostFields(base, updated);
           draft.mainPosts.forEach((v) => {
             if (v.regram_id === baseId && v.Regram) {
-              v.Regram.Likers = updated.Likers || [];
-              v.Regram.Bookmarkers = updated.Bookmarkers || [];
-              v.Regram.Regrams = updated.Regrams || [];
+              updateBasePostFields(v.Regram, updated);
             }
           });
         }
@@ -232,16 +217,10 @@ const postINReducer = (state = initialState, action) =>
           const updated = action.data.basePost;
           const baseId = updated.id;
           const base = draft.mainPosts.find((v) => v.id === baseId);
-          if (base) {
-            base.Likers = updated.Likers || [];
-            base.Bookmarkers = updated.Bookmarkers || [];
-            base.Regrams = updated.Regrams || [];
-          }
+          updateBasePostFields(base, updated);
           draft.mainPosts.forEach((v) => {
             if (v.regram_id === baseId && v.Regram) {
-              v.Regram.Likers = updated.Likers || [];
-              v.Regram.Bookmarkers = updated.Bookmarkers || [];
-              v.Regram.Regrams = updated.Regrams || [];
+              updateBasePostFields(v.Regram, updated);
             }
           });
         }
@@ -257,22 +236,16 @@ const postINReducer = (state = initialState, action) =>
         draft.regramLoading = false;
         draft.regramDone = true;
         if (action.data.fullRegram) {
-          draft.mainPosts.unshift(action.data.fullRegram); 
+          draft.mainPosts.unshift(action.data.fullRegram);
         }
         if (action.data.basePost) {
           const updated = action.data.basePost;
           const baseId = updated.id;
           const base = draft.mainPosts.find((v) => v.id === baseId);
-          if (base) {
-            base.Likers = updated.Likers || [];
-            base.Bookmarkers = updated.Bookmarkers || [];
-            base.Regrams = updated.Regrams || [];
-          }
+          updateBasePostFields(base, updated);
           draft.mainPosts.forEach((v) => {
             if (v.regram_id === baseId && v.Regram) {
-              v.Regram.Likers = updated.Likers || [];
-              v.Regram.Bookmarkers = updated.Bookmarkers || [];
-              v.Regram.Regrams = updated.Regrams || [];
+              updateBasePostFields(v.Regram, updated);
             }
           });
         }
@@ -292,11 +265,23 @@ const postINReducer = (state = initialState, action) =>
         draft.removePostError = null;
         draft.removePostDone = false;
         break;
-      case REMOVE_POST_SUCCESS:
+      case REMOVE_POST_SUCCESS: {
         draft.removePostLoading = false;
         draft.removePostDone = true;
         draft.mainPosts = draft.mainPosts.filter((v) => v.id !== action.data.PostId);
+        if (action.data.basePost) {
+          const updated = action.data.basePost;
+          const baseId = updated.id;
+          const base = draft.mainPosts.find((v) => v.id === baseId);
+          updateBasePostFields(base, updated);
+          draft.mainPosts.forEach((v) => {
+            if (v.regram_id === baseId && v.Regram) {
+              updateBasePostFields(v.Regram, updated);
+            }
+          });
+        }
         break;
+      }
       case REMOVE_POST_FAILURE:
         draft.removePostLoading = false;
         draft.removePostError = action.error;

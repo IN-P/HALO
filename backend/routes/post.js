@@ -84,10 +84,8 @@ router.post('/images', isLoggedIn, upload.array('image'), (req, res) => {
 // 게시글 삭제
 router.delete('/:postId', isLoggedIn, async (req, res, next) => {
   try {
-    // 1. 삭제될 포스트 찾기
     const post = await Post.findByPk(req.params.postId);
 
-    // 2. 기존 삭제 로직
     await Image.destroy({ where: { post_id: req.params.postId } });
     await Comment.destroy({ where: { post_id: req.params.postId } });
     await Post.destroy({
@@ -97,7 +95,6 @@ router.delete('/:postId', isLoggedIn, async (req, res, next) => {
       },
     });
 
-    // 3. 만약 리그램글이면, 원본글 최신 상태까지 응답!
     let basePost = null;
     if (post && post.regram_id) {
       basePost = await Post.findOne({
@@ -105,14 +102,21 @@ router.delete('/:postId', isLoggedIn, async (req, res, next) => {
         include: [
           { model: User, as: 'Likers', attributes: ['id'] },
           { model: User, as: 'Bookmarkers', attributes: ['id'] },
-          { model: Post, as: 'Regrams', attributes: ['id'] }, // ★
+          {
+            model: Post,
+            as: 'Regrams',
+            include: [
+              { model: User, attributes: ['id', 'nickname', 'profile_img'] }
+            ]
+          },
+          { model: Comment, attributes: ['id'] },
         ]
       });
     }
 
     res.status(200).json({
       PostId: parseInt(req.params.postId, 10),
-      ...(basePost && { basePost }), // basePost 있으면 같이 보내줌
+      ...(basePost && { basePost }),
     });
   } catch (error) {
     console.error(error);
@@ -149,11 +153,9 @@ router.patch('/:postId', isLoggedIn, async (req, res, next) => {
       const existingImages = await post.getImages();
       const existingSrcs = existingImages.map(img => img.src);
 
-      // 삭제될 이미지
       const toRemove = existingImages.filter(img => !images.includes(img.src));
       await Promise.all(toRemove.map(img => img.destroy()));
 
-      // 새로 추가된 이미지
       const toAdd = images.filter(src => !existingSrcs.includes(src));
       for (const src of toAdd) {
         const exists = await Image.findOne({ where: { src, post_id: post.id } });
@@ -198,19 +200,23 @@ router.patch('/:postId/like', isLoggedIn, async (req, res, next) => {
   try {
     const post = await Post.findByPk(req.params.postId);
     if (!post) return res.status(404).send('게시글이 존재하지 않습니다.');
-    // 원본글 찾기
     const originId = post.regram_id || post.id;
     const originPost = (originId === post.id) ? post : await Post.findByPk(originId);
 
     await originPost.addLikers(req.user.id);
 
-    // 원본글의 최신 정보 포함해서 응답!
     const fullOrigin = await Post.findOne({
       where: { id: originPost.id },
       include: [
         { model: User, as: 'Likers', attributes: ['id'] },
         { model: User, as: 'Bookmarkers', attributes: ['id'] },
-        { model: Post, as: 'Regrams' }, // 리그램 카운트용
+        {
+          model: Post,
+          as: 'Regrams',
+          include: [
+            { model: User, attributes: ['id', 'nickname', 'profile_img'] },
+          ],
+        },
         { model: Comment, attributes: ['id'] },
       ]
     });
@@ -237,7 +243,13 @@ router.delete('/:postId/like', isLoggedIn, async (req, res, next) => {
       include: [
         { model: User, as: 'Likers', attributes: ['id'] },
         { model: User, as: 'Bookmarkers', attributes: ['id'] },
-        { model: Post, as: 'Regrams' },
+        {
+          model: Post,
+          as: 'Regrams',
+          include: [
+            { model: User, attributes: ['id', 'nickname', 'profile_img'] },
+          ],
+        },
         { model: Comment, attributes: ['id'] },
       ]
     });
@@ -270,14 +282,21 @@ router.post('/:postId/regram', isLoggedIn, async (req, res, next) => {
       visibility: req.body.isPublic ? 'public' : 'private',
     });
 
-    // 원본글 최신 데이터 포함 응답
+    // 원본글 최신 데이터 포함 응답 (여기도 마찬가지!)
     const fullOrigin = await Post.findOne({
       where: { id: targetPost.id },
       include: [
         { model: User, as: 'Likers', attributes: ['id'] },
         { model: User, as: 'Bookmarkers', attributes: ['id'] },
-        { model: Post, as: 'Regrams' },
+        {
+          model: Post,
+          as: 'Regrams',
+          include: [
+            { model: User, attributes: ['id', 'nickname', 'profile_img'] },
+          ],
+        },
         { model: Comment, attributes: ['id'] },
+        
       ]
     });
 
@@ -297,6 +316,10 @@ router.post('/:postId/regram', isLoggedIn, async (req, res, next) => {
             { model: Image },
           ],
         },
+      ],
+            order: [
+        [Image, 'id', 'ASC'],
+        [{ model: Post, as: 'Regram' }, Image, 'id', 'ASC'],
       ],
     });
 
@@ -322,7 +345,13 @@ router.patch('/:postId/bookmark', isLoggedIn, async (req, res, next) => {
       include: [
         { model: User, as: 'Likers', attributes: ['id'] },
         { model: User, as: 'Bookmarkers', attributes: ['id'] },
-        { model: Post, as: 'Regrams' },
+        {
+          model: Post,
+          as: 'Regrams',
+          include: [
+            { model: User, attributes: ['id', 'nickname', 'profile_img'] },
+          ],
+        },
         { model: Comment, attributes: ['id'] },
       ]
     });
@@ -349,7 +378,13 @@ router.delete('/:postId/bookmark', isLoggedIn, async (req, res, next) => {
       include: [
         { model: User, as: 'Likers', attributes: ['id'] },
         { model: User, as: 'Bookmarkers', attributes: ['id'] },
-        { model: Post, as: 'Regrams' },
+        {
+          model: Post,
+          as: 'Regrams',
+          include: [
+            { model: User, attributes: ['id', 'nickname', 'profile_img'] },
+          ],
+        },
         { model: Comment, attributes: ['id'] },
       ]
     });

@@ -31,7 +31,11 @@ router.get('/', async (req, res, next) => {
         },
         { model: User, as: 'Likers', attributes: ['id'] },
         { model: User, as: 'Bookmarkers', attributes: ['id'] },
-        { model: Post, as: 'Regrams', attributes: ['id'] },
+        {
+          model: Post,
+          as: 'Regrams',
+          include: [{ model: User, attributes: ['id', 'nickname', 'profile_img'] }], // ★ 이거!
+        },
         {
           model: Post,
           as: 'Regram',
@@ -40,11 +44,16 @@ router.get('/', async (req, res, next) => {
             { model: Image },
             { model: User, as: 'Likers', attributes: ['id'] },
             { model: User, as: 'Bookmarkers', attributes: ['id'] },
-            { model: Post, as: 'Regrams', attributes: ['id'] },
+            { 
+              model: Post, 
+              as: 'Regrams',
+              include: [{ model: User, attributes: ['id', 'nickname', 'profile_img'] }],
+            },
           ],
         },
       ],
     });
+
 
     // 무한스크롤을 위해 10개 채웠으면 hasMorePosts true, 아니면 false
     res.status(200).json({

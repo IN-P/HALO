@@ -24,23 +24,20 @@ const PostCard = ({ post }) => {
   const [showReportForm, setShowReportForm] = useState(false);
   const menuRef = useRef(null);
 
-  // ★ basePost: 항상 "원본글" 기준
+  // basePost: 항상 "원본글" 기준
   const isRegram = !!post.regram_id;
   const origin = post.Regram;
-  const basePost = isRegram && origin ? origin : post; // 이거만 쓰면 됨!
+  const basePost = isRegram && origin ? origin : post;
   const isMine = post.User?.id === user?.id;
 
-  // 내가 리그램한 글인가? (리그램이고, 원본 작성자가 로그인 유저)
-  const isMyRegram = isRegram && origin && origin.User?.id === user?.id;
-
-  // 좋아요/북마크/리그램만 basePost 기준!
+  // 좋아요/북마크/리그램 basePost 기준!
   const liked = basePost.Likers?.some((u) => u.id === user?.id);
   const bookmarked = basePost.Bookmarkers?.some((u) => u.id === user?.id);
   const likeCount = basePost.Likers?.length || 0;
   const regramCount = basePost.Regrams?.length || 0;
   const bookmarkCount = basePost.Bookmarkers?.length || 0;
 
-  // 댓글 카운트는 반드시 post.Comments (리그램이든 뭐든 자기 자신 id의 Comments)
+  // 댓글 카운트
   const commentCount = post.Comments?.length || 0;
 
   // 이미지 (리그램+코멘트 없는 순수 리그램은 원본 이미지, 나머지는 post 이미지)
@@ -71,25 +68,64 @@ const PostCard = ({ post }) => {
   const onDelete = () => { if (window.confirm('정말 삭제하시겠습니까?')) dispatch({ type: REMOVE_POST_REQUEST, data: post.id }); };
   const onReport = () => { if (window.confirm('정말 신고하시겠습니까?')) dispatch({ type: REPORT_POST_REQUEST, data: post.id }); };
 
-  // 리그램 아이콘 색상 및 활성화/비활성화, 얼럿 텍스트 설정
-  let regramIconColor = '#000'; // 기본 검정
-  let regramDisabled = false;   // 클릭 가능 여부
+  // ---------------- 리그램 아이콘 상태 분기 ----------------
+  // 이 부분만 보면 됨!
+  const isOriginMine = origin?.User?.id === user?.id; // 원본이 내 글
+
+  // 내글을 남이 리그램한 글(리그램글)
+  const isMyOriginRegrammed = isRegram && isOriginMine && post.User?.id !== user?.id;
+
+  // 내가 남의 글 리그램한 글(리그램글)
+  const isMyRegram = isRegram && post.User?.id === user?.id && !isOriginMine;
+
+  // 남이쓴글, 내가 리그램한 적이 있는지(원본글 기준)
+  const iRegrammedThis = !isRegram && post.Regrams?.some(rg => rg.User?.id === user?.id);
+
+  // 남이 남의 글 리그램한 글(리그램글)
+  const isOthersRegram = isRegram && !isOriginMine && post.User?.id !== user?.id;
+
+  // 남이쓴글, 원본글(내가 쓴글도 아니고, 리그램도 아님)
+  const isOthersPost = !isMine && !isRegram;
+
+  let regramIconColor = '#000';
+  let regramDisabled = false;
   let regramTooltip = '리그램하기';
 
-  if (isMine || isMyRegram) {
-    // 내 글 혹은 내가 리그램한 글은 회색, 클릭 금지
+  if (isMine && !isRegram) {
+    // 내가 쓴글(원본)
     regramIconColor = '#aaa';
     regramDisabled = true;
-    regramTooltip = '리그램할 수 없습니다.';
-  } else if (isRegram && origin && origin.User?.id !== user?.id) {
-    // 남이 쓴 글을 리그램한 글은 초록색, 클릭 금지
+    regramTooltip = '내 게시글은 리그램할 수 없습니다.';
+  } else if (isMyOriginRegrammed) {
+    // 내 글을 남이 리그램한 글(리그램글)
+    regramIconColor = '#32e732';
+    regramDisabled = true;
+    regramTooltip = '내 글이 리그램된 글입니다.';
+  } else if (isMyRegram) {
+    // 내가 남의 글 리그램한 글(리그램글)
     regramIconColor = '#32e732';
     regramDisabled = true;
     regramTooltip = '이미 리그램한 글입니다.';
+  } else if (iRegrammedThis) {
+    // 남이쓴글, 내가 리그램한 적이 있는지(원본글)
+    regramIconColor = '#32e732';
+    regramDisabled = true;
+    regramTooltip = '이미 리그램한 글입니다.';
+  } else if (isOthersRegram) {
+    // 남이 남의 글 리그램한 글(리그램글)
+    regramIconColor = '#32e732';
+    regramDisabled = true;
+    regramTooltip = '남이 리그램한 글입니다.';
+  } else {
+    // 남이쓴글, 내가 리그램X, 남이 리그램 안한 글(원본)
+    regramIconColor = '#000';
+    regramDisabled = false;
+    regramTooltip = '리그램하기';
   }
+  // ------------------------------------------------------
 
   const onRegram = () => {
-    if (regramDisabled) return; // 비활성화 상태면 무반응
+    if (regramDisabled) return;
     if (window.confirm('리그램하시겠습니까?')) {
       dispatch({ type: REGRAM_REQUEST, data: { postId: basePost.id, content: '', isPublic: true } });
     }
@@ -179,7 +215,7 @@ const PostCard = ({ post }) => {
             src={post.User?.profile_img ? `http://localhost:3065${post.User.profile_img}` : 'http://localhost:3065/img/profile/default.jpg'}
             alt="프로필"
             style={{ width: 54, height: 54, borderRadius: '50%', objectFit: 'cover', marginRight: 16, border: '2px solid #bbb' }}
-            onClick={() => router.push(`/profile/${post.User?.nickname}`)} // 아바타 클릭시 프로필 이동
+            onClick={() => router.push(`/profile/${post.User?.nickname}`)}
           />
           <div>
             <div style={{ fontWeight: 'bold', fontSize: 20 }}>{post.User?.nickname}</div>
@@ -188,7 +224,6 @@ const PostCard = ({ post }) => {
             </div>
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-            {/* 리그램된 글이면 메뉴(수정) 숨김 */}
             {!isMine ? (
               <button style={menuBtnStyle} onClick={() => setShowReportForm(prev => !prev)}>
                 <FaEllipsisH />
@@ -200,7 +235,6 @@ const PostCard = ({ post }) => {
                 </button>
                 {showMenu && (
                   <div style={menuDropdownStyle}>
-                    {/* 리그램이면 "삭제"만, 아니면 수정/삭제 */}
                     {!isRegram && <button style={menuItemStyle} onClick={onEdit}>수정</button>}
                     <button style={{ ...menuItemStyle, color: 'red' }} onClick={() => { onDelete(); setShowMenu(false); }}>삭제</button>
                   </div>
@@ -210,9 +244,8 @@ const PostCard = ({ post }) => {
           </div>
         </div>
 
-        {/* 본문/미리보기 - 리그램 분기 */}
+        {/* 본문/리그램 분기 */}
         {isRegram && isPureRegram && origin ? (
-          // 리그램(내 코멘트X): 원본글만
           <div style={{
             marginBottom: 12,
             maxHeight: 130,
@@ -231,7 +264,6 @@ const PostCard = ({ post }) => {
             </div>
           </div>
         ) : isRegram && origin ? (
-          // 리그램(코멘트 있음): 내 코멘트 + 원본 미리보기 박스
           <>
             <div style={{
               fontSize: 17,
@@ -269,7 +301,6 @@ const PostCard = ({ post }) => {
             </div>
           </>
         ) : (
-          // 일반글
           <div style={{
             fontSize: 17,
             lineHeight: 1.6,
@@ -284,7 +315,7 @@ const PostCard = ({ post }) => {
           </div>
         )}
 
-        {/* 아이콘/카운트 영역 */}
+        {/* 아이콘/카운트 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 22, fontSize: 26, marginBottom: 8 }}>
           {/* 1. 댓글 */}
           <button style={iconBtnStyle} onClick={() => setShowComments(v => !v)}>
