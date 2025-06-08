@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Col, Row } from "antd";
 import MySettingSidebar from "./MySettingSidebar";
-import MyHeader from "./MyHeader";
-import MyAvatar from "./MyAvatar";
-import MySettingEditForm from "./MySettingEditForm";
 import { CloseOutlined } from "@ant-design/icons";
 import MySettingBlock from "./MySettingBlock";
 import MySettingAchievement from "./MySettingAchievement";
