@@ -10,6 +10,8 @@ import { FaHeart, FaRegHeart, FaRegComment, FaBookmark, FaRegBookmark, FaEllipsi
 import { useRouter } from 'next/router';
 import FollowButton from '../components/FollowButton';
 import ReportModal from './ReportModal';
+import ReportButton from './ReportButton'; // 윫
+
 
 const IMAGE_SIZE = { width: 540, height: 640 };
 
@@ -24,7 +26,7 @@ const PostCard = ({ post }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showReportForm, setShowReportForm] = useState(false);
   const menuRef = useRef(null);
-
+  const [showReportModal, setShowReportModal] = useState(false); // 윫
   // ===== 리그램/원본 분기처리 =====
   const isRegram = !!post.regram_id;
   const origin = post.Regram;
@@ -52,7 +54,9 @@ const PostCard = ({ post }) => {
   // 메뉴바 외부 클릭 닫기
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (showMenu && menuRef.current && !menuRef.current.contains(e.target)) {
+      if (showMenu && menuRef.current && !menuRef.current.contains(e.target)
+        && !document.getElementById('report-modal')?.contains(e.target) //윫
+      ) {
         setShowMenu(false);
       }
     };
@@ -70,14 +74,14 @@ const PostCard = ({ post }) => {
   const renderContent = (content) =>
     content
       ? content.split(/(#[^\s#]+)/g).map((part, i) =>
-          part.startsWith('#') ? (
-            <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: '#007bff' }}>
-              {part}
-            </a>
-          ) : (
-            part
-          )
+        part.startsWith('#') ? (
+          <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: '#007bff' }}>
+            {part}
+          </a>
+        ) : (
+          part
         )
+      )
       : null;
 
   return (
@@ -150,29 +154,44 @@ const PostCard = ({ post }) => {
             <div style={{ fontSize: 14, color: '#888' }}>
               {minutesAgo < 1 ? '방금 전' : `${minutesAgo}분 전`}
             </div>
-          </div>
+          </div>{/* 율 수정 */}
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-            {/* {post.User?.id && user?.id !== post.User.id && (
-              <FollowButton toUserId={Number(post.User.id)} />
-            )} */}
-            {!isMine ? (
-              <button style={menuBtnStyle} onClick={() => setShowReportForm(prev => !prev)}>
+            <div style={{ position: 'relative' }} ref={menuRef}>
+              <button style={menuBtnStyle} onClick={() => setShowMenu((v) => !v)}>
                 <FaEllipsisH />
               </button>
-            ) : (
-              <div style={{ position: 'relative' }} ref={menuRef}>
-                <button style={menuBtnStyle} onClick={() => setShowMenu((v) => !v)}>
-                  <FaEllipsisH />
-                </button>
-                {showMenu && (
-                  <div style={menuDropdownStyle}>
-                    <button style={menuItemStyle} onClick={onEdit}>수정</button>
-                    <button style={{ ...menuItemStyle, color: 'red' }} onClick={() => { onDelete(); setShowMenu(false); }}>삭제</button>
-                  </div>
-                )}
-              </div>
-            )}
+              {showMenu && (
+                <div style={menuDropdownStyle}>
+                  {isMine ? (
+                    <>
+                      <button style={menuItemStyle} onClick={onEdit}>수정</button>
+                      <button
+                        style={{ ...menuItemStyle, color: 'red' }}
+                        onClick={() => {
+                          onDelete();
+                          setShowMenu(false);
+                        }}
+                      >
+                        삭제
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      style={menuItemStyle}
+                      onClick={() => {
+                        setShowReportModal(true); // 신고 버튼 클릭 시 모달 상태 따로 띄움
+                        setShowMenu(false); // 메뉴 닫기
+                      }}
+                    >
+                      신고하기
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
+
+
         </div>
 
         {/* 본문/미리보기 - 리그램 분기 */}
@@ -276,11 +295,13 @@ const PostCard = ({ post }) => {
           </div>
         )}
 
-        {/* 신고 모달 */}
-        {showReportForm && (
-          <div style={{ marginTop: 24 }}>
-            <ReportModal visible={showReportForm} postId={post.id} onClose={() => setShowReportForm(false)} />
-          </div>
+        {/* 신고 모달 추가!! */}
+        {showReportModal && (
+          <ReportModal
+            visible={showReportModal}
+            postId={post.id}
+            onClose={() => setShowReportModal(false)}
+          />
         )}
       </div>
     </div>
