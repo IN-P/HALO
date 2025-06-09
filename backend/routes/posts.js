@@ -33,7 +33,7 @@ router.get('/', async (req, res, next) => {
     }
 
 
-    const posts = await Post.findAll({
+    let posts = await Post.findAll({
       where,
       limit: 10,
       order: [
@@ -103,6 +103,10 @@ router.get('/', async (req, res, next) => {
         }
       }
     }
+    posts = posts.filter(post => {
+      const regramUserId = post?.Regram?.User?.id;
+      return !(regramUserId && blockedUserIds.includes(regramUserId) && post.user_id !== req.user.id);
+    });
 
     // 무한스크롤을 위해 10개 채웠으면 hasMorePosts true, 아니면 false
     res.status(200).json({
