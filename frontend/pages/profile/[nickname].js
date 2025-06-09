@@ -5,9 +5,9 @@ import MyHeader from "../../components/mypage/MyHeader";
 import MyAvatar from "../../components/mypage/MyAvatar";
 import MyMain from "../../components/mypage/MyMain";
 import MyPost from "../../components/mypage/MyPost";
-import MySetting from "../../components/mypage/MySetting";
+import MySettingMain from "../../components/mypage/MySettingMain"; // main 브랜치 쪽
+import ProfilePost from "../../components/mypage/ProfilePost";
 import { InboxOutlined, NumberOutlined, TagOutlined } from "@ant-design/icons";
-
 import { useDispatch, useSelector } from "react-redux";
 import { LOAD_USER_INFO_REQUEST } from "../../reducers/profile_jh";
 import wrapper from "../../store/configureStore";
@@ -15,83 +15,82 @@ import { END } from "redux-saga";
 import axios from "axios";
 import MyBookmark from "../../components/mypage/MyBookmark";
 
-
 const ProfilePage = () => {
-  // c
-  
   const router = useRouter();
   const { nickname } = router.query;
-  console.log("INSERTING NICKNAME :"+ nickname);
-  
+  console.log("INSERTING NICKNAME :" + nickname);
+
   const dispatch = useDispatch();
   const [showSetting, setShowSetting] = useState(false);
-  
-  // nickname이 바뀔 때마다 정보 요청
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
+
   useEffect(() => {
     if (nickname) {
       dispatch({ type: LOAD_USER_INFO_REQUEST, data: nickname });
     }
-  }, [dispatch, nickname]);
-  
-  // redux에서 data 가져오기
+  }, [dispatch, nickname, refetchTrigger]);
+
   const data = useSelector((state) => state.profile_jh?.data);
-  console.log("data1", data)
+  console.log("data1", data);
+
+  const { user } = useSelector((state) => state.user_YG);
+  const isMyProfile = user && data && user.id === data.id;
 
   useEffect(() => {
-  const removePadding = document.getElementById("mainContents");
+    const removePadding = document.getElementById("mainContents");
+    if (removePadding) {
+      removePadding.style.padding = "0";
+    }
+  }, []);
 
-  if (removePadding) { removePadding.style.padding = "0"; } }, []);
+  // 데이터 갱신용
+  const fetchUserInfo = () => {
+    dispatch({ type: LOAD_USER_INFO_REQUEST, data: nickname });
+  };
 
-  // v
   return (
     <AppLayout>
-      <div>
-        <div style={{ display: "flex", justifyContent: "end", padding: "1% 1% 0 0" }}>
-          <MyHeader data={data} />
+      {showSetting && isMyProfile ? (
+        <>
+          <MySettingMain onClose={() => setShowSetting(false)} data={data} reload={fetchUserInfo} />
+        </>
+      ) : (
+        <div>
+          <div style={{ display: "flex", justifyContent: "end", padding: "1% 1% 0 0" }}>
+            <MyHeader data={data} onClickSetting={() => setShowSetting(true)} isMyProfile={isMyProfile} />
+          </div>
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <MyAvatar data={data} />
+            <div style={{ width: "30px" }} />
+            <MyMain
+              key={refetchTrigger}
+              data={data}
+              isMyProfile={isMyProfile}
+              loginUser={user}
+              onRefetch={() => setRefetchTrigger((prev) => prev + 1)}
+            />
+          </div>
+          <ProfilePost data={data} isMyProfile={isMyProfile} />
         </div>
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <MyAvatar data={data} />
-          <div style={{ width: "30px" }} />
-          <MyMain data={data} />
-        </div>
-        <hr style={{ marginTop:"3%"}}/>
-        <div
-          style={{ display: "flex", justifyContent: "center", gap: "100px" }}
-        >
-          <span>
-            <InboxOutlined />
-            &nbsp;게시물
-          </span>
-          <span>
-            <TagOutlined />
-            &nbsp;북마크
-          </span>
-          <span>
-            <NumberOutlined />
-            &nbsp;태그됨
-          </span>
-        </div>
-        <MyPost data={data} />
-        <MyBookmark data={data} />
-      </div>
+      )}
     </AppLayout>
   );
 };
 
 ///////////////////////////////////////////////////////////
-export const getServerSideProps = wrapper.getServerSideProps(async (context) => { 
-  //1. cookie 설정
+export const getServerSideProps = wrapper.getServerSideProps(async (context) => {
   const cookie = context.req ? context.req.headers.cookie : '';
   axios.defaults.headers.Cookie = '';
-  
-  if (context.req  && cookie ) { axios.defaults.headers.Cookie = cookie;   }
 
-  //2. redux 액션
-  context.store.dispatch({ type: LOAD_USER_INFO_REQUEST, data: context.params.nickname  });
+  if (context.req && cookie) {
+    axios.defaults.headers.Cookie = cookie;
+  }
+
+  context.store.dispatch({ type: LOAD_USER_INFO_REQUEST, data: context.params.nickname });
   context.store.dispatch(END);
 
-  await  context.store.sagaTask.toPromise();
-}); 
+  await context.store.sagaTask.toPromise();
+});
 ///////////////////////////////////////////////////////////
 
 export default ProfilePage;

@@ -1,32 +1,42 @@
-import React from "react";
-import { SettingFilled, ShareAltOutlined, CrownFilled, } from "@ant-design/icons";
-import { useRouter } from "next/router";
+import React, { useState } from "react";
+import {
+  SettingFilled,
+  ShareAltOutlined,
+  CrownFilled,
+} from "@ant-design/icons";
+import ProfileShare from "./ProfileShare"; // ✅ default import
 
-const MyHeader = ({ data }) => {
-  const router = useRouter();
+const MyHeader = ({ data, onClickSetting, isMyProfile }) => {
+  const [showShare, setShowShare] = useState(false);
 
-  const handleSettingClick = () => {
-    if (router.pathname === "/profile/[nickname]") {
-      // 프로필 페이지 → 세팅 페이지로 이동
-      router.push("/myset");
-    } else if (router.pathname === "/myset") {
-      // 세팅 페이지 → 프로필 페이지로 이동
-      if (data?.nickname) {
-        router.push(`/profile/${data.nickname}`);
-      } else {
-        alert("닉네임 정보가 없습니다.");
-      }
-    }
-  };
-  
-  // v
+  const profileUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/profile/${data?.nickname}`
+    : "";
+
   return (
-    <div style={{ textAlign: "right" }}>
-      <CrownFilled style={{ fontSize: "32px", color: "#FFD700" }}  id='membership' />
-      &nbsp; &nbsp;
-      <ShareAltOutlined style={{ fontSize: "32px", color: "#4A98FF" }}  id='share' />
-      &nbsp; &nbsp;
-      <SettingFilled style={{ fontSize: "32px", color: "#363636" }} onClick={handleSettingClick} />
+    <div style={{ textAlign: "right", position: "relative" }}>
+      {isMyProfile && (
+        <CrownFilled style={{ fontSize: "32px", color: "#FFD700" }} />
+      )}
+      &nbsp;&nbsp;
+      <ShareAltOutlined
+        style={{ fontSize: "32px", color: "#4A98FF", cursor: "pointer" }}
+        onClick={() => setShowShare((prev) => !prev)}
+      />
+      &nbsp;&nbsp;
+      {isMyProfile && (
+        <SettingFilled
+          style={{ fontSize: "32px", color: "#363636", cursor: "pointer" }}
+          onClick={onClickSetting}
+        />
+      )}
+
+      {showShare && (
+        <ProfileShare
+          profileUrl={profileUrl}
+          onClose={() => setShowShare(false)}
+        />
+      )}
     </div>
   );
 };

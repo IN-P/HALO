@@ -1,14 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { useDispatch } from 'react-redux'; // ✅ 추가
+import { LOAD_FOLLOWINGS_REQUEST } from '../reducers/follow_YB'; // ✅ 추가
 
 // 1. Context 객체 생성 -전역 로그인 상태 관리
 const AuthContext = createContext();
 
-// 2. 모든 컴포넌트를 감싸주는 Provider를 정의.
-// 앱 최상단에서 <AuthProvider>로 감싸면 내부 컴포넌트들이 로그인 상태에 접근
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);     // 로그인 유저 정보
-  const [loading, setLoading] = useState(true); // 로딩 여부
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch(); // ✅ dispatch 선언
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -16,11 +17,12 @@ export const AuthProvider = ({ children }) => {
         const res = await axios.get('http://localhost:3065/user/me', {
           withCredentials: true,
         });
-        setUser(res.data); // 로그인 유저 정보 저장
+        setUser(res.data);
+        dispatch({ type: LOAD_FOLLOWINGS_REQUEST }); // ✅ 로그인된 경우 팔로우 목록 로딩
       } catch (err) {
-        setUser(null); // 비로그인 상태
+        setUser(null);
       } finally {
-        setLoading(false); // 로딩 종료
+        setLoading(false);
       }
     };
     fetchUser();
@@ -33,5 +35,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// 3. useAuth 훅으로 외부에서 쉽게 접근
 export const useAuth = () => useContext(AuthContext);

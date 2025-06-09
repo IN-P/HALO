@@ -6,17 +6,16 @@ import {
 } from '../reducers/bookmark_IN';
 
 function bookmarkPostAPI(postId) {
-  return axios.patch(`/post/${postId}/bookmark`);
+  return axios.patch(`/post/${postId}/bookmark`, {}, { withCredentials: true });
 }
 function unbookmarkPostAPI(postId) {
-  return axios.delete(`/post/${postId}/bookmark`);
+  return axios.delete(`/post/${postId}/bookmark`, { withCredentials: true });
 }
 
 function* bookmarkPost(action) {
   try {
     const result = yield call(bookmarkPostAPI, action.data);
     yield put({ type: BOOKMARK_POST_SUCCESS, data: result.data });
-    // mainPosts 상태에 BookmarkedUsers 바로 반영하려면 post_IN에서 액션 따로 처리해야 함
   } catch (err) {
     yield put({ type: BOOKMARK_POST_FAILURE, error: err.response?.data || err.message });
   }

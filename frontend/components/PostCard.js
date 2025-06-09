@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  LIKE_POST_REQUEST,
-  UNLIKE_POST_REQUEST,
-  REMOVE_POST_REQUEST,
-  REPORT_POST_REQUEST
+  LIKE_POST_REQUEST, UNLIKE_POST_REQUEST, REMOVE_POST_REQUEST, REPORT_POST_REQUEST,
 } from '../reducers/post_IN';
 import { BOOKMARK_POST_REQUEST, UNBOOKMARK_POST_REQUEST } from '../reducers/bookmark_IN';
+import { REGRAM_REQUEST } from '../reducers/regram_IN';
 import Comment from './Comment';
-import { FaHeart, FaRegHeart, FaRegComment, FaRegPaperPlane, FaRegBookmark, FaBookmark, FaEllipsisH } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaRegComment, FaBookmark, FaRegBookmark, FaEllipsisH, FaRetweet } from 'react-icons/fa';
 import { useRouter } from 'next/router';
+import ReportModal from './ReportModal';
+
+const IMAGE_SIZE = { width: 540, height: 640 };
 
 const PostCard = ({ post }) => {
   const dispatch = useDispatch();
@@ -20,19 +21,38 @@ const PostCard = ({ post }) => {
   const [showImageModal, setShowImageModal] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-
+  const [showReportForm, setShowReportForm] = useState(false);
   const menuRef = useRef(null);
 
-  const liked = post.Likers?.some((u) => u.id === user?.id);
-  const bookmarked = post.Bookmarkers?.some((u) => u.id === user?.id);
+  // basePost: 항상 "원본글" 기준
+  const isRegram = !!post.regram_id;
+  const origin = post.Regram;
+  const basePost = isRegram && origin ? origin : post;
   const isMine = post.User?.id === user?.id;
-  const minutesAgo = Math.floor((Date.now() - new Date(post.User?.last_active).getTime()) / 60000);
 
-  // 이미지 슬라이드
-  const prevImage = () => setImageIndex(i => (i > 0 ? i - 1 : post.Images.length - 1));
-  const nextImage = () => setImageIndex(i => (i < post.Images.length - 1 ? i + 1 : 0));
+  // 좋아요/북마크/리그램 basePost 기준!
+  const liked = basePost.Likers?.some((u) => u.id === user?.id);
+  const bookmarked = basePost.Bookmarkers?.some((u) => u.id === user?.id);
+  const likeCount = basePost.Likers?.length || 0;
+  const regramCount = basePost.Regrams?.length || 0;
+  const bookmarkCount = basePost.Bookmarkers?.length || 0;
 
-  // 메뉴 외부 클릭시 닫기
+  // 댓글 카운트
+  const commentCount = post.Comments?.length || 0;
+
+  // 이미지 (리그램+코멘트 없는 순수 리그램은 원본 이미지, 나머지는 post 이미지)
+  const isPureRegram = isRegram && (!post.content || post.content.trim() === '');
+  const images = isPureRegram && origin ? origin.Images : post.Images;
+  const [currentImages, setCurrentImages] = useState(images || []);
+  useEffect(() => { setCurrentImages(images || []); }, [images]);
+  const prevImage = () => setImageIndex(i => (i > 0 ? i - 1 : currentImages.length - 1));
+  const nextImage = () => setImageIndex(i => (i < currentImages.length - 1 ? i + 1 : 0));
+
+  // 시간
+  const baseDate = post.User?.last_active ? new Date(post.User.last_active) : new Date(post.createdAt);
+  const minutesAgo = Math.floor((Date.now() - baseDate.getTime()) / 60000);
+
+  // 메뉴바 외부 클릭 닫기
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (showMenu && menuRef.current && !menuRef.current.contains(e.target)) {
@@ -43,131 +63,307 @@ const PostCard = ({ post }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showMenu]);
 
-  // 수정 버튼: 페이지 이동
-  const onEdit = () => {
-    router.push(`/edit/${post.id}`);
-    setShowMenu(false);
-  };
+  // 수정/삭제/신고/리그램
+  const onEdit = () => { router.push(`/edit/${post.id}`); setShowMenu(false); };
+  const onDelete = () => { if (window.confirm('정말 삭제하시겠습니까?')) dispatch({ type: REMOVE_POST_REQUEST, data: post.id }); };
+  const onReport = () => { if (window.confirm('정말 신고하시겠습니까?')) dispatch({ type: REPORT_POST_REQUEST, data: post.id }); };
 
-  // 삭제 핸들러
-  const onDelete = () => {
-    if (window.confirm('정말 삭제하시겠습니까?')) {
-      dispatch({ type: REMOVE_POST_REQUEST, data: post.id });
+  // ---------------- 리그램 아이콘 상태 분기 ----------------
+  // 이 부분만 보면 됨!
+  const isOriginMine = origin?.User?.id === user?.id; // 원본이 내 글
+
+  // 내글을 남이 리그램한 글(리그램글)
+  const isMyOriginRegrammed = isRegram && isOriginMine && post.User?.id !== user?.id;
+
+  // 내가 남의 글 리그램한 글(리그램글)
+  const isMyRegram = isRegram && post.User?.id === user?.id && !isOriginMine;
+
+  // 남이쓴글, 내가 리그램한 적이 있는지(원본글 기준)
+  const iRegrammedThis = !isRegram && post.Regrams?.some(rg => rg.User?.id === user?.id);
+
+  // 남이 남의 글 리그램한 글(리그램글)
+  const isOthersRegram = isRegram && !isOriginMine && post.User?.id !== user?.id;
+
+  // 남이쓴글, 원본글(내가 쓴글도 아니고, 리그램도 아님)
+  const isOthersPost = !isMine && !isRegram;
+
+  let regramIconColor = '#000';
+  let regramDisabled = false;
+  let regramTooltip = '리그램하기';
+
+  if (isMine && !isRegram) {
+    // 내가 쓴글(원본)
+    regramIconColor = '#aaa';
+    regramDisabled = true;
+    regramTooltip = '내 게시글은 리그램할 수 없습니다.';
+  } else if (isMyOriginRegrammed) {
+    // 내 글을 남이 리그램한 글(리그램글)
+    regramIconColor = '#32e732';
+    regramDisabled = true;
+    regramTooltip = '내 글이 리그램된 글입니다.';
+  } else if (isMyRegram) {
+    // 내가 남의 글 리그램한 글(리그램글)
+    regramIconColor = '#32e732';
+    regramDisabled = true;
+    regramTooltip = '이미 리그램한 글입니다.';
+  } else if (iRegrammedThis) {
+    // 남이쓴글, 내가 리그램한 적이 있는지(원본글)
+    regramIconColor = '#32e732';
+    regramDisabled = true;
+    regramTooltip = '이미 리그램한 글입니다.';
+  } else if (isOthersRegram) {
+    // 남이 남의 글 리그램한 글(리그램글)
+    regramIconColor = '#32e732';
+    regramDisabled = true;
+    regramTooltip = '남이 리그램한 글입니다.';
+  } else {
+    // 남이쓴글, 내가 리그램X, 남이 리그램 안한 글(원본)
+    regramIconColor = '#000';
+    regramDisabled = false;
+    regramTooltip = '리그램하기';
+  }
+  // ------------------------------------------------------
+
+  const onRegram = () => {
+    if (regramDisabled) return;
+    if (window.confirm('리그램하시겠습니까?')) {
+      dispatch({ type: REGRAM_REQUEST, data: { postId: basePost.id, content: '', isPublic: true } });
     }
   };
 
-  // 신고 핸들러
-  const onReport = () => {
-    if (window.confirm('정말 신고하시겠습니까?')) {
-      dispatch({ type: REPORT_POST_REQUEST, data: post.id });
-    }
-  };
+  // 좋아요/북마크 클릭 핸들러
+  const onLike = () => dispatch({ type: LIKE_POST_REQUEST, data: basePost.id });
+  const onUnlike = () => dispatch({ type: UNLIKE_POST_REQUEST, data: basePost.id });
+  const onBookmark = () => dispatch({ type: BOOKMARK_POST_REQUEST, data: basePost.id });
+  const onUnbookmark = () => dispatch({ type: UNBOOKMARK_POST_REQUEST, data: basePost.id });
+
+  // 본문 내용 렌더링
+  const renderContent = (content) =>
+    content
+      ? content.split(/(#[^\s#]+)/g).map((part, i) =>
+          part.startsWith('#') ? (
+            <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: '#007bff' }}>
+              {part}
+            </a>
+          ) : (
+            part
+          )
+        )
+      : null;
 
   return (
     <div style={cardStyle}>
-      {/* 왼쪽: 이미지 슬라이더 */}
-      <div style={{ width: 420, position: 'relative', background: '#eee' }}>
-        <img
-          src={`http://localhost:3065/uploads/post/${post.Images?.[imageIndex]?.src}`}
-          alt=""
-          style={{ width: '100%', height: 420, objectFit: 'cover', cursor: 'pointer' }}
-          onClick={() => setShowImageModal(true)}
-        />
-        {post.Images && post.Images.length > 1 && (
+      {/* 왼쪽 이미지 */}
+      <div style={{ ...IMAGE_SIZE, position: 'relative', background: '#eee', flexShrink: 0 }}>
+        {currentImages.length > 0 ? (
+          <img
+            src={`http://localhost:3065/uploads/post/${currentImages[imageIndex]?.src}`}
+            alt=""
+            style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#eee', cursor: 'pointer' }}
+            onClick={() => setShowImageModal(true)}
+          />
+        ) : (
+          <div style={{ width: '100%', height: '100%', background: '#f3f3f3' }} />
+        )}
+        {currentImages.length > 1 && (
           <>
-            <button onClick={prevImage} style={arrowBtnStyle}>←</button>
-            <button onClick={nextImage} style={{ ...arrowBtnStyle, right: 12, left: 'auto' }}>→</button>
+            <button onClick={prevImage} style={{ ...arrowBtnStyle, left: 16 }}>←</button>
+            <button onClick={nextImage} style={{ ...arrowBtnStyle, right: 16, left: 'auto' }}>→</button>
           </>
         )}
-        {showImageModal && (
+        {showImageModal && currentImages[imageIndex] && (
           <div style={modalStyle} onClick={() => setShowImageModal(false)}>
             <img
-              src={`http://localhost:3065/uploads/post/${post.Images?.[imageIndex]?.src}`}
+              src={`http://localhost:3065/uploads/post/${currentImages[imageIndex]?.src}`}
               alt=""
               style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: 12 }}
             />
           </div>
         )}
       </div>
-      {/* 오른쪽: 정보 + 액션 */}
-      <div style={{ flex: 1, padding: 32, position: 'relative' }}>
-        {/* 작성자 정보 + 메뉴 */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
+
+      {/* 오른쪽: 본문+댓글 전체 */}
+      <div style={{
+        flex: 1,
+        height: IMAGE_SIZE.height,
+        display: 'flex',
+        flexDirection: 'column',
+        background: '#fff',
+        minWidth: 390,
+        boxSizing: 'border-box',
+        padding: '20px 24px',
+        overflowX: 'hidden',
+      }}>
+        {/* 상단: 리그램 표시 */}
+        {isRegram && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            marginBottom: 12,
+            color: '#0088ff',
+            fontWeight: 600,
+            fontSize: 15,
+          }}>
+            <FaRetweet style={{ marginRight: 5 }} />
+            재게시했습니다
+          </div>
+        )}
+
+        {/* 작성자+상단 메뉴 */}
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8, minHeight: 54 }}>
           <img
-            src={post.User?.profile_img
-              ? `http://localhost:3065${post.User.profile_img}`
-              : 'http://localhost:3065/img/profile/default.jpg'}
+            src={post.User?.profile_img ? `http://localhost:3065${post.User.profile_img}` : 'http://localhost:3065/img/profile/default.jpg'}
             alt="프로필"
-            style={{ width: 50, height: 50, borderRadius: '50%', objectFit: 'cover', marginRight: 14, border: '2px solid #bbb' }}
+            style={{ width: 54, height: 54, borderRadius: '50%', objectFit: 'cover', marginRight: 16, border: '2px solid #bbb' }}
+            onClick={() => router.push(`/profile/${post.User?.nickname}`)}
           />
           <div>
-            <div style={{ fontWeight: 'bold', fontSize: 18 }}>{post.User?.nickname}</div>
-            <div style={{ fontSize: 13, color: '#888' }}>
+            <div style={{ fontWeight: 'bold', fontSize: 20 }}>{post.User?.nickname}</div>
+            <div style={{ fontSize: 14, color: '#888' }}>
               {minutesAgo < 1 ? '방금 전' : `${minutesAgo}분 전`}
             </div>
           </div>
-          {/* 점점점 메뉴 */}
-          <div style={{ marginLeft: 'auto', position: 'relative' }} ref={menuRef}>
-            <button style={menuBtnStyle} onClick={() => setShowMenu((v) => !v)}>
-              <FaEllipsisH />
-            </button>
-            {showMenu && (
-              <div style={menuDropdownStyle}>
-                {isMine ? (
-                  <>
-                    {/* 수정: 페이지 이동 */}
-                    <button style={menuItemStyle} onClick={onEdit}>수정</button>
-                    <button style={menuItemStyle} onClick={() => { onDelete(); setShowMenu(false); }}>삭제</button>
-                  </>
-                ) : (
-                  <button style={menuItemStyle} onClick={() => { onReport(); setShowMenu(false); }}>신고</button>
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+            {!isMine ? (
+              <button style={menuBtnStyle} onClick={() => setShowReportForm(prev => !prev)}>
+                <FaEllipsisH />
+              </button>
+            ) : (
+              <div style={{ position: 'relative' }} ref={menuRef}>
+                <button style={menuBtnStyle} onClick={() => setShowMenu((v) => !v)}>
+                  <FaEllipsisH />
+                </button>
+                {showMenu && (
+                  <div style={menuDropdownStyle}>
+                    {!isRegram && <button style={menuItemStyle} onClick={onEdit}>수정</button>}
+                    <button style={{ ...menuItemStyle, color: 'red' }} onClick={() => { onDelete(); setShowMenu(false); }}>삭제</button>
+                  </div>
                 )}
               </div>
             )}
           </div>
         </div>
-        {/* 게시글 텍스트 */}
-        <div style={{ fontSize: 16, marginBottom: 20 }}>
-          {post.content}
-        </div>
-        {/* 버튼들 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24, fontSize: 24 }}>
-          {/* 좋아요 */}
-          <button
-            style={iconBtnStyle}
-            onClick={() =>
-              liked
-                ? dispatch({ type: UNLIKE_POST_REQUEST, data: post.id })
-                : dispatch({ type: LIKE_POST_REQUEST, data: post.id })
-            }
-          >
-            {liked ? <FaHeart color="red" /> : <FaRegHeart />}
-          </button>
-          {/* 댓글 */}
+
+        {/* 본문/리그램 분기 */}
+        {isRegram && isPureRegram && origin ? (
+          <div style={{
+            marginBottom: 12,
+            maxHeight: 130,
+            minHeight: 60,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            wordBreak: 'break-all',
+            fontSize: 17,
+            lineHeight: 1.6,
+          }}>
+            <div style={{ fontWeight: 600, color: '#888', marginBottom: 5 }}>
+              {origin.User?.nickname}님의 게시글
+            </div>
+            <div>
+              {renderContent(origin.content)}
+            </div>
+          </div>
+        ) : isRegram && origin ? (
+          <>
+            <div style={{
+              fontSize: 17,
+              lineHeight: 1.6,
+              marginBottom: 12,
+              minHeight: 60,
+              maxHeight: 130,
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              wordBreak: 'break-all',
+            }}>
+              {renderContent(post.content)}
+            </div>
+            <div style={{
+              border: '1px solid #eee',
+              background: '#f8f8fa',
+              borderRadius: 8,
+              padding: 16,
+              marginBottom: 12,
+              fontSize: 15,
+              color: '#444',
+              overflowX: 'hidden',
+              wordBreak: 'break-all',
+            }}>
+              <div style={{ fontWeight: 600, marginBottom: 8 }}>
+                {origin.User?.nickname}님의 게시글
+              </div>
+              <div>
+                {renderContent(origin.content)}
+              </div>
+              {origin.Images && origin.Images.length > 0 && (
+                <img src={`http://localhost:3065/uploads/post/${origin.Images[0].src}`}
+                  style={{ width: 180, borderRadius: 8, marginTop: 10 }} alt="리그램 원본 이미지" />
+              )}
+            </div>
+          </>
+        ) : (
+          <div style={{
+            fontSize: 17,
+            lineHeight: 1.6,
+            marginBottom: 12,
+            minHeight: 60,
+            maxHeight: 130,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            wordBreak: 'break-all',
+          }}>
+            {renderContent(post.content)}
+          </div>
+        )}
+
+        {/* 아이콘/카운트 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 22, fontSize: 26, marginBottom: 8 }}>
+          {/* 1. 댓글 */}
           <button style={iconBtnStyle} onClick={() => setShowComments(v => !v)}>
             <FaRegComment />
+            <span style={countStyle}>{commentCount}</span>
           </button>
-          {/* 채팅 */}
-          <button style={iconBtnStyle}>
-            <FaRegPaperPlane />
+          {/* 2. 좋아요 */}
+          <button style={iconBtnStyle} onClick={liked ? onUnlike : onLike}>
+            {liked ? <FaHeart color="red" /> : <FaRegHeart />}
+            <span style={countStyle}>{likeCount}</span>
           </button>
-          {/* 북마크 */}
-          <button style={iconBtnStyle} onClick={() => {
-            bookmarked
-              ? dispatch({ type: UNBOOKMARK_POST_REQUEST, data: post.id })
-              : dispatch({ type: BOOKMARK_POST_REQUEST, data: post.id });
-          }}>
+          {/* 3. 리그램 */}
+          <button
+            style={iconBtnStyle}
+            onClick={onRegram}
+            disabled={regramDisabled}
+            title={regramTooltip}
+          >
+            <FaRetweet color={regramIconColor} />
+            <span style={countStyle}>{regramCount}</span>
+          </button>
+          {/* 4. 북마크 */}
+          <button style={iconBtnStyle} onClick={bookmarked ? onUnbookmark : onBookmark}>
             {bookmarked ? <FaBookmark color="#007bff" /> : <FaRegBookmark />}
+            <span style={countStyle}>{bookmarkCount}</span>
           </button>
         </div>
-        {/* 좋아요/댓글 수 표시 */}
-        <div style={{ margin: '14px 0 0 2px', fontSize: 14, color: '#888' }}>
-          {post.Likers?.length || 0} likes • {post.Comments?.length || 0} comments
-        </div>
-        {/* 댓글 리스트/작성창 접기 */}
+
+        {/* 댓글 */}
         {showComments && (
-          <div style={{ marginTop: 20 }}>
+          <div
+            style={{
+              flex: 1,
+              minHeight: 0,
+              overflowY: 'auto',
+              background: '#fafbfc',
+              borderRadius: 14,
+              padding: '14px 10px 10px 10px',
+            }}
+          >
             <Comment postId={post.id} currentUserId={user?.id} />
+          </div>
+        )}
+
+        {/* 신고 모달 */}
+        {showReportForm && (
+          <div style={{ marginTop: 24 }}>
+            <ReportModal visible={showReportForm} postId={post.id} onClose={() => setShowReportForm(false)} />
           </div>
         )}
       </div>
@@ -178,9 +374,9 @@ const PostCard = ({ post }) => {
 const cardStyle = {
   display: 'flex',
   background: '#fff',
-  borderRadius: 18,
-  boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
-  margin: '24px 0',
+  borderRadius: 20,
+  boxShadow: '0 3px 16px rgba(0,0,0,0.12)',
+  margin: '28px 0',
   padding: 0,
   overflow: 'hidden',
 };
@@ -188,35 +384,49 @@ const cardStyle = {
 const arrowBtnStyle = {
   position: 'absolute',
   top: '50%',
-  left: 12,
   transform: 'translateY(-50%)',
-  background: 'rgba(0,0,0,0.35)',
+  background: 'rgba(0,0,0,0.4)',
   color: '#fff',
   border: 'none',
   borderRadius: '50%',
-  width: 36,
-  height: 36,
-  fontSize: 24,
+  width: 48,
+  height: 48,
+  fontSize: 28,
   cursor: 'pointer',
   zIndex: 1,
 };
+
 const iconBtnStyle = {
   background: 'none',
   border: 'none',
   cursor: 'pointer',
-  fontSize: 24,
+  fontSize: 26,
   color: '#444',
   outline: 'none',
+  display: 'flex',
+  alignItems: 'center',
+  gap: 4,
 };
+
+const countStyle = {
+  fontSize: 16,
+  marginLeft: 4,
+  color: '#444',
+  minWidth: 18,
+  textAlign: 'right',
+  fontWeight: 600,
+};
+
 const menuBtnStyle = {
   background: 'none',
   border: 'none',
   cursor: 'pointer',
-  fontSize: 30,
+  fontSize: 32,
   color: '#888',
   padding: 0,
   outline: 'none',
 };
+
 const modalStyle = {
   position: 'fixed',
   zIndex: 9999,
@@ -229,14 +439,28 @@ const modalStyle = {
   alignItems: 'center',
   justifyContent: 'center',
 };
+
 const menuDropdownStyle = {
-  position: 'absolute', right: 0, top: 36, background: '#fff', boxShadow: '0 2px 8px #0001',
-  borderRadius: 8, zIndex: 10, minWidth: 120
+  position: 'absolute',
+  right: 0,
+  top: 36,
+  background: '#fff',
+  boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+  borderRadius: 8,
+  zIndex: 10,
+  minWidth: 130,
 };
+
 const menuItemStyle = {
-  display: 'block', width: '100%', padding: '10px 16px',
-  border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer',
-  fontSize: 16, color: '#444'
+  display: 'block',
+  width: '100%',
+  padding: '10px 16px',
+  border: 'none',
+  background: 'none',
+  textAlign: 'left',
+  cursor: 'pointer',
+  fontSize: 16,
+  color: '#444',
 };
 
 export default PostCard;

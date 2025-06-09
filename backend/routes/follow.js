@@ -2,10 +2,13 @@ const express = require('express');
 const router = express.Router();
 const { Follow, User } = require('../models');
 const { where } = require('sequelize');
+const { isLoggedIn } = require('./middlewares');
 
-
-// 팔로우하기 http://localhost:3065/api/follow
-router.post('/', async (req, res, next) => {
+// 팔로우하기 http://localhost:3065/follow
+router.post('/',isLoggedIn, async (req, res, next) => {
+ console.log('📥 follow 요청 도착');
+  console.log('📦 req.body:', req.body);
+  console.log('👤 req.user:', req.user);
   console.log('......req.body:', req.body);
 
   try {
@@ -38,7 +41,7 @@ router.post('/', async (req, res, next) => {
 });
 
 
-// 팔로우 삭제 http://localhost:3065/api/following/2
+// 팔로우 삭제 http://localhost:3065/following/2
 router.delete('/following/:toUserId', async (req, res, next) => {
   try {
     const fromUserId = req.user.id;
