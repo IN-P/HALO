@@ -6,6 +6,8 @@ const fs = require('fs');
 const { Post, User, Image, Comment, Hashtag } = require('../models');
 const { isLoggedIn } = require('./middlewares');
 const { Block } = require('../models');//윫
+const { Op } = require('sequelize'); // ✅ 이 줄 추가
+
 // uploads 폴더 생성
 try {
   fs.accessSync('uploads/post');
