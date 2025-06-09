@@ -34,6 +34,7 @@ const ChatPage = () => {
 
   const chatBoxRef = useRef();
   const [userMap, setUserMap] = useState({});
+  const [selectedChatRoomId, setSelectedChatRoomId] = useState(null);
 
 const handleReadUpdate = useCallback((readMessageIdsRaw) => {
   const readMessageIds = Array.isArray(readMessageIdsRaw) ? readMessageIdsRaw : [readMessageIdsRaw];
@@ -99,7 +100,7 @@ const handleReadUpdate = useCallback((readMessageIdsRaw) => {
    };
    console.log('현재 방 메시지! log에 추가 후 formattedMessage:', formattedMessage);
    dispatch(addLog(formattedMessage));
-  }, [dispatch, roomId, selectedUser]); // 의존성 배열에 selectedUser 추가
+  }, [dispatch, roomId, selectedUser, userMap]); // 의존성 배열에 selectedUser 추가
 
   const handleExitSuccess = useCallback(() => {
     alert('채팅방을 나갔습니다.');
@@ -118,13 +119,29 @@ const handleReadUpdate = useCallback((readMessageIdsRaw) => {
     socket.on('exit_room_failed', handleExitFailed);
     socket.on('read_update', handleReadUpdate);
 
+socket.on('new_chat_room_created', () => {
+  console.log('🔔 새 채팅방 생성 이벤트 수신 → ChatList 갱신');
+  if (me && me.id) {
+    setTimeout(() => {
+      axios.get('http://localhost:3065/api/chat/my-rooms', { withCredentials: true })
+        .then(res => {
+          dispatch(setChatRooms(res.data));
+        })
+        .catch(err => {
+          console.error('❌ 채팅방 목록 갱신 실패:', err);
+        });
+    }, 300); // 300ms 딜레이 추가
+  }
+});
+
     return () => {
       socket.off('receive_message', handleReceive);
       socket.off('exit_room_success', handleExitSuccess);
       socket.off('exit_room_failed', handleExitFailed);
       socket.off('read_update', handleReadUpdate);
+      socket.off('new_chat_room_created');
     };
-  }, [handleReceive, handleExitSuccess, handleExitFailed, handleReadUpdate]);
+  }, [handleReceive, handleExitSuccess, handleExitFailed, handleReadUpdate, dispatch, me]);
 
   // ⭐ 변경 3: 유저 선택 핸들러 (SearchModal, ChatList에서 공통으로 사용)
 const handleUserSelect = useCallback(async (user) => { 
@@ -142,6 +159,8 @@ const handleUserSelect = useCallback(async (user) => {
     }, { withCredentials: true });
 
     console.log('✅ POST /api/chat 응답:', res);
+
+    setSelectedChatRoomId(res.data.id);
 
     dispatch(updateChatRoomLastMessage({
       roomId: `chat-${[me.id, user.id].sort((a, b) => a - b).join('-')}`,
@@ -229,10 +248,12 @@ const handleUserSelect = useCallback(async (user) => {
     const lastMsg = log[log.length - 1];
     const wasAtBottom = isAtBottom();
     // 마지막 메시지가 내가 보낸 것이거나, 이미 스크롤이 최하단에 있었다면 스크롤
-    if (lastMsg.senderId === me.id || wasAtBottom) { // ⭐ me.id로 비교
-      requestAnimationFrame(() => {
+    if (chatBoxRef.current && (lastMsg.senderId === me.id || wasAtBottom)) {
+    requestAnimationFrame(() => {
+      if (chatBoxRef.current) { // 여기 한번 더 체크
         chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
-      });
+      }
+    });
       dispatch(setShowNewMsgAlert(false));
     } else {
       // 새로운 메시지가 왔고 스크롤이 최하단이 아니라면 알림
@@ -308,7 +329,16 @@ const handleUserSelect = useCallback(async (user) => {
                 setMessage={(value) => dispatch(setMessage(value))}
                 showNewMsgAlert={showNewMsgAlert}
                 handleScroll={handleScroll}
-                onExit={() => dispatch(exitRoom({ roomId, userId: me.id }))} // ⭐ me.id로 전달
+                onExit={async () => {
+  try {
+    dispatch(exitRoom({ roomId, userId: me.id }));
+
+    await axios.patch(`http://localhost:3065/api/chat/${selectedChatRoomId}/exit`, {}, { withCredentials: true });
+    console.log('✅ PATCH /exit 요청 완료');
+  } catch (error) {
+    console.error('❌ PATCH /exit 요청 에러:', error);
+  }
+}} // ⭐ me.id로 전달
                 onSendMessage={handleSend}
                 userMap={userMap}
                 onClose={() => {

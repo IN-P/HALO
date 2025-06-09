@@ -14,12 +14,24 @@ const { io, socketMap } = require('../server');
 router.post('/', isLoggedIn, async (req, res, next) => {
   try {
     const user1_id = req.user.id;
-    const user2_id = req.body.targetUserId;
+const user2_id = Number(req.body.targetUserId);
 
-    if (user1_id === user2_id) {
-      return res.status(400).send('본인과 채팅방을 생성할 수 없어.');
-    }
+console.log('[POST /] user1_id:', user1_id, 'user2_id:', user2_id, 'typeof user2_id:', typeof user2_id, 'raw targetUserId:', req.body.targetUserId);
 
+if (!Number.isInteger(user2_id) || user2_id <= 0) {
+  return res.status(400).json({ error: 'targetUserId is required and must be a positive integer' });
+}
+
+if (user1_id === user2_id) {
+  return res.status(400).send('본인과 채팅방을 생성할 수 없어.');
+}
+
+const sortedIds = [user1_id, user2_id].sort((a, b) => a - b);
+
+if (!Array.isArray(sortedIds) || sortedIds.length !== 2 || !Number.isInteger(sortedIds[0]) || !Number.isInteger(sortedIds[1])) {
+  console.error(`[POST /] 🚨 emit 방어 → sortedIds 값 이상함: ${JSON.stringify(sortedIds)}`);
+  return res.status(400).send('잘못된 채팅방 생성 요청이야.');
+}
     let chatRoom = await ChatRoom.findOne({
       where: {
         [Op.or]: [
@@ -33,9 +45,6 @@ router.post('/', isLoggedIn, async (req, res, next) => {
       console.log(`[POST /] 기존 채팅방 조회 완료: ID ${chatRoom.id}`);
       return res.status(200).json(chatRoom);
     }
-
-    const sortedIds = [user1_id, user2_id].sort((a, b) => a - b);
-
     chatRoom = await ChatRoom.create({
     user1_id: sortedIds[0],
     user2_id: sortedIds[1],
@@ -48,6 +57,25 @@ router.post('/', isLoggedIn, async (req, res, next) => {
       user2_id_active: true,
     });
     console.log(`[POST /] 새로운 채팅방 생성 및 ChatRoomExit 생성 완료: ID ${chatRoom.id}`);
+console.log(`[POST /] new_chat_room_created emit 준비용 → sortedIds=${JSON.stringify(sortedIds)}`);
+
+if (Array.isArray(sortedIds) && sortedIds.length === 2) {
+  console.log(`[POST /] new_chat_room_created emit 준비: roomId=chat-${sortedIds[0]}-${sortedIds[1]}, targetUserId=${sortedIds[1]}`);
+
+if (socketMap && socketMap[sortedIds[0]] && socketMap[sortedIds[0]].socketId) {
+  io.to(socketMap[sortedIds[0]].socketId).emit('new_chat_room_created', {
+    roomId: `chat-${sortedIds[0]}-${sortedIds[1]}`,
+    targetUserId: sortedIds[1],
+  });
+}
+
+if (socketMap && socketMap[sortedIds[1]] && socketMap[sortedIds[1]].socketId) {
+  io.to(socketMap[sortedIds[1]].socketId).emit('new_chat_room_created', {
+    roomId: `chat-${sortedIds[0]}-${sortedIds[1]}`,
+    targetUserId: sortedIds[0],
+  });
+}
+}
 
     res.status(201).json(chatRoom);
   } catch (error) {
@@ -169,21 +197,18 @@ router.patch('/:chatRoomId/exit', isLoggedIn, async (req, res, next) => {
     console.log(`[PATCH /:chatRoomId/exit] 업데이트된 ChatRoomExit 상태 조회 완료:`, updatedChatRoomExit.toJSON());
 
     // 두 사용자 모두 나갔는지 확인
-    if (updatedChatRoomExit.user1_id_active === false && updatedChatRoomExit.user2_id_active === false) {
-      console.log(`[PATCH /:chatRoomId/exit] 유저 2명 모두 나감 → 채팅방 및 메시지 삭제 시작.`);
+    if (!updatedChatRoomExit.user1_id_active && !updatedChatRoomExit.user2_id_active) {
+  console.log(`[PATCH /:chatRoomId/exit] 유저 2명 모두 나감 → 채팅방 및 메시지 삭제 시작.`);
 
-      // 먼저 ChatMessages 삭제
-      await ChatMessage.destroy({ where: { rooms_id: chatRoomId } });
-      console.log(`[PATCH /:chatRoomId/exit] ChatMessages 삭제 완료.`);
+  await ChatMessage.destroy({ where: { rooms_id: chatRoomId } });
+  console.log(`[PATCH /:chatRoomId/exit] ChatMessages 삭제 완료.`);
 
-      // ChatRoomExit 삭제
-      await ChatRoomExit.destroy({ where: { chat_rooms_id: chatRoomId } });
-      console.log(`[PATCH /:chatRoomId/exit] ChatRoomExit 삭제 완료.`);
+  await ChatRoomExit.destroy({ where: { chat_rooms_id: chatRoomId } });
+  console.log(`[PATCH /:chatRoomId/exit] ChatRoomExit 삭제 완료.`);
 
-      // ChatRoom 삭제
-      await ChatRoom.destroy({ where: { id: chatRoomId } });
-      console.log(`[PATCH /:chatRoomId/exit] ChatRoom 삭제 완료.`);
-    }
+  await ChatRoom.destroy({ where: { id: chatRoomId } });
+  console.log(`[PATCH /:chatRoomId/exit] ChatRoom 삭제 완료.`);
+}
 
     res.status(200).json({ message: '채팅방을 나갔어.', chatRoomExit: updatedChatRoomExit });
   } catch (error) {
@@ -236,11 +261,19 @@ router.patch('/:chatRoomId/rejoin', isLoggedIn, async (req, res, next) => {
 
 router.post('/message', isLoggedIn, async (req, res, next) => {
   try {
-    // 클라이언트에서 roomId를 `body`에 `roomsId` 필드로 보낸다고 가정합니다.
-    // 만약 클라이언트에서 `param`으로 'chat-1-2' 같은 `roomId`를 보낸다면,
-    // 이 라우트에서 파라미터 파싱 로직을 추가해야 하지만, 현재는 body로 받는 것을 목표로 합니다.
-    const { roomsId, content } = req.body; // 🟢 roomsId를 body에서 받음
+    const { roomsId, content } = req.body; 
+    console.log(`[POST /message] roomsId=${roomsId}, content=${content}`);
     const senderId = req.user.id;
+
+    const roomsIdNum = Number(roomsId);
+if (isNaN(roomsIdNum)) {
+  console.log(`[POST /message] roomsId 변환 실패 → 잘못된 값: ${roomsId}`);
+  return res.status(400).send('잘못된 roomsId');
+}
+
+console.log(`[POST /message] roomsId 변환 확인 → Number: ${roomsIdNum}`);
+
+    console.log(`[POST /message] roomsId param type: ${typeof roomsId}, value: ${roomsId}`);
 
     console.log(`[POST /message] 메시지 전송 요청: roomId=<span class="math-inline">\{roomsId\}, senderId\=</span>{senderId}, content='${content}'`);
 
@@ -249,7 +282,7 @@ router.post('/message', isLoggedIn, async (req, res, next) => {
       return res.status(400).send('채팅방 ID와 내용을 모두 입력해야 해.');
     }
 
-    const chatRoom = await ChatRoom.findOne({ where: { id: roomsId } }); // roomsId는 숫자 ID여야 함
+    const chatRoom = await ChatRoom.findOne({ where: { id: roomsIdNum } }); // roomsId는 숫자 ID여야 함
     if (!chatRoom) {
       console.log(`[POST /message] 채팅방 없음: ID ${roomsId}`);
       return res.status(404).send('채팅방이 존재하지 않아.');
@@ -265,20 +298,40 @@ router.post('/message', isLoggedIn, async (req, res, next) => {
     console.log(`[POST /message] senderId=${senderId}, chatRoom.user1_id=${chatRoom.user1_id}, chatRoom.user2_id=${chatRoom.user2_id}`);
     console.log(`[POST /message] senderId typeof=${typeof senderId}, senderId=${JSON.stringify(senderId)}`);
 
-await ChatRoomExit.update(
-  chatRoom.user1_id === senderId
-    ? { user1_id_active: true, user1_exited_at: null }
-    : { user2_id_active: true, user2_exited_at: null },
-  {
-    where: { chat_rooms_id: roomsId }
-  }
-);
-console.log(`[POST /message] ChatRoomExit active 상태 복구 처리 완료 (senderId=${senderId}).`);
+let chatRoomExit = await ChatRoomExit.findOne({
+  where: { chat_rooms_id: roomsIdNum  }
+});
+
+// 2️⃣ 없으면 생성
+if (!chatRoomExit) {
+  chatRoomExit = await ChatRoomExit.create({
+    chat_rooms_id: roomsIdNum,
+    user1_id_active: true,
+    user2_id_active: true,
+    user1_exited_at: null,
+    user2_exited_at: null,
+  });
+  console.log(`[POST /message] ChatRoomExit 새로 생성 (두 사용자 active=true)`);
+} else {
+  // 강제 update 사용
+  await ChatRoomExit.update(
+    {
+      user1_id_active: true,
+      user2_id_active: true,
+      user1_exited_at: null,
+      user2_exited_at: null,
+    },
+    {
+      where: { chat_rooms_id: roomsIdNum },
+    }
+  );
+  console.log(`[POST /message] ChatRoomExit 강제 update로 active 상태 복구 완료 (채팅 발송으로 두 사용자 모두 active 처리).`);
+}
 
     // 1. 메시지 저장
     const newMessage = await ChatMessage.create({
       sender_id: senderId,
-      rooms_id: roomsId, // rooms_id (DB 컬럼명)
+      rooms_id: roomsIdNum, // rooms_id (DB 컬럼명)
       content,
     });
     console.log(`[POST /message] 메시지 DB 저장 완료: ID ${newMessage.id}`);
@@ -307,6 +360,10 @@ console.log(`[POST /message] ChatRoomExit active 상태 복구 처리 완료 (se
   const receiverId = (chatRoom.user1_id === senderId) ? chatRoom.user2_id : chatRoom.user1_id;
 
   // socket.join 시 room 이름을 'user-2' 식으로 설정했을 경우
+  io.to(`user-${senderId}`).emit('new_chat_room_created', {
+  roomId: `chat-${[chatRoom.user1_id, chatRoom.user2_id].sort((a, b) => a - b).join('-')}`,
+});
+
   io.to(`user-${receiverId}`).emit('new_chat_room_created', {
     roomId: `chat-${[chatRoom.user1_id, chatRoom.user2_id].sort((a, b) => a - b).join('-')}`,
   });
@@ -330,6 +387,11 @@ router.get('/message/:roomId', isLoggedIn, async (req, res, next) => {
     // 이 부분이 500 에러의 원인일 가능성이 매우 높음!
     const paramRoomId = req.params.roomId; // 'chat-1-2' 같은 문자열 그대로 받음
     let roomIdAsNumber; // 숫자로 변환된 roomId
+
+    if (!paramRoomId || !paramRoomId.startsWith('chat-')) {
+    console.log(`[GET /message/:roomId] 유효하지 않은 roomId 형식 또는 undefined: ${paramRoomId}`);
+    return res.status(400).send('유효하지 않은 채팅방 ID 형식이야.');
+}
 
     // roomId 파싱 (예: 'chat-1-2' -> user1Id: 1, user2Id: 2 -> 실제 DB chatRoomId)
     if (paramRoomId.startsWith('chat-')) {

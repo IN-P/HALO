@@ -179,6 +179,16 @@ io.on('connection', (socket) => {
             });
             console.log(`✅ ChatRoomExit active 복구됨 (senderId=${senderId})`);
           }
+          const oppositeFieldToUpdate = (senderId === sortedUser1Id) ? 'user2_id_active' : 'user1_id_active';
+const oppositeExitedAtField = (oppositeFieldToUpdate === 'user1_id_active') ? 'user1_exited_at' : 'user2_exited_at';
+
+if (exitInfo[oppositeFieldToUpdate] === false) {
+  await exitInfo.update({
+    [oppositeFieldToUpdate]: true,
+    [oppositeExitedAtField]: null
+  });
+  console.log(`✅ ChatRoomExit 상대방 active 복구됨 (상대방=${oppositeFieldToUpdate})`);
+}
         }
       }
 
