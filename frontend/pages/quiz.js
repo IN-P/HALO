@@ -11,7 +11,7 @@ const QuizPage = () => {
     const { quizList = [] } = useSelector((state) => state.quiz ?? {});
 
     const quizState = useSelector((state) => state.quiz);
-    console.log("🔥 state.quiz 전체 상태: ", quizState); 
+    console.log("🔥 state.quiz 전체 상태: ", quizState);
 
     useEffect(() => {
         dispatch({
