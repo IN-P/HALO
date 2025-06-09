@@ -6,7 +6,7 @@ import { REPORT_POST_REQUEST } from '../reducers/report_YB';
 
 const { TextArea } = Input;
 
-const ReportModal = ({ visible, onClose, postId }) => {
+const ReportModal = ({ visible, onClose, postId, targetType }) => {
   const dispatch = useDispatch();
 
  
@@ -23,7 +23,7 @@ const ReportModal = ({ visible, onClose, postId }) => {
       type: REPORT_POST_REQUEST,
       data: {
         reason,
-        target_type_id: 1,       // 예: 게시글 신고는 1
+        target_type_id: targetType,       // 예: 게시글 신고는 1
         target_id: postId,       // postId를 명확하게 넘김
       },
     });
@@ -61,6 +61,7 @@ ReportModal.propTypes = {
   visible: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   postId: PropTypes.number.isRequired,
+  targetType: PropTypes.string.isRequired,
 };
 
 export default ReportModal;
