@@ -31,6 +31,12 @@ const MyMain = ({ data, isMyProfile, loginUser, onRefetch }) => {
     }
   }, [nickname, refetchTrigger]);
 
+  //윫추가
+  const refetchUserInfo = () => {
+    setRefetchTrigger(v => v + 1);
+    onRefetch?.();
+  };
+
   const onChange = (e) => {
     setChecked(e.target.checked);
   };
@@ -38,6 +44,26 @@ const MyMain = ({ data, isMyProfile, loginUser, onRefetch }) => {
   const label = `${checked ? 'Checked' : 'Unchecked'}-${disabled ? 'Disabled' : 'Enabled'}`;
   const [isFollowerModalOpen, setIsFollowerModalOpen] = useState(false);
   const [isFollowingModalOpen, setIsFollowingModalOpen] = useState(false);
+  //윫 추가
+if (data?.isBlocked|| data?.isBlockedByTarget) {
+  return (
+    <div style={{ width: '25%', padding: '20px', textAlign: 'center', color: '#888' }}>
+      <p>이 사용자는 차단되어 있어 정보를 볼 수 없습니다.</p>
+      {/* 👇 차단 해제 버튼은 항상 노출 */}
+      <div style={{ marginTop: '12px' }}>
+        <BlockButton
+          toUserId={data?.id}
+          isBlocked={data?.isBlocked}
+          onRefetch={() => {
+            setRefetchTrigger((v) => v + 1);
+            onRefetch?.();
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+  //
   return (
     <div style={{ width: '25%' }}>
       <div style={{ paddingBottom: "10px", display: 'flex', alignItems: 'center', marginTop: '5%' }}>
@@ -166,10 +192,12 @@ const MyMain = ({ data, isMyProfile, loginUser, onRefetch }) => {
       <FollowersModal
         open={isFollowerModalOpen}
         onClose={() => setIsFollowerModalOpen(false)}
+        onUpdate={refetchUserInfo}
       />
       <FollowingsModal
         open={isFollowingModalOpen}
         onClose={() => setIsFollowingModalOpen(false)}
+        onUpdate={refetchUserInfo}
       />
 
     </div>

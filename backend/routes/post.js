@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const { Post, User, Image, Comment, Hashtag } = require('../models');
 const { isLoggedIn } = require('./middlewares');
-
+const { Block } = require('../models');//윫
 // uploads 폴더 생성
 try {
   fs.accessSync('uploads/post');
@@ -68,7 +68,23 @@ router.post('/', isLoggedIn, async (req, res, next) => {
         { model: Hashtag, attributes: ['id', 'name'] },
       ],
     });
-
+    // 윫 - 차단된 댓글 필터링
+    if (req.user) {
+      const myId = req.user.id;
+      const blockedRelations = await Block.findAll({
+        where: {
+          [Op.or]: [
+            { from_user_id: myId },
+            { to_user_id: myId },
+          ]
+        }
+      });
+      const blockedUserIds = blockedRelations.map(b =>
+        b.from_user_id === myId ? b.to_user_id : b.from_user_id
+      );
+      fullPost.Comments = fullPost.Comments.filter(c => !blockedUserIds.includes(c.User.id));
+    }
+    /////////////
     res.status(201).json(fullPost);
   } catch (error) {
     console.error(error);
@@ -296,7 +312,7 @@ router.post('/:postId/regram', isLoggedIn, async (req, res, next) => {
           ],
         },
         { model: Comment, attributes: ['id'] },
-        
+
       ]
     });
 
@@ -317,7 +333,7 @@ router.post('/:postId/regram', isLoggedIn, async (req, res, next) => {
           ],
         },
       ],
-            order: [
+      order: [
         [Image, 'id', 'ASC'],
         [{ model: Post, as: 'Regram' }, Image, 'id', 'ASC'],
       ],

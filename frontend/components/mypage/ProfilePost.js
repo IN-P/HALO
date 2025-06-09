@@ -5,7 +5,7 @@ import MyBookmark from "./MyBookmark";
 import TaggedMe from "./TaggedMe";
 // import MyTagged from "./MyTagged"; // 태그된 게시물이 있으면 사용
 
-const ProfilePost = ({ data, isMyProfile }) => {
+const ProfilePost = ({ data, isMyProfile ,isBlocked}) => {//윫 수정
     const [activeTab, setActiveTab] = useState("posts");
 
     const tabStyle = {
@@ -85,7 +85,7 @@ const ProfilePost = ({ data, isMyProfile }) => {
         </nav>
 
         <div style={{ marginTop: 24 }}>
-            {activeTab === "posts" && <MyPost data={data} />}
+            {activeTab === "posts" && <MyPost data={data} isBlocked={isBlocked}/>} {/* 윫 수정 */}
             {activeTab === "bookmark" && isMyProfile && <MyBookmark data={data} />}
             {activeTab === "tagged" && isMyProfile && <TaggedMe data={data} />}
         </div>
