@@ -145,14 +145,14 @@ const PostCard = ({ post }) => {
   const renderContent = (content) =>
     content
       ? content.split(/(#[^\s#]+)/g).map((part, i) =>
-          part.startsWith('#') ? (
-            <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: '#007bff' }}>
-              {part}
-            </a>
-          ) : (
-            part
-          )
+        part.startsWith('#') ? (
+          <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: '#007bff' }}>
+            {part}
+          </a>
+        ) : (
+          part
         )
+      )
       : null;
 
   return (
@@ -249,15 +249,13 @@ const PostCard = ({ post }) => {
                       </button>
                     </>
                   ) : (
-                    <button
-                      style={menuItemStyle}
+                    <ReportButton
                       onClick={() => {
-                        setShowReportModal(true); // 신고 버튼 클릭 시 모달 상태 따로 띄움
-                        setShowMenu(false); // 메뉴 닫기
+                        setShowReportModal(true);
+                        setShowMenu(false);
                       }}
-                    >
-                      신고하기
-                    </button>
+                    />
+
                   )}
                 </div>
               )}
@@ -390,6 +388,7 @@ const PostCard = ({ post }) => {
             visible={showReportModal}
             postId={post.id}
             onClose={() => setShowReportModal(false)}
+            targetType={1}
           />
         )}
       </div>
