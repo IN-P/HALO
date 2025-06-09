@@ -7,19 +7,36 @@ import {
 } from '../reducers/quiz_GM';
 
 // API
-const loadQuizzesAPI = () => axios.get('/event/quizzes');
-const loadQuizDetailAPI = () => axios.get(`/event/quizzes/${id}`);
+const loadQuizzesAPI = () => axios.get('http://localhost:3065/event/quizzes');
+const loadQuizDetailAPI = (id) => axios.get(`/event/quizzes/${id}`);
 const submitQuizAPI = ({id, users_id, quizOption_id}) =>
     axios.post(`/event/quizzes/${id}/submit`, {users_id, quizOption_id});
 
 // sagas
+// function* loadQuizzes() {
+//     try {
+//         const result = yield call(loadQuizzesAPI);
+//         console.log("🎯 응답받은 퀴즈 목록: ", result.data);
+//         yield put({type: LOAD_QUIZZES_SUCCESS, data: result.data});
+//     } catch (error) {
+//         console.error("❌ 퀴즈 요청 실패: ", error);
+//         yield put({type: LOAD_QUIZZES_FAILURE, error: error.response?.data});
+//     }
+// }
 function* loadQuizzes() {
-    try {
-        const result = yield call(loadQuizzesAPI);
-        yield put({type: LOAD_QUIZZES_SUCCESS, data: result.data});
-    } catch (error) {
-        yield put({type: LOAD_QUIZZES_FAILURE, error: error.response?.data});
-    }
+  console.log("🎯 [saga 실행됨] loadQuizzes");
+
+  try {
+    const result = yield call(loadQuizzesAPI);
+    console.log("🎯 응답받은 퀴즈 목록:", result.data);
+
+    yield put({
+      type: LOAD_QUIZZES_SUCCESS,
+      data: result.data,
+    });
+  } catch (err) {
+    console.error("❌ 퀴즈 요청 실패:", err);
+  }
 }
 
 function* loadQuizDetail(action) {
