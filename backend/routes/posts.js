@@ -12,6 +12,27 @@ router.get('/', async (req, res, next) => {
       where.id = { [Op.lt]: parseInt(req.query.lastId, 10) }; // lastId보다 작은 게시글만
     }
 
+    // 윫 차단된 사용자 필터링
+    let blockedUserIds = [];
+    if (req.user) {
+      const blocks = await Block.findAll({
+        where: {
+          [Op.or]: [
+            { from_user_id: req.user.id },
+            { to_user_id: req.user.id },
+          ],
+        },
+      });
+
+      blockedUserIds = blocks.map(b =>
+        b.from_user_id === req.user.id ? b.to_user_id : b.from_user_id
+      );
+
+      // 윫 게시글 작성자가 차단 목록에 포함되어 있으면 제외
+      where.user_id = { [Op.notIn]: blockedUserIds };
+    }
+
+
     const posts = await Post.findAll({
       where,
       limit: 10,

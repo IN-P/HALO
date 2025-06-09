@@ -94,16 +94,26 @@ router.get('/post/:postId/tree', async (req, res, next) => {
     let blockedUserIds = [];
 
     if (req.user) {
-      const myBlocks = await Block.findAll({
-        where: { from_user_id: req.user.id },
+      const blocks = await Block.findAll({
+        where: {
+          [Op.or]: [
+            { from_user_id: req.user.id },
+            { to_user_id: req.user.id },
+          ]
+        }
       });
-      blockedUserIds = myBlocks.map(b => b.to_user_id);
+
+      // 윫 나를 차단했거나 내가 차단한 사람 모두 필터링
+      blockedUserIds = blocks.map(b =>
+        b.from_user_id === req.user.id ? b.to_user_id : b.from_user_id
+      );
     }
+
     /////
     const comments = await Comment.findAll({
       where: {
-        post_id: req.params.postId ,
-       user_id: {
+        post_id: req.params.postId,
+        user_id: {
           [Op.notIn]: blockedUserIds, // 윫 추가
         },
       },
