@@ -7,6 +7,10 @@ import useToggle from "../../hooks/useToggle";
 import BlockButton from "../../components/BlockButton";
 import FollowButton from "../../components/FollowButton";
 
+import FollowingsModal from '../../components/FollowingsModal';
+import FollowersModal from '../../components/FollowersModal';
+
+
 const MyMain = ({ data, isMyProfile, loginUser, onRefetch }) => {
   const dispatch = useDispatch();
   const router = useRouter();
@@ -32,7 +36,8 @@ const MyMain = ({ data, isMyProfile, loginUser, onRefetch }) => {
   };
 
   const label = `${checked ? 'Checked' : 'Unchecked'}-${disabled ? 'Disabled' : 'Enabled'}`;
-
+  const [isFollowerModalOpen, setIsFollowerModalOpen] = useState(false);
+  const [isFollowingModalOpen, setIsFollowingModalOpen] = useState(false);
   return (
     <div style={{ width: '25%' }}>
       <div style={{ paddingBottom: "10px", display: 'flex', alignItems: 'center', marginTop: '5%' }}>
@@ -123,15 +128,24 @@ const MyMain = ({ data, isMyProfile, loginUser, onRefetch }) => {
           </div>
           <div>게시글</div>
         </div>
-        <div style={{ textAlign: 'center' }}>
+        {/* 팔로우 (팔로워) */}
+        <div
+          onClick={() => setIsFollowerModalOpen(true)}
+          style={{ textAlign: 'center', cursor: 'pointer' }}
+        >
           <div style={{ fontWeight: '700', fontSize: '20px', color: '#1890ff' }}>
-            {Array.isArray(data?.Followers) ? data.Followers.length : (typeof data?.Followers === "number" ? data.Followers : 0)}
+            {Array.isArray(data?.Followers) ? data.Followers.length : 0}
           </div>
-          <div>팔로우</div>
+          <div>팔로워</div>
         </div>
-        <div style={{ textAlign: 'center' }}>
+
+        {/* 팔로잉 */}
+        <div
+          onClick={() => setIsFollowingModalOpen(true)}
+          style={{ textAlign: 'center', cursor: 'pointer' }}
+        >
           <div style={{ fontWeight: '700', fontSize: '20px', color: '#1890ff' }}>
-            {Array.isArray(data?.Followings) ? data.Followings.length : (typeof data?.Followings === "number" ? data.Followings : 0)}
+            {Array.isArray(data?.Followings) ? data.Followings.length : 0}
           </div>
           <div>팔로잉</div>
         </div>
@@ -148,7 +162,19 @@ const MyMain = ({ data, isMyProfile, loginUser, onRefetch }) => {
           {data?.UserInfo?.introduce}
         </p>
       </div>
+      {/* 윫-팔로잉 팔로워 모달추가 */}
+      <FollowersModal
+        open={isFollowerModalOpen}
+        onClose={() => setIsFollowerModalOpen(false)}
+      />
+      <FollowingsModal
+        open={isFollowingModalOpen}
+        onClose={() => setIsFollowingModalOpen(false)}
+      />
+
     </div>
+
+
   );
 };
 
