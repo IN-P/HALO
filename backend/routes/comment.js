@@ -21,7 +21,14 @@ router.post('/post/:postId', isLoggedIn, async (req, res, next) => {
       include: [{ model: User, attributes: ['id', 'nickname'] }],
     });
 
-    res.status(201).json(fullComment);
+    // 댓글 등록 후 최신 댓글 카운트도 같이 응답!
+    const totalComments = await Comment.count({ where: { post_id: post.id, is_deleted: false } });
+
+    res.status(201).json({
+      comment: fullComment,
+      postId: post.id,
+      commentCount: totalComments, // ← 추가
+    });
   } catch (error) {
     console.error(error);
     next(error);
@@ -59,11 +66,18 @@ router.post('/:commentId/reply', isLoggedIn, async (req, res, next) => {
         uniquePaths.push(row);
         keySet.add(key);
       }
-    }    
-    
+    }
+
     await CommentPath.bulkCreate(uniquePaths);
 
-    res.status(201).json(reply);
+    // 대댓글 등록 후 최신 댓글 카운트도 같이 응답!
+    const totalComments = await Comment.count({ where: { post_id: parent.post_id, is_deleted: false } });
+
+    res.status(201).json({
+      comment: reply,
+      postId: parent.post_id,
+      commentCount: totalComments, // ← 추가
+    });
   } catch (error) {
     console.error(error);
     next(error);
@@ -127,7 +141,7 @@ router.patch('/:commentId', isLoggedIn, async (req, res, next) => {
   }
 });
 
-// 댓글 삭제 (실제 삭제 or soft delete 방식 가능)
+// 댓글 삭제 (실제 삭제 or soft delete 방식)
 router.delete('/:commentId', isLoggedIn, async (req, res, next) => {
   try {
     const comment = await Comment.findByPk(req.params.commentId);
@@ -135,7 +149,15 @@ router.delete('/:commentId', isLoggedIn, async (req, res, next) => {
     if (comment.user_id !== req.user.id) return res.status(403).send('삭제 권한이 없습니다.');
 
     await comment.update({ is_deleted: true });
-    res.status(200).json({ CommentId: comment.id });
+
+    // 삭제 후 최신 댓글 카운트도 같이 응답!
+    const totalComments = await Comment.count({ where: { post_id: comment.post_id, is_deleted: false } });
+
+    res.status(200).json({
+      CommentId: comment.id,
+      postId: comment.post_id,
+      commentCount: totalComments, // ← 추가
+    });
   } catch (error) {
     console.error(error);
     next(error);
