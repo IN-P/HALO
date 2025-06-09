@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { isLoggedIn } = require("./middlewares");
-const { User, Block, Achievement, Badge, UserInfo, Follow, Myteam, Post, UserPoint, UserPayment, ActiveLog } = require("../models");
+const { User, Block, Achievement, Badge, UserInfo, Follow, Myteam, Post, UserPoint, UserPayment, ActiveLog, Image } = require("../models");
 
 // nickname으로 userId 값 불러온 후 정보 가져오기
 router.get("/:nickname", async (req, res, next) => {
@@ -21,14 +21,15 @@ router.get("/:nickname", async (req, res, next) => {
       attributes: ["id", "nickname", "profile_img", "theme_mode", "is_private", "myteam_id", "role", "email"],
       include: [
       { model: UserInfo },
-      { model: Post },
+      { model: Post, include: [Image], separate: true, order: [['id', 'DESC']], },
+      { model: Post, as: 'BookmarkedPosts', attributes: ['id', 'content', 'createdAt'], through: { attributes: [] }, },
+      { model: Post, as: 'Liked', attributes: ['id', 'content', 'createdAt'], through: { attributes: [] } },
       { model: Follow, as: 'Followings', include: [
         { model: User, as: 'Followers', attributes: ['id', 'nickname', 'profile_img'], }
       ], },
       { model: Follow, as: 'Followers', include: [
         { model: User, as: 'Followings', attributes: ['id', 'nickname', 'profile_img'], },
       ], },
-      { model: Post, as: 'BookmarkedPosts', attributes: ['id', 'content', 'createdAt'], through: { attributes: [] }, },
       { model: Achievement, attributes: ['id', 'name', 'description'], through: { attributes: ['createdAt', 'updatedAt'], }, },
       { model: Badge, attributes: ['id', 'name', 'img', 'description'], through: { attributes: ['createdAt', 'updatedAt'], }, },
       { model: Myteam, attributes: ['id', 'teamname', 'teamcolor', 'region'], },

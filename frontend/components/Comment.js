@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useRouter } from "next/router";
 import {
   LOAD_COMMENTS_REQUEST,
   ADD_COMMENT_REQUEST,
@@ -7,7 +8,6 @@ import {
   REMOVE_COMMENT_REQUEST,
 } from "../reducers/comment_IN";
 
-// 계층별 바구니(자식댓글들 묶음) 테두리(좌/우/아래만)
 const BASKET_STYLE = [
   {}, // 0단: 안씀
   {
@@ -30,20 +30,20 @@ const BASKET_STYLE = [
     padding: '2px 0 2px 0',
     background: 'none',
   },
-  // 필요시 계속 추가
 ];
 
 const Comment = ({ postId, currentUserId }) => {
   const dispatch = useDispatch();
+  const router = useRouter();
   const { comments, addCommentLoading } = useSelector((state) => state.comment_IN);
 
   const [openMap, setOpenMap] = useState({});
   const [inputMap, setInputMap] = useState({});
   const [showInputMap, setShowInputMap] = useState({});
-  const [menuOpenId, setMenuOpenId] = useState(null);
+  const [menuOpenMap, setMenuOpenMap] = useState({});
   const [editId, setEditId] = useState(null);
   const [editValue, setEditValue] = useState("");
-  const menuRef = useRef(null);
+  const menuRefs = useRef({}); // 댓글마다 ref 분리
 
   useEffect(() => {
     dispatch({ type: LOAD_COMMENTS_REQUEST, postId });
@@ -51,13 +51,23 @@ const Comment = ({ postId, currentUserId }) => {
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (menuOpenId && menuRef.current && !menuRef.current.contains(e.target)) {
-        setMenuOpenId(null);
+      if (Object.keys(menuOpenMap).length === 0) return;
+      const openIds = Object.keys(menuOpenMap).filter(id => menuOpenMap[id]);
+      let clickedInsideAny = false;
+      for (const id of openIds) {
+        const ref = menuRefs.current[id];
+        if (ref && ref.contains(e.target)) {
+          clickedInsideAny = true;
+          break;
+        }
+      }
+      if (!clickedInsideAny) {
+        setMenuOpenMap({});
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [menuOpenId]);
+  }, [menuOpenMap]);
 
   const onReplyShow = (id) => {
     setOpenMap((prev) => ({ ...prev, [id]: true }));
@@ -77,7 +87,9 @@ const Comment = ({ postId, currentUserId }) => {
       type: ADD_COMMENT_REQUEST,
       data: {
         postId,
-        content: inputMap[parentId].startsWith(`@${nickname}`) ? inputMap[parentId] : `@${nickname} ${inputMap[parentId]}`,
+        content: inputMap[parentId].startsWith(`@${nickname}`)
+          ? inputMap[parentId]
+          : `@${nickname} ${inputMap[parentId]}`,
         parentId,
       },
     });
@@ -88,7 +100,7 @@ const Comment = ({ postId, currentUserId }) => {
   const onEditBtn = (comment) => {
     setEditId(comment.id);
     setEditValue(comment.content);
-    setMenuOpenId(null);
+    setMenuOpenMap({});
   };
 
   const onEditSubmit = (comment) => {
@@ -104,16 +116,44 @@ const Comment = ({ postId, currentUserId }) => {
   const onDelete = (comment) => {
     if (window.confirm("정말 삭제하시겠습니까?")) {
       dispatch({ type: REMOVE_COMMENT_REQUEST, data: { commentId: comment.id, postId } });
-      setMenuOpenId(null);
+      setMenuOpenMap({});
     }
   };
 
   const onReport = (comment) => {
     window.alert("신고가 접수되었습니다.");
-    setMenuOpenId(null);
+    setMenuOpenMap({});
   };
 
-  // 바구니(자식리스트)로 테두리 씌우는 재귀 함수
+  const toggleMenu = (id) => {
+    setMenuOpenMap((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  // 아바타 클릭 시 프로필 페이지로 이동
+  const onAvatarClick = (nickname) => {
+    if (nickname) router.push(`/profile/${nickname}`);
+  };
+
+  // 부모 아이디 부분만 볼드로 빼고 본문에서 @부모아이디 중복 제거 처리 함수
+  const renderCommentContent = (content, parentNickname) => {
+    if (!content) return null;
+    let text = content;
+
+    if (parentNickname && content.startsWith(`@${parentNickname}`)) {
+      text = content.slice(parentNickname.length + 1).trimStart();
+    }
+
+    return (
+      <>
+        {parentNickname && <b>@{parentNickname} </b>}
+        {text}
+      </>
+    );
+  };
+
   const renderTree = (list, level = 0) => {
     if (!Array.isArray(list)) return null;
     return list.map((c) => {
@@ -125,13 +165,15 @@ const Comment = ({ postId, currentUserId }) => {
 
       return (
         <React.Fragment key={c.id}>
-          {/* 댓글/대댓글(들여쓰기X, 배경X) */}
-          <div style={{
-            display: "block",
-            padding: "12px 0 0 0",
-            borderBottom: "1px solid #f1f1f1",
-            background: "none"
-          }}>
+          {/* 댓글/대댓글 */}
+          <div
+            style={{
+              display: "block",
+              padding: "12px 0 0 0",
+              borderBottom: "1px solid #f1f1f1",
+              background: "none",
+            }}
+          >
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
               <img
                 src={
@@ -141,43 +183,75 @@ const Comment = ({ postId, currentUserId }) => {
                 }
                 alt="avatar"
                 style={{
-                  width: 28, height: 28, borderRadius: "50%", objectFit: "cover",
-                  border: "1px solid #eee", flexShrink: 0,
+                  width: 28,
+                  height: 28,
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  border: "1px solid #eee",
+                  flexShrink: 0,
+                  cursor: "pointer",
                 }}
+                onClick={() => onAvatarClick(c.User?.nickname)}
               />
               <div style={{ flex: 1 }}>
                 <b>{c.User?.nickname || "알 수 없음"}</b>
-                <div style={{
-                  whiteSpace: "pre-wrap", fontSize: 15,
-                  color: c.is_deleted ? "#721c24" : "#222",
-                }}>
-                  {c.is_deleted ? "삭제된 댓글입니다." : <>
-                    {isReply && c.Parent?.User?.nickname && (
-                      <b>@{c.Parent.User.nickname} </b>
-                    )}
-                    {c.content}
-                  </>}
+                <div
+                  style={{
+                    whiteSpace: "pre-wrap",
+                    fontSize: 15,
+                    color: c.is_deleted ? "#721c24" : "#222",
+                  }}
+                >
+                  {c.is_deleted
+                    ? "삭제된 댓글입니다."
+                    : renderCommentContent(c.content, c.Parent?.User?.nickname)}
                 </div>
               </div>
               {!c.is_deleted && (
-                <div style={{ position: "relative" }} ref={menuRef}>
+                <div style={{ position: "relative" }} ref={(el) => (menuRefs.current[c.id] = el)}>
                   <button
-                    onClick={() => setMenuOpenId(menuOpenId === c.id ? null : c.id)}
-                    style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: "#666", padding: "2px 6px", outline: "none" }}
-                  >⋯</button>
-                  {menuOpenId === c.id && (
-                    <div style={{
-                      position: "absolute", right: 0, top: 28,
-                      background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                      borderRadius: 8, zIndex: 100, minWidth: 100,
-                    }}>
+                    onClick={() => toggleMenu(c.id)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      fontSize: 20,
+                      color: "#666",
+                      padding: "2px 6px",
+                      outline: "none",
+                    }}
+                  >
+                    ⋯
+                  </button>
+                  {menuOpenMap[c.id] && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        right: 0,
+                        top: 28,
+                        background: "#fff",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                        borderRadius: 8,
+                        zIndex: 100,
+                        minWidth: 100,
+                      }}
+                    >
                       {isAuthor ? (
                         <>
-                          <button onClick={() => onEditBtn(c)} style={menuItemStyle}>수정</button>
-                          <button onClick={() => onDelete(c)} style={{ ...menuItemStyle, color: "red" }}>삭제</button>
+                          <button onClick={() => onEditBtn(c)} style={menuItemStyle}>
+                            수정
+                          </button>
+                          <button
+                            onClick={() => onDelete(c)}
+                            style={{ ...menuItemStyle, color: "red" }}
+                          >
+                            삭제
+                          </button>
                         </>
                       ) : (
-                        <button onClick={() => onReport(c)} style={menuItemStyle}>신고</button>
+                        <button onClick={() => onReport(c)} style={menuItemStyle}>
+                          신고
+                        </button>
                       )}
                     </div>
                   )}
@@ -195,17 +269,25 @@ const Comment = ({ postId, currentUserId }) => {
                     <div style={{ margin: "8px 0" }}>
                       <input
                         value={inputMap[c.id] || ""}
-                        onChange={e => setInputMap(prev => ({ ...prev, [c.id]: e.target.value }))}
+                        onChange={(e) =>
+                          setInputMap((prev) => ({ ...prev, [c.id]: e.target.value }))
+                        }
                         placeholder={`@${c.User?.nickname} 님에게 대댓글 입력`}
                         style={{
-                          width: "70%", padding: 6, borderRadius: 4, border: "1px solid #ccc", marginRight: 8
+                          width: "70%",
+                          padding: 6,
+                          borderRadius: 4,
+                          border: "1px solid #ccc",
+                          marginRight: 8,
                         }}
                       />
                       <button
                         disabled={addCommentLoading}
                         onClick={() => onReplySubmit(c.id, c.User?.nickname)}
                         style={{ padding: "6px 12px", cursor: "pointer" }}
-                      >등록</button>
+                      >
+                        등록
+                      </button>
                     </div>
                   )}
                   <div style={{ display: "inline-flex", gap: 6, marginBottom: 2 }}>
@@ -222,24 +304,42 @@ const Comment = ({ postId, currentUserId }) => {
               )}
             </div>
           </div>
-          {/* 자식(대댓글) 바구니: 테두리(좌/우/아래), 배경X */}
-          {openMap[c.id] && replyList.length > 0 && (
-            <div style={BASKET_STYLE[level + 1] || BASKET_STYLE[BASKET_STYLE.length - 1]}>
-              {renderTree(replyList, level + 1)}
-            </div>
-          )}
+
+          {/* 수정폼을 댓글 바로 아래 렌더링 */}
           {editId === c.id && !c.is_deleted && (
             <div style={{ marginTop: 6 }}>
               <input
                 value={editValue}
-                onChange={e => setEditValue(e.target.value)}
-                style={{ width: "100%", padding: 6, borderRadius: 4, border: "1px solid #ccc", marginTop: 6 }}
+                onChange={(e) => setEditValue(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: 6,
+                  borderRadius: 4,
+                  border: "1px solid #ccc",
+                  marginTop: 6,
+                }}
               />
               <button
-                onClick={() => { onEditSubmit(c); }}
+                onClick={() => {
+                  onEditSubmit(c);
+                }}
                 style={{ marginLeft: 8, padding: "6px 12px", cursor: "pointer" }}
-              >수정완료</button>
-              <button onClick={() => setEditId(null)} style={{ marginLeft: 4, padding: "6px 12px", cursor: "pointer" }}>취소</button>
+              >
+                수정완료
+              </button>
+              <button
+                onClick={() => setEditId(null)}
+                style={{ marginLeft: 4, padding: "6px 12px", cursor: "pointer" }}
+              >
+                취소
+              </button>
+            </div>
+          )}
+
+          {/* 자식 댓글들 렌더링 */}
+          {openMap[c.id] && replyList.length > 0 && (
+            <div style={BASKET_STYLE[level + 1] || BASKET_STYLE[BASKET_STYLE.length - 1]}>
+              {renderTree(replyList, level + 1)}
             </div>
           )}
         </React.Fragment>
@@ -248,16 +348,27 @@ const Comment = ({ postId, currentUserId }) => {
   };
 
   return (
-    <div style={{
-      marginTop: 20, background: "#fafbfc", borderRadius: 14,
-      padding: "5px 10px 10px 10px", overflowX: "hidden",
-    }}>
+    <div
+      style={{
+        marginTop: 20,
+        background: "#fafbfc",
+        borderRadius: 14,
+        padding: "5px 10px 10px 10px",
+        overflowX: "hidden",
+      }}
+    >
       <div style={{ marginBottom: 20 }}>
         <input
           value={inputMap[0] || ""}
-          onChange={e => setInputMap((prev) => ({ ...prev, 0: e.target.value }))}
+          onChange={(e) => setInputMap((prev) => ({ ...prev, 0: e.target.value }))}
           placeholder="댓글 입력"
-          style={{ width: "80%", padding: 8, borderRadius: 6, border: "1px solid #ccc", marginRight: 8 }}
+          style={{
+            width: "80%",
+            padding: 8,
+            borderRadius: 6,
+            border: "1px solid #ccc",
+            marginRight: 8,
+          }}
         />
         <button
           disabled={addCommentLoading}
@@ -270,7 +381,9 @@ const Comment = ({ postId, currentUserId }) => {
             setInputMap((prev) => ({ ...prev, 0: "" }));
           }}
           style={{ padding: "8px 16px", cursor: "pointer" }}
-        >등록</button>
+        >
+          등록
+        </button>
       </div>
       {Array.isArray(comments[postId]) && comments[postId].length === 0 && (
         <div style={{ color: "#aaa", marginLeft: 8 }}>아직 댓글이 없습니다.</div>

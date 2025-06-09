@@ -10,6 +10,7 @@ import user_YG from './user_YG';
 import profile_jh from './profile_jh'; 
 import chatSaga from './chatSaga_JW';
 import blockSaga from './block';;//율비
+import notification_JH from './notification_JH';
 
 export default function* rootSaga() {
   yield all([
@@ -24,5 +25,6 @@ export default function* rootSaga() {
     fork(profile_jh),
     fork(chatSaga),
     fork(blockSaga),//율비
+    fork(notification_JH), // 준혁추가
   ]);
 }

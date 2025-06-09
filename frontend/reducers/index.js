@@ -15,6 +15,7 @@ import block from './block';//율비
 import hashtag_IN from './hashtag_IN';
 import regram_IN from './regram_IN';
 
+import notification_JH from './notification_JH'; //준혁추가
 
 const rootReducer = combineReducers({
   index: (state = {}, action) => {
@@ -36,6 +37,7 @@ const rootReducer = combineReducers({
   user_YG,
   block,//율비
   profile_jh,
+  notification_JH, //준혁추가
 });
 
 export default rootReducer;

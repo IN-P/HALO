@@ -15,6 +15,7 @@ import chatReducer from '../reducers/chatReducer_JW';
 import profile_jh from '../reducers/profile_jh';
 import reportReducer from '../reducers/report_YB';
 import block from '../reducers/block'// 율비 추가
+import notification_JH from '../reducers/notification_JH' // 준혁추가
 
 const rootReducer = combineReducers({
   post_IN,
@@ -23,10 +24,11 @@ const rootReducer = combineReducers({
   regram_IN,
   bookmark_IN,
   follow_YB,
- report_YB: reportReducer,
+  report_YB: reportReducer,
   block, // 율비
   user_YG, 
   profile_jh,
+  notification_JH,
   chat: chatReducer,
 });
 

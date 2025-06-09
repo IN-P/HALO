@@ -10,6 +10,12 @@ const { isLoggedIn, isNotLoggedIn } = require('./middlewares'); // 로그인 여
 const userService = require('../services/userService'); //소프트 딜리트
 const db = require('../models');
 
+// 프로필 이미지 변경 - 준혁 추가
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const crypto = require('crypto');
+
 // 현재 로그인한 유저 정보를 반환하는 라우터
 router.get('/me', isLoggedIn, async (req, res) => {
   try {
@@ -173,6 +179,59 @@ router.get('/', isLoggedIn, async (req, res, next) => {
   }
 });
 
+// 기존 프로필 이미지 삭제 함수 - >> 준혁 추가
+const defaultImgPath = '/uploads/profile/default.jpg';
+
+const tryDeleteImage = (relativePath) => {
+  if (!relativePath || relativePath === defaultImgPath) return;
+  const trimmedPath = relativePath.startsWith('/') ? relativePath.slice(1) : relativePath;
+  const fullPath = path.join(__dirname, '..', trimmedPath);
+  fs.access(fullPath, fs.constants.F_OK, (err) => {
+    if (!err) {
+      fs.unlink(fullPath, (unlinkErr) => {
+        if (unlinkErr) console.error('이미지 삭제 실패:', unlinkErr);
+        else console.log('이미지 삭제 성공:', relativePath);
+      });
+    }
+  });
+};
+// 프로필 이미지 저장 경로 및 랜덤화
+const storage = multer.diskStorage({
+  destination(req, file, cb) {
+    cb(null, 'uploads/profile/'); // 실제 저장될 폴더
+  },
+  filename(req, file, cb) {
+    const ext = path.extname(file.originalname); // 파일 확장자 추출
+    const randomName = crypto.randomBytes(16).toString('hex'); // 랜덤 32글자 문자열
+    cb(null, randomName + ext); // 예: 9f8e7d6c5b4a3f2e1d0c.jpg
+  }
+});
+const upload = multer({ storage });
+// 이미지 업로드 및 기존 이미지 삭제
+router.post('/uploadProfileImage', isLoggedIn, upload.single('profile_img'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).send('파일이 업로드되지 않았습니다.');
+
+    const userId = req.user.id;
+    const newImagePath = `/uploads/profile/${req.file.filename}`;
+    const user = await User.findByPk(userId);
+    const oldImagePath = user.profile_img;
+
+    // 기존 이미지 삭제
+    tryDeleteImage(oldImagePath);
+
+    // 새 이미지 경로로 DB 업데이트
+    await user.update({ profile_img: newImagePath });
+    res.json({ path: newImagePath });
+  } catch (error) {
+    console.error('이미지 업로드 실패:', error);
+    // 업로드된 이미지도 삭제
+    if (req.file) { fs.unlink(path.join(__dirname, '..', 'uploads/profile', req.file.filename), () => {}); }
+    res.status(500).send('이미지 업로드 실패');
+  }
+});
+// 준혁추가
+
 /* 마이페이지 정보 수정 (닉네임, 테마모드, 공개여부 등)   ★테스트 성공
 - URL: http://localhost:3065/user/
 - Method: PATCH
@@ -201,7 +260,26 @@ router.patch('/', isLoggedIn, async (req, res, next) => {
     if (nickname) updateUserFields.nickname = nickname;
     if (theme_mode) updateUserFields.theme_mode = theme_mode;
     if (typeof is_private !== 'undefined') updateUserFields.is_private = is_private;
-    if (profile_img) updateUserFields.profile_img = profile_img;
+
+    // 프로필 이미지 수정 -  >> 준혁 수정 및 추가
+    const user = await User.findByPk(req.user.id);
+    if (typeof profile_img !== 'undefined' && profile_img !== "" && profile_img !== null) {
+      if (profile_img !== user.profile_img) {
+        updateUserFields.profile_img = profile_img;
+
+        // 기본 이미지로 복귀 시 기존 이미지 삭제
+        if (
+          user.profile_img &&
+          user.profile_img !== defaultImgPath &&
+          profile_img === defaultImgPath
+        ) {
+          tryDeleteImage(user.profile_img);
+        }
+      }
+    }
+            console.log("요청 profile_img:", profile_img);
+        console.log("DB에 저장된 profile_img:", user.profile_img);
+    // 준혁 추가 <<
 
     // userinfos 테이블
     if (phone) updateUserinfoFields.phone = phone;
@@ -365,8 +443,6 @@ router.get('/', async (req, res) => {
   }
   return res.status(401).json({ message: '로그인 필요' });
 });
-
-
 
 module.exports = router;
 

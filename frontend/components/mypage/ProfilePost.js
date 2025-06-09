@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { InboxOutlined, NumberOutlined, TagOutlined } from "@ant-design/icons";
+import { InboxOutlined, HeartOutlined, TagOutlined } from "@ant-design/icons";
 import MyPost from "./MyPost";
 import MyBookmark from "./MyBookmark";
-import TaggedMe from "./TaggedMe";
-// import MyTagged from "./MyTagged"; // 태그된 게시물이 있으면 사용
+import MyLiked from "./MyLiked";
 
 const ProfilePost = ({ data, isMyProfile }) => {
     const [activeTab, setActiveTab] = useState("posts");
@@ -72,13 +71,13 @@ const ProfilePost = ({ data, isMyProfile }) => {
                 <div
                 role="tab"
                 tabIndex={0}
-                onClick={() => setActiveTab("tagged")}
-                onKeyDown={(e) => e.key === "Enter" && setActiveTab("tagged")}
-                style={activeTab === "tagged" ? activeTabStyle : inactiveTabStyle}
-                aria-selected={activeTab === "tagged"}
+                onClick={() => setActiveTab("like")}
+                onKeyDown={(e) => e.key === "Enter" && setActiveTab("like")}
+                style={activeTab === "like" ? activeTabStyle : inactiveTabStyle}
+                aria-selected={activeTab === "like"}
                 >
-                <NumberOutlined />
-                <span>태그됨</span>
+                <HeartOutlined />
+                <span>좋아요</span>
                 </div>
             </>
             )}
@@ -87,7 +86,7 @@ const ProfilePost = ({ data, isMyProfile }) => {
         <div style={{ marginTop: 24 }}>
             {activeTab === "posts" && <MyPost data={data} />}
             {activeTab === "bookmark" && isMyProfile && <MyBookmark data={data} />}
-            {activeTab === "tagged" && isMyProfile && <TaggedMe data={data} />}
+            {activeTab === "like" && isMyProfile && <MyLiked data={data} />}
         </div>
         </div>
     );
