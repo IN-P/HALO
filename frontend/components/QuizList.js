@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Table } from 'antd';
+import { Table, Button } from 'antd';
 import Link from 'next/link';
 import { LOAD_QUIZZES_REQUEST } from '../reducers/quiz_GM';
 
@@ -31,6 +31,9 @@ const EventPage = () => {
     return (
         <div style={{padding: '2rem'}}>
             <h2>🎲 전체 퀴즈 목록</h2>
+            <Link href="/adminQuiz" passHref>
+                <Button>퀴즈 등록하기</Button>
+            </Link>
             <Table
                 dataSource={quizList}
                 columns={columns}
