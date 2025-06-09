@@ -8,6 +8,7 @@ module.exports = (sequelize, DataTypes) => {
     code: {
       type: DataTypes.STRING(45),
       allowNull: false,
+      unique: true,
     },
   }, {
     charset: 'utf8mb4',
