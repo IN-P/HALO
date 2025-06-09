@@ -2,19 +2,19 @@ const express = require('express');
 const router = express.Router();
 const { Block, User, Follow } = require('../models');
 
-// ✅ 차단 추가: POST /block
+// 차단 추가: POST /block
 router.post('/', async (req, res, next) => {
-  console.log('req.body:', req.body); // 율비: 요청 body 확인용 로그
+  console.log('req.body:', req.body); //  요청 body 확인용 로그
   try {
-    const fromUserId = req.user.id; // 율비: 로그인한 사용자
+    const fromUserId = req.user.id; //  로그인한 사용자
     const { toUserId } = req.body;
 
-    // 율비: 자기 자신 차단 방지
+    //  자기 자신 차단 방지
     if (fromUserId === toUserId) {
       return res.status(400).json({ message: '자기 자신을 차단할 수 없습니다.' });
     }
 
-    // 율비: 기존 차단 여부 확인
+    // 기존 차단 여부 확인
     const existing = await Block.findOne({
       where: { from_user_id: fromUserId, to_user_id: toUserId },
     });
@@ -23,13 +23,13 @@ router.post('/', async (req, res, next) => {
       return res.status(400).json({ message: '이미 차단한 사용자입니다.' });
     }
 
-    // 율비: 차단 정보 DB에 저장
+    //  차단 정보 DB에 저장
     const block = await Block.create({
       from_user_id: fromUserId,
       to_user_id: toUserId,
     });
 
-    // ✅ 율비: 양방향 팔로우 관계 삭제 (차단 시)
+    //  양방향 팔로우 관계 삭제 (차단 시)
     const deleted1 = await Follow.destroy({
       where: { from_user_id: fromUserId, to_user_id: toUserId },
     });
@@ -37,23 +37,22 @@ router.post('/', async (req, res, next) => {
       where: { from_user_id: toUserId, to_user_id: fromUserId },
     });
 
-    console.log(`팔로우 삭제됨: ${deleted1} / ${deleted2}`); // 율비: 디버그용 로그
+    console.log(`팔로우 삭제됨: ${deleted1} / ${deleted2}`); //  디버그용 로그
     
-    // 율비: 클라이언트에 차단 정보 응답
+    //  클라이언트에 차단 정보 응답
     res.status(201).json(block);
   } catch (err) {
-    console.error(err); // 율비: 서버 오류 로그
+    console.error(err); //  서버 오류 로그
     next(err);
   }
 });
 
-// ✅ 차단 해제: DELETE /block/:toUserId
+//  차단 해제: DELETE /block/:toUserId
 router.delete('/:toUserId', async (req, res, next) => {
   try {
     const fromUserId = req.user.id;
     const toUserId = parseInt(req.params.toUserId, 10);
 
-    // 율비: 차단 관계 확인
     const existing = await Block.findOne({
       where: {
         from_user_id: fromUserId,
@@ -65,7 +64,6 @@ router.delete('/:toUserId', async (req, res, next) => {
       return res.status(404).json({ message: '차단관계가 존재하지 않습니다.' });
     }
 
-    // 율비: 차단 해제
     await existing.destroy();
     res.status(200).json({ message: '차단을 해제했습니다.' });
   } catch (err) {
@@ -74,23 +72,22 @@ router.delete('/:toUserId', async (req, res, next) => {
   }
 });
 
-// ✅ 차단 목록 조회: GET /block
+//  차단 목록 조회: GET /block
 router.get('/', async (req, res, next) => {
   try {
-    const fromUserId = req.user.id; // 율비: 로그인한 사용자 기준
+    const fromUserId = req.user.id; 
 
     const blockedUsers = await Block.findAll({
       where: { from_user_id: fromUserId },
       include: [
         {
           model: User,
-          as: 'Blocked', // 율비: Blocked 관계 설정 기반
-          attributes: ['id', 'nickname'], // 율비: 최소 정보만 전달
+          as: 'Blocked', 
+          attributes: ['id', 'nickname'], 
         },
       ],
     });
 
-    // 율비: Blocked 유저 정보만 반환
     res.status(200).json(blockedUsers.map(b => b.Blocked));
   } catch (err) {
     console.error(err);

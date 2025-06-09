@@ -1,7 +1,15 @@
 import React from "react";
 import { Image } from "antd";
 
-const MyPost = ({ data }) => {
+const MyPost = ({ data, isBlocked }) => {
+  console.log("isBlocked in MyPost:", isBlocked);
+  if (isBlocked) {
+    return (
+      <div style={{ width: '800px', margin: '0 auto', textAlign: 'center', marginTop: '40px', color: '#999' }}>
+        <p>차단된 사용자의 게시글은 표시되지 않습니다.</p>
+      </div>
+    );
+  }
   return (
     <div
       style={{

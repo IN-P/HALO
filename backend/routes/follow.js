@@ -98,21 +98,19 @@ router.delete('/follower/:fromUserId', async (req, res, next) => {
 });
 
 
-// 팔로잉 목록조회 http://localhost:3065/api/followings
+// 팔로잉 목록조회 http://localhost:3065/follow/followings
 router.get('/followings', async (req, res, next) => {
   try {
     const fromUserId = req.user.id;
     const followings = await Follow.findAll({
       where: { from_user_id: fromUserId },
-      include: [
-        {
-          model: User,
-          as: 'Followings',
-          attributes: ['id', 'nickname'],
-        },
-      ],
+      include: [{
+        model: User,
+        as: 'Followers', // ✅ "to_user_id" 기준으로 '내가 팔로우한 대상'을 가져오려면
+        attributes: ['id', 'nickname', 'profile_img'],
+      }],
     });
-    res.status(200).json(followings.map(f => f.Followings));
+    res.status(200).json(followings.map(f => f.Followers)); // ✅ "팔로우 대상"
   } catch (err) {
     console.error(err);
     next(err);
@@ -124,16 +122,15 @@ router.get('/followings', async (req, res, next) => {
 router.get('/followers', async (req, res, next) => {
   try {
     const toUserId = req.user.id;
-
     const followers = await Follow.findAll({
       where: { to_user_id: toUserId },
       include: [{
         model: User,
-        as: 'Followers',
-        attributes: ['id', 'nickname'],
+        as: 'Followings', // ✅ "from_user_id" 기준으로 '나를 팔로우한 사람'을 가져오려면
+        attributes: ['id', 'nickname', 'profile_img'],
       }],
     });
-    res.status(200).json(followers.map(f => f.Followers));
+    res.status(200).json(followers.map(f => f.Followings)); // ✅ "팔로워"
   } catch (err) {
     console.error(err);
     next(err);
