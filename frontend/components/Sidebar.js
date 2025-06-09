@@ -88,7 +88,9 @@ const Sidebar = () => {
           <Link href="/quiz" passHref>
             <SidebarButton icon={<GiftOutlined />}>이벤트</SidebarButton>
           </Link>
-          <SidebarButton icon={<ShopOutlined />}>문의</SidebarButton> {/*조율비 추가*/}
+          <Link href="/inquiry" passHref>
+          <SidebarButton icon={<ShopOutlined />}>문의</SidebarButton>
+          </Link>
         </div>
       </div>
 
