@@ -20,6 +20,7 @@ import {
 
 import socket from '../socket';
 
+
 const ChatPage = () => {
   const dispatch = useDispatch();
   const {
@@ -31,6 +32,7 @@ const ChatPage = () => {
     showSearchModal,
     chatRooms,
   } = useSelector((state) => state.chat);
+  
 
   const chatBoxRef = useRef();
   const [userMap, setUserMap] = useState({});
@@ -73,34 +75,33 @@ const handleReadUpdate = useCallback((readMessageIdsRaw) => {
   }, []);
 
   // 2. socket 리스너: receive_message (딱 1번만 등록)
-  const handleReceive = useCallback((data) => {
-    console.log('➡️ receive_message 이벤트 수신됨 (클라이언트):', data);
+const handleReceive = useCallback((data) => {
+  console.log('➡️ receive_message 이벤트 수신됨 (클라이언트):', data);
 
-     dispatch(updateChatRoomLastMessage({
+  dispatch(updateChatRoomLastMessage({
     roomId: data.roomId,
     lastMessage: data.content,
     lastTime: new Date(data.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
-    unreadCountDelta: (!selectedUser || roomId !== data.roomId) ? 1 : 0,
+    unreadCountDelta: (!selectedUser || roomId !== data.roomId) ? 1 : 0,  // ⭐ 원래 이렇게 쓰던거 다시 써
   }));
 
-    if (!selectedUser || !roomId || data.roomId !== roomId) {
-      console.log('다른 방 메시지이거나 방이 선택되지 않음:', data.roomId, '현재 roomId:', roomId);
-      dispatch(setShowNewMsgAlert(true));
-      return;
-    }
+  if (!selectedUser || !roomId || data.roomId !== roomId) {
+    console.log('다른 방 메시지이거나 방이 선택되지 않음:', data.roomId, '현재 roomId:', roomId);
+    dispatch(setShowNewMsgAlert(true));
+    return;
+  }
 
-    console.log('현재 방 메시지! log에 추가:', data);
-    const formattedMessage = {
-     ...data, 
-     sender_id: data.sender_id, 
-     User: data.User, 
-  created_at: data.created_at, 
-   time: new Date(data.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
- is_read: data.is_read
-   };
-   console.log('현재 방 메시지! log에 추가 후 formattedMessage:', formattedMessage);
-   dispatch(addLog(formattedMessage));
-  }, [dispatch, roomId, selectedUser, userMap]); // 의존성 배열에 selectedUser 추가
+  console.log('현재 방 메시지! log에 추가:', data);
+  const formattedMessage = {
+    ...data,
+    sender_id: data.sender_id,
+    User: data.User,
+    created_at: data.created_at,
+    time: new Date(data.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+    is_read: data.is_read
+  };
+  dispatch(addLog(formattedMessage));
+}, [dispatch, roomId, selectedUser]); // 의존성 배열에 selectedUser 추가
 
   const handleExitSuccess = useCallback(() => {
     alert('채팅방을 나갔습니다.');
@@ -113,35 +114,37 @@ const handleReadUpdate = useCallback((readMessageIdsRaw) => {
     alert(`채팅방 나가기 실패: ${data.message || '알 수 없는 오류'}`);
   }, []);
 
-  useEffect(() => {
-    socket.on('receive_message', handleReceive);
-    socket.on('exit_room_success', handleExitSuccess);
-    socket.on('exit_room_failed', handleExitFailed);
-    socket.on('read_update', handleReadUpdate);
+useEffect(() => {
+  socket.on('receive_message', handleReceive);
+  socket.on('exit_room_success', handleExitSuccess);
+  socket.on('exit_room_failed', handleExitFailed);
+  socket.on('read_update', handleReadUpdate);
 
-socket.on('new_chat_room_created', () => {
-  console.log('🔔 새 채팅방 생성 이벤트 수신 → ChatList 갱신');
-  if (me && me.id) {
-    setTimeout(() => {
-      axios.get('http://localhost:3065/api/chat/my-rooms', { withCredentials: true })
-        .then(res => {
-          dispatch(setChatRooms(res.data));
-        })
-        .catch(err => {
-          console.error('❌ 채팅방 목록 갱신 실패:', err);
-        });
-    }, 300); // 300ms 딜레이 추가
-  }
-});
+  // ⭐ 요기 추가
+  const handleNewChatRoom = (data) => {
+    console.log('🔔 new_chat_room_created 수신:', data);
+    axios.get('http://localhost:3065/api/chat/my-rooms', { withCredentials: true })
+      .then((res) => {
+        console.log('🌍 [AppLayout] /my-rooms 응답:', res.data);
+        dispatch(setChatRooms(res.data));
+      })
+      .catch((err) => {
+        console.error('❌ my-rooms 갱신 실패:', err);
+      });
+  };
 
-    return () => {
-      socket.off('receive_message', handleReceive);
-      socket.off('exit_room_success', handleExitSuccess);
-      socket.off('exit_room_failed', handleExitFailed);
-      socket.off('read_update', handleReadUpdate);
-      socket.off('new_chat_room_created');
-    };
-  }, [handleReceive, handleExitSuccess, handleExitFailed, handleReadUpdate, dispatch, me]);
+  socket.on('new_chat_room_created', handleNewChatRoom);
+
+  return () => {
+    socket.off('receive_message', handleReceive);
+    socket.off('exit_room_success', handleExitSuccess);
+    socket.off('exit_room_failed', handleExitFailed);
+    socket.off('read_update', handleReadUpdate);
+
+    // ⭐ clean up 도 같이
+    socket.off('new_chat_room_created', handleNewChatRoom);
+  };
+}, [handleReceive, handleExitSuccess, handleExitFailed, handleReadUpdate, dispatch, me]);
 
   // ⭐ 변경 3: 유저 선택 핸들러 (SearchModal, ChatList에서 공통으로 사용)
 const handleUserSelect = useCallback(async (user) => { 
@@ -220,17 +223,17 @@ const handleUserSelect = useCallback(async (user) => {
 
   // 4. 채팅방 목록은 최초 1회 및 변경 시 불러오기 (useSelector로 chatRooms가 관리되므로)
   useEffect(() => {
-    // me.id가 있을 때만 호출 (로그인 정보 확인)
     if (me && me.id) {
       axios.get('http://localhost:3065/api/chat/my-rooms', { withCredentials: true })
         .then(res => {
           dispatch(setChatRooms(res.data));
+          console.log('📦 [ChatPage] my-rooms 강제 갱신됨:', res.data);
         })
         .catch(err => {
           console.error('❌ 채팅방 목록 불러오기 실패:', err);
         });
     }
-  }, [dispatch, me]); // me 의존성 추가 (로그인 정보 받아온 후 실행)
+  }, [dispatch, me, selectedUser]); // me 의존성 추가 (로그인 정보 받아온 후 실행)
 
   // 5. 스크롤 및 새 메시지 알림 관리
   const isAtBottom = () => {
@@ -342,7 +345,7 @@ const handleUserSelect = useCallback(async (user) => {
                 onSendMessage={handleSend}
                 userMap={userMap}
                 onClose={() => {
-                  socket.emit('leave_room', me.id);
+                  //socket.emit('leave_room', me.id);
                     dispatch(setSelectedUser(null)); // 채팅방 닫을 때 selectedUser 초기화
                     dispatch(clearLog()); // 로그도 초기화
                 }}

@@ -1,6 +1,7 @@
 import React from 'react';
 
 const ChatList = ({ chatRooms, onSelectUser }) => {
+  console.log('🔥 ChatList 렌더링됨 chatRooms:', chatRooms);
   return (
     <div style={{
       width: 300,

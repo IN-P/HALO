@@ -43,7 +43,63 @@ if (!Array.isArray(sortedIds) || sortedIds.length !== 2 || !Number.isInteger(sor
 
     if (chatRoom) {
       console.log(`[POST /] 기존 채팅방 조회 완료: ID ${chatRoom.id}`);
-      return res.status(200).json(chatRoom);
+
+  // ✅ 여기서 ChatRoomExit 확인 후 user2_id_active false면 emit 보내기
+let chatRoomExit = await ChatRoomExit.findOne({
+  where: { chat_rooms_id: chatRoom.id },
+});
+
+// 🚩 이 로그 꼭 찍어줘
+console.log('✅ chatRoomExit 확인:', chatRoomExit);
+
+// 없으면 생성 후 진행 (바로 여기)
+if (!chatRoomExit) {
+  chatRoomExit = await ChatRoomExit.create({
+    chat_rooms_id: chatRoom.id,
+    user1_id_active: true,
+    user2_id_active: true,
+    user1_exited_at: null,
+    user2_exited_at: null,
+  });
+
+  // 생성 후에도 찍어줘
+  console.log('✅ chatRoomExit 생성 완료:', chatRoomExit);
+}
+
+const senderIsUser1 = chatRoom.user1_id === req.user.id;
+
+// 🚩 여기도 찍어줘
+console.log('✅ senderIsUser1 확인:', senderIsUser1);
+
+// 🚩 chatRoomExit 최종확인
+console.log('✅ 최종 chatRoomExit 상태:', chatRoomExit.user1_id_active, chatRoomExit.user2_id_active);
+
+const receiverIsActive = senderIsUser1 
+  ? chatRoomExit.user2_id_active 
+  : chatRoomExit.user1_id_active;
+
+// 🚩 receiverIsActive도 찍어줘
+console.log('✅ receiverIsActive:', receiverIsActive);
+
+if (!receiverIsActive) {
+  console.log(`[POST /] 기존방이나 상대방 inactive → emit 보내기`);
+  const sortedIds = [chatRoom.user1_id, chatRoom.user2_id].sort((a, b) => a - b);
+  if (socketMap[sortedIds[0]]) {
+    io.to(socketMap[sortedIds[0]].socketId).emit('new_chat_room_created', {
+      roomId: `chat-${sortedIds[0]}-${sortedIds[1]}`,
+      targetUserId: sortedIds[1],
+    });
+  }
+  if (socketMap[sortedIds[1]]) {
+    io.to(socketMap[sortedIds[1]].socketId).emit('new_chat_room_created', {
+      roomId: `chat-${sortedIds[0]}-${sortedIds[1]}`,
+      targetUserId: sortedIds[0],
+    });
+  }
+}
+
+return res.status(200).json(chatRoom);
+
     }
     chatRoom = await ChatRoom.create({
     user1_id: sortedIds[0],
@@ -61,20 +117,6 @@ console.log(`[POST /] new_chat_room_created emit 준비용 → sortedIds=${JSON.
 
 if (Array.isArray(sortedIds) && sortedIds.length === 2) {
   console.log(`[POST /] new_chat_room_created emit 준비: roomId=chat-${sortedIds[0]}-${sortedIds[1]}, targetUserId=${sortedIds[1]}`);
-
-if (socketMap && socketMap[sortedIds[0]] && socketMap[sortedIds[0]].socketId) {
-  io.to(socketMap[sortedIds[0]].socketId).emit('new_chat_room_created', {
-    roomId: `chat-${sortedIds[0]}-${sortedIds[1]}`,
-    targetUserId: sortedIds[1],
-  });
-}
-
-if (socketMap && socketMap[sortedIds[1]] && socketMap[sortedIds[1]].socketId) {
-  io.to(socketMap[sortedIds[1]].socketId).emit('new_chat_room_created', {
-    roomId: `chat-${sortedIds[0]}-${sortedIds[1]}`,
-    targetUserId: sortedIds[0],
-  });
-}
 }
 
     res.status(201).json(chatRoom);
@@ -314,18 +356,36 @@ if (!chatRoomExit) {
   console.log(`[POST /message] ChatRoomExit 새로 생성 (두 사용자 active=true)`);
 } else {
   // 강제 update 사용
-  await ChatRoomExit.update(
-    {
-      user1_id_active: true,
-      user2_id_active: true,
-      user1_exited_at: null,
-      user2_exited_at: null,
-    },
-    {
-      where: { chat_rooms_id: roomsIdNum },
-    }
-  );
-  console.log(`[POST /message] ChatRoomExit 강제 update로 active 상태 복구 완료 (채팅 발송으로 두 사용자 모두 active 처리).`);
+  
+const senderFieldToUpdate = (chatRoom.user1_id === senderId) ? 'user1_id_active' : 'user2_id_active';
+const senderExitedAtField = (senderFieldToUpdate === 'user1_id_active') ? 'user1_exited_at' : 'user2_exited_at';
+
+const receiverFieldToUpdate = (chatRoom.user1_id === senderId) ? 'user2_id_active' : 'user1_id_active';
+const receiverExitedAtField = (receiverFieldToUpdate === 'user1_id_active') ? 'user1_exited_at' : 'user2_exited_at';
+
+// 👉 sender 쪽 active 복구
+await ChatRoomExit.update(
+  {
+    [senderFieldToUpdate]: true,
+    [senderExitedAtField]: null,
+  },
+  {
+    where: { chat_rooms_id: roomsIdNum },
+  }
+);
+
+// 👉 receiver 쪽도 active 복구
+await ChatRoomExit.update(
+  {
+    [receiverFieldToUpdate]: true,
+    [receiverExitedAtField]: null,
+  },
+  {
+    where: { chat_rooms_id: roomsIdNum },
+  }
+);
+
+console.log(`[POST /message] ChatRoomExit sender(${senderFieldToUpdate})/receiver(${receiverFieldToUpdate}) active 복구 완료`);
 }
 
     // 1. 메시지 저장
@@ -360,13 +420,7 @@ if (!chatRoomExit) {
   const receiverId = (chatRoom.user1_id === senderId) ? chatRoom.user2_id : chatRoom.user1_id;
 
   // socket.join 시 room 이름을 'user-2' 식으로 설정했을 경우
-  io.to(`user-${senderId}`).emit('new_chat_room_created', {
-  roomId: `chat-${[chatRoom.user1_id, chatRoom.user2_id].sort((a, b) => a - b).join('-')}`,
-});
 
-  io.to(`user-${receiverId}`).emit('new_chat_room_created', {
-    roomId: `chat-${[chatRoom.user1_id, chatRoom.user2_id].sort((a, b) => a - b).join('-')}`,
-  });
 }
 
     // 4. 요청을 보낸 클라이언트에게 응답 (프론트엔드에서 이 응답을 받으면 됨)
