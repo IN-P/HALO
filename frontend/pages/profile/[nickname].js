@@ -5,9 +5,9 @@ import MyHeader from "../../components/mypage/MyHeader";
 import MyAvatar from "../../components/mypage/MyAvatar";
 import MyMain from "../../components/mypage/MyMain";
 import MyPost from "../../components/mypage/MyPost";
-import MySettingPopUp from "../../components/mypage/MySettingPopUp";
+import MySettingMain from "../../components/mypage/MySettingMain"; // main 브랜치 쪽
+import ProfilePost from "../../components/mypage/ProfilePost";
 import { InboxOutlined, NumberOutlined, TagOutlined } from "@ant-design/icons";
-
 import { useDispatch, useSelector } from "react-redux";
 import { LOAD_USER_INFO_REQUEST } from "../../reducers/profile_jh";
 import wrapper from "../../store/configureStore";
@@ -22,15 +22,13 @@ const ProfilePage = () => {
 
   const dispatch = useDispatch();
   const [showSetting, setShowSetting] = useState(false);
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
 
-  const [refetchTrigger, setRefetchTrigger] = useState(0); // 율비: 상태 갱신 트리거 추가
-
-  // nickname 또는 트리거 변경될 때마다 정보 요청
   useEffect(() => {
     if (nickname) {
       dispatch({ type: LOAD_USER_INFO_REQUEST, data: nickname });
     }
-  }, [dispatch, nickname, refetchTrigger]); // 율비: refetchTrigger 의존성 추가
+  }, [dispatch, nickname, refetchTrigger]);
 
   const data = useSelector((state) => state.profile_jh?.data);
   console.log("data1", data);
@@ -38,7 +36,6 @@ const ProfilePage = () => {
   const { user } = useSelector((state) => state.user_YG);
   const isMyProfile = user && data && user.id === data.id;
 
-  // 레이아웃 패딩 제거
   useEffect(() => {
     const removePadding = document.getElementById("mainContents");
     if (removePadding) {
@@ -46,10 +43,17 @@ const ProfilePage = () => {
     }
   }, []);
 
+  // 데이터 갱신용
+  const fetchUserInfo = () => {
+    dispatch({ type: LOAD_USER_INFO_REQUEST, data: nickname });
+  };
+
   return (
     <AppLayout>
       {showSetting && isMyProfile ? (
-        <MySettingPopUp onClose={() => setShowSetting(false)} data={data} />
+        <>
+          <MySettingMain onClose={() => setShowSetting(false)} data={data} reload={fetchUserInfo} />
+        </>
       ) : (
         <div>
           <div style={{ display: "flex", justifyContent: "end", padding: "1% 1% 0 0" }}>
@@ -59,20 +63,14 @@ const ProfilePage = () => {
             <MyAvatar data={data} />
             <div style={{ width: "30px" }} />
             <MyMain
-              key={refetchTrigger} //율비
+              key={refetchTrigger}
               data={data}
               isMyProfile={isMyProfile}
-              onRefetch={() => setRefetchTrigger((prev) => prev + 1)} // 율비: MyMain에게 갱신함수 넘김
+              loginUser={user}
+              onRefetch={() => setRefetchTrigger((prev) => prev + 1)}
             />
           </div>
-          <hr style={{ marginTop: "3%" }} />
-          <div style={{ display: "flex", justifyContent: "center", gap: "100px" }}>
-            <span><InboxOutlined />&nbsp;게시물</span>
-            <span><TagOutlined />&nbsp;북마크</span>
-            <span><NumberOutlined />&nbsp;태그됨</span>
-          </div>
-          <MyPost data={data} />
-          <MyBookmark data={data} />
+          <ProfilePost data={data} isMyProfile={isMyProfile} />
         </div>
       )}
     </AppLayout>

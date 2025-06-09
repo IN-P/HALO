@@ -35,6 +35,8 @@ const weatherRouter = require('./routes/weather'); //## 재원
 const chatRouter = require('./routes/chat') //## 재원
 const resetPasswordRouter = require('./routes/resetPassword'); //윤기
 const authRouter = require('./routes/auth'); // 윤기 간편 로그인 라우터 추가
+const achievements = require('./routes/achievements'); // 준혁
+const badges = require('./routes/badges'); // 준혁
 
 // .env 적용
 dotenv.config();
@@ -92,6 +94,8 @@ app.use('/inquiry',inquiryRouter); //## 율비
 app.use("/profile", profile); //## 준혁
 app.use("/notification", notification); //## 준혁
 app.use("/log", activeLog); //## 준혁
+app.use("/achievements", achievements) // ## 준혁
+app.use("/badges", badges) // ## 준혁
 
 app.use('/event/quizzes', quizRouter);  //## 경미
 app.use('/event/admin', adminQuizRouter);  //## 경미
