@@ -84,18 +84,22 @@ console.log('✅ receiverIsActive:', receiverIsActive);
 if (!receiverIsActive) {
   console.log(`[POST /] 기존방이나 상대방 inactive → emit 보내기`);
   const sortedIds = [chatRoom.user1_id, chatRoom.user2_id].sort((a, b) => a - b);
-  if (socketMap[sortedIds[0]]) {
+  if (socketMap && socketMap[sortedIds[0]]) {
     io.to(socketMap[sortedIds[0]].socketId).emit('new_chat_room_created', {
       roomId: `chat-${sortedIds[0]}-${sortedIds[1]}`,
       targetUserId: sortedIds[1],
     });
+  } else {
+    console.log(`[POST /] socketMap에 sortedIds[0](${sortedIds[0]}) 없음.`);
   }
-  if (socketMap[sortedIds[1]]) {
-    io.to(socketMap[sortedIds[1]].socketId).emit('new_chat_room_created', {
-      roomId: `chat-${sortedIds[0]}-${sortedIds[1]}`,
-      targetUserId: sortedIds[0],
-    });
-  }
+  if (socketMap && socketMap[sortedIds[1]]) {
+  io.to(socketMap[sortedIds[1]].socketId).emit('new_chat_room_created', {
+    roomId: `chat-${sortedIds[0]}-${sortedIds[1]}`,
+    targetUserId: sortedIds[0],
+  });
+} else {
+  console.log(`[POST /] socketMap에 sortedIds[1](${sortedIds[1]}) 없음.`);
+}
 }
 
 return res.status(200).json(chatRoom);
