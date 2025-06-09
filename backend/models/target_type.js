@@ -28,5 +28,19 @@ module.exports = (sequelize, DataTypes) => {
     });
   };
 
+
+    //  모델 초기화 후 기본 데이터 삽입
+  TargetType.sync().then(() => {
+    return TargetType.bulkCreate([
+      { code: 'post' },
+      { code: 'comment' },
+      { code: 'user' },
+    ], {
+      ignoreDuplicates: true, // 중복 데이터 무시
+    });
+  }).catch((err) => {
+    console.error('💥 TargetType 초기값 삽입 오류:', err);
+  });
+
   return TargetType;
 };
