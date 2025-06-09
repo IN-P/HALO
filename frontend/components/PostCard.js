@@ -262,23 +262,7 @@ const PostCard = ({ post }) => {
                 </div>
               )}
             </div>
-            {!isMine ? (
-              <button style={menuBtnStyle} onClick={() => setShowReportForm(prev => !prev)}>
-                <FaEllipsisH />
-              </button>
-            ) : (
-              <div style={{ position: 'relative' }} ref={menuRef}>
-                <button style={menuBtnStyle} onClick={() => setShowMenu((v) => !v)}>
-                  <FaEllipsisH />
-                </button>
-                {showMenu && (
-                  <div style={menuDropdownStyle}>
-                    {!isRegram && <button style={menuItemStyle} onClick={onEdit}>수정</button>}
-                    <button style={{ ...menuItemStyle, color: 'red' }} onClick={() => { onDelete(); setShowMenu(false); }}>삭제</button>
-                  </div>
-                )}
-              </div>
-            )}
+
           </div>
 
 
