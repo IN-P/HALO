@@ -11,7 +11,7 @@ import MySettingPassword from "./MySettingPassword";
 import MySettingFollowers from "./MySettingFollowers";
 import MySettingFollowings from "./MySettingFollowings";
 
-const MySettingMain = ({ data, onClose, reload }) => {
+const MySettingMain = ({ data, onClose, reload, reloadLogInUser }) => {
   const [selectedTab, setSelectedTab] = useState("profile");
 
   useEffect(() => {
@@ -58,7 +58,7 @@ const MySettingMain = ({ data, onClose, reload }) => {
             </span>
           </div>
 
-          {selectedTab === "profile" && <MySettingProfile data={data} reload={reload} />}
+          {selectedTab === "profile" && <MySettingProfile data={data} reload={reload} reloadLogInUser={reloadLogInUser} />}
           {selectedTab === "password" && <MySettingPassword data={data} />}
           {selectedTab === "block" && <MySettingBlock data={data} />}
           {selectedTab === "achievement" && <MySettingAchievement data={data} />}

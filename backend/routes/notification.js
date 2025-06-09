@@ -99,4 +99,34 @@ router.patch("/:id/read", async( req, res, next) => {
   }
 });
 
+router.patch('/readall/:userId', async (req, res, next) => {
+  try {
+    await Notification.update(
+      { is_read: true },
+      { where: { users_id: req.params.userId } }
+    );
+
+    // 읽음 처리 후, 다시 전체 알림 조회
+    const notifications = await Notification.findAll({
+      where: { users_id: req.params.userId },
+      include: [
+        {
+          model: TargetType,
+          attributes: ['id', 'code'],
+        },
+        {
+          model: User,
+          attributes: ['id', 'nickname'],
+        },
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+
+    res.status(200).json(notifications); // 수정된 알림 목록 반환
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+
 module.exports = router;

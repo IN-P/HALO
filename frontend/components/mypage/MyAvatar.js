@@ -1,5 +1,4 @@
 import React from "react";
-import { Avatar } from "antd";
 import { CameraOutlined } from "@ant-design/icons";
 
 const MyAvatar = ({ data }) => {
@@ -41,11 +40,11 @@ return (
         height: 256,
         borderRadius: "50%",
         overflow: "hidden",
-        backgroundColor: "#fff", // 흰색 배경 또는 원하는 배경색
+        backgroundColor: "#fff",
       }}
     >
       <img
-        src={data.profile_img}
+        src={`http://localhost:3065${data.profile_img}`}
         alt="profile"
         style={{
           width: "100%",

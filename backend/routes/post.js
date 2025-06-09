@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { Post, User, Image, Comment, Hashtag } = require('../models');
+const { Post, User, Image, Comment, Hashtag, ActiveLog } = require('../models'); // ActiveLog 준혁추가
 const { isLoggedIn } = require('./middlewares');
 
 // uploads 폴더 생성
@@ -69,6 +69,15 @@ router.post('/', isLoggedIn, async (req, res, next) => {
       ],
     });
 
+    // 활동 내역 생성 - 준혁추가
+    await ActiveLog.create({
+      action: "CREATE",
+      target_id: post.id,
+      users_id: req.user.id,
+      target_type_id: 1,
+    })
+    // 준혁 추가
+
     res.status(201).json(fullPost);
   } catch (error) {
     console.error(error);
@@ -113,6 +122,15 @@ router.delete('/:postId', isLoggedIn, async (req, res, next) => {
         ]
       });
     }
+
+    // 활동 내역 추가 - 준혁 추가
+    await ActiveLog.create({
+      action: "DELETE",
+      target_id: req.params.postId,
+      users_id: req.user.id,
+      target_type_id: 1,
+    });
+    // 준혁 추가
 
     res.status(200).json({
       PostId: parseInt(req.params.postId, 10),
@@ -164,6 +182,20 @@ router.patch('/:postId', isLoggedIn, async (req, res, next) => {
         }
       }
     }
+
+    // 활동 내역 변경 - 준혁 추가
+    const log = await ActiveLog.findOne({
+      where: {
+        target_id: post.id,
+        users_id: req.user.id,
+        target_type_id: 1,
+      }
+    });
+    if (!log) { return res.status(403).send("해당되는 기록이 없습니다"); }
+    if (log.action !== "UPDATE") { await log.update({ action: "UPDATE" });
+    // 강제 업데이트
+    } else { log.changed('updatedAt', true); await log.save(); }
+    // 준혁 추가
 
     res.status(200).json({ PostId: post.id, content: req.body.content });
   } catch (error) {
@@ -221,6 +253,15 @@ router.patch('/:postId/like', isLoggedIn, async (req, res, next) => {
       ]
     });
 
+    // 활동 내역 추가 - 준혁 추가
+    await ActiveLog.create({
+      action: "LIKE",
+      target_id: post.id,
+      users_id: req.user.id,
+      target_type_id: 1,
+    });
+    // 준혁 추가
+
     res.status(200).json({ basePost: fullOrigin });
   } catch (error) {
     console.error(error);
@@ -253,6 +294,18 @@ router.delete('/:postId/like', isLoggedIn, async (req, res, next) => {
         { model: Comment, attributes: ['id'] },
       ]
     });
+
+    // 활동 내역 변경 - 준혁 추가
+    const log = await ActiveLog.findOne({
+    where: {
+      action: "LIKE",
+      target_id: originPost.id,
+      users_id: req.user.id,
+      target_type_id: 1,
+    } });
+    if (!log) { return res.status(403).send("해당되는 기록이 없습니다");}
+    await log.update({ action: "UNLIKE" });
+    // 준혁 추가
 
     res.status(200).json({ basePost: fullOrigin });
   } catch (error) {
