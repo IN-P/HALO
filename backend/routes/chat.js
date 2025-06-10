@@ -8,9 +8,9 @@ const { ChatRoom, User, ChatMessage, ChatRoomExit,Sequelize } = require('../mode
 const { isLoggedIn } = require('./middlewares'); // 로그인 미들웨어
 const { io, socketMap } = require('../server');
 
+/////////////////////////////////////////////////////////////////////////////////
 //1. 채팅방 관련 라우트
 //1.1 새로운 채팅방 생성 또는 기존 채팅방 조회 (POST /)
-
 router.post('/', isLoggedIn, async (req, res, next) => {
   try {
     const user1_id = req.user.id;
@@ -130,6 +130,7 @@ if (Array.isArray(sortedIds) && sortedIds.length === 2) {
   }
 });
 
+
 router.get('/', isLoggedIn, async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -228,8 +229,8 @@ router.patch('/:chatRoomId/exit', isLoggedIn, async (req, res, next) => {
         user2_exited_at: exitedAt, // 여기에 직접 명시
       }, {
         where: { chat_rooms_id: chatRoomId },
-        // fields: ['user2_id_active', 'user2_exited_at'], // 필요없을 가능성 높음
       });
+      ///////////////
       console.log(`[PATCH /:chatRoomId/exit] user2_id_active false 설정, user2_exited_at=${exitedAt}`);
     } else {
       console.log(`[PATCH /:chatRoomId/exit] 권한 없음: userId=${userId}는 해당 채팅방에 참여하고 있지 않음.`);

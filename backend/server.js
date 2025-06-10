@@ -61,12 +61,61 @@ io.on('connection', (socket) => {
     });
   });
 
-  socket.on('leave_room', (userId) => {
-    if (socketMap[userId]) {
-      socketMap[userId].currentRoomId = null;
-      console.log(`🚪 유저 ${userId} 채팅방 나감 → currentRoomId null 처리`);
+socket.on('leave_room', async (userId) => {
+  if (socketMap[userId]) {
+    const currentRoomId = socketMap[userId].currentRoomId;
+    socketMap[userId].currentRoomId = null;
+    console.log(`🚪 유저 ${userId} 채팅방 나감 → currentRoomId null 처리`);
+
+    if (currentRoomId) {
+      try {
+        const parts = currentRoomId.split('-');
+        const user1Id = parseInt(parts[1]);
+        const user2Id = parseInt(parts[2]);
+        const sortedUser1Id = Math.min(user1Id, user2Id);
+        const sortedUser2Id = Math.max(user1Id, user2Id);
+
+        const chatRoom = await ChatRoom.findOne({
+          where: {
+            user1_id: sortedUser1Id,
+            user2_id: sortedUser2Id,
+          },
+        });
+
+        if (!chatRoom) return;
+
+        const senderId = userId;
+        const receiverId = senderId === sortedUser1Id ? sortedUser2Id : sortedUser1Id;
+
+        const systemMessage = await ChatMessage.create({
+          rooms_id: chatRoom.id,
+          sender_id: senderId,
+          content: '상대방이 채팅을 종료했습니다.',
+          is_read: false,
+        });
+
+        const messageWithUser = await ChatMessage.findByPk(systemMessage.id, {
+          include: [{ model: User, attributes: ['id', 'nickname', 'profile_img'] }],
+        });
+
+        const messageToSend = {
+          ...messageWithUser.toJSON(),
+          roomId: currentRoomId,
+          is_read: false,
+        };
+
+        // 상대방이 접속해 있다면 메시지 보내기
+        if (socketMap[receiverId]) {
+          const receiverSocketId = socketMap[receiverId].socketId;
+          io.to(receiverSocketId).emit('receive_message', messageToSend);
+          console.log(`📩 상대방(${receiverId})에게 종료 메시지 전송 완료`);
+        }
+      } catch (err) {
+        console.error('❌ leave_room 처리 중 에러:', err);
+      }
     }
-  });
+  }
+});
 
   socket.on('join_room', async (roomId, userId) => {
     socket.join(roomId);
@@ -180,7 +229,25 @@ if (!isOpponentActive) {
   if (socketMap[senderId]) {
     const senderSocketId = socketMap[senderId].socketId;
     const sortedIds = [chatRoomInstance.user1_id, chatRoomInstance.user2_id].sort((a, b) => a - b);
+    ///////////////////////////////////////////////////////////////
+    // const newMessage = await ChatMessage.create({
+    //     rooms_id: chatRoomInstance.id,
+    //     sender_id: senderId,
+    //     content: '상대방이 채팅을 종료했습니다.',
+    //     is_read: false,
+    //   });
+    //   const messageWithUser = await ChatMessage.findByPk(newMessage.id, {
+    //     include: [{ model: User, attributes: ['id', 'nickname', 'profile_img'] }],
+    //   });
 
+    //   const messageToSend = {
+    //     ...messageWithUser.toJSON(),
+    //     roomId,
+    //     is_read: false,
+    //   };
+
+    //   io.to(socket.id).emit('receive_message', messageToSend);
+    //////////////////////////////////////////////////////////////////
     io.to(senderSocketId).emit('chat_room_closed', {
       roomId: `chat-${sortedIds[0]}-${sortedIds[1]}`,
       message: '상대방이 채팅방을 나간 상태입니다. 채팅을 새로 시작해야 합니다.',
