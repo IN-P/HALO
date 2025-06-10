@@ -20,15 +20,25 @@ const AppLayout = ({ children }) => {
   //
   // 준혁 추가 : 알림창 토글
   const [showNotification, setShowNotification] = useState(false);
-  const onToggleNotification = () => {
-  setShowNotification((prev) => { const next = !prev; if (!prev && userId) {
+const onToggleNotification = () => {
+  setShowNotification((prev) => {
+    const next = !prev;
+    if (!prev && userId) {
       dispatch({
         type: IS_READ_TRUE_LOADING,
         data: userId,
-      }); }
+      });
+      // 읽음 처리 후 알림 목록 재요청
+      setTimeout(() => {
+        dispatch({
+          type: LOAD_USER_NOTIFICATION_REQUEST,
+          data: userId,
+        });
+      }, 300); // 0.3초 후 재요청 (API 처리 시간 고려)
+    }
     return next;
-    });
-  };
+  });
+};
   //
   // 해당하는 유저 아이디의 알림 가져오기
   const { notification } = useSelector((state) => state.notification_JH);

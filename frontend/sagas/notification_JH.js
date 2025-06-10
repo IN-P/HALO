@@ -28,7 +28,7 @@ function* loadNotification(action) {
 }
 
 function isReadTrueAPI(userId) {
-  return axios.put(`/notification/readall/${userId}`); 
+  return axios.patch(`/notification/read/${userId}`); 
 }
 function* isReadTrue(action) {
   try {

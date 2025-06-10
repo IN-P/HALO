@@ -81,25 +81,7 @@ router.get('/:userId', /*isLoggedIn,*/ async (req, res, next) => {
   }
 });
 
-// 알림의 id 값으로 읽음여부 업데이트하기
-router.patch("/:id/read", async( req, res, next) => {
-  try{
-    const notification = await Notification.findOne({
-      where: { id: req.params.id },
-    });
-    if(!notification) return res.status(404).send("알림이 존재하지 않습니다");
-
-    notification.is_read = true;
-    await notification.save();
-
-    res.status(200).json({ message: "읽음처리됨", notification});
-  } catch (error) {
-    console.error(error);
-    next(error);
-  }
-});
-
-router.patch('/readall/:userId', async (req, res, next) => {
+router.patch('/read/:userId', async (req, res, next) => {
   try {
     await Notification.update(
       { is_read: true },
@@ -122,7 +104,7 @@ router.patch('/readall/:userId', async (req, res, next) => {
       order: [['createdAt', 'DESC']],
     });
 
-    res.status(200).json(notifications); // 수정된 알림 목록 반환
+    res.status(200).json(notifications);
   } catch (error) {
     console.error(error);
     next(error);
