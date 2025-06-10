@@ -10,6 +10,10 @@ export const initialState = {
   isReadTrueLoading: false,
   isReadTrueDone: false,
   isReadTrueError: null,
+
+  deleteNotificationLoading: false,
+  deleteNotificationDone: false,
+  deleteNotificationError: null,
 };
 // 알림 불러오기
 export const LOAD_USER_NOTIFICATION_REQUEST = "LOAD_USER_NOTIFICATION_REQUEST";
@@ -20,6 +24,11 @@ export const LOAD_USER_NOTIFICATION_FAILURE = "LOAD_USER_NOTIFICATION_FAILURE";
 export const IS_READ_TRUE_LOADING = "IS_READ_TRUE_LOADING";
 export const IS_READ_TRUE_SUCCESS = "IS_READ_TRUE_SUCCESS";
 export const IS_READ_TRUE_FAILURE = "IS_READ_TRUE_FAILURE";
+
+// 알림 삭제
+export const DELETE_NOTIFICATION_LOADING = "DELETE_NOTIFICATION_LOADING";
+export const DELETE_NOTIFICATION_SUCCESS = "DELETE_NOTIFICATION_SUCCESS";
+export const DELETE_NOTIFICATION_FAILURE = "DELETE_NOTIFICATION_FAILURE";
 
 const notification_JH = (state = initialState, action) =>
   produce(state, (draft) => {

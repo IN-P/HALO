@@ -69,10 +69,10 @@ const Notification = ({ notification }) => {
     const diffHour = Math.floor(diffMin / 60);
     const diffDay = Math.floor(diffHour / 24);
 
-    if (diffMin < 1) return '방금 전';
-    if (diffMin < 60) return `${diffMin}분 전`;
-    if (diffHour < 24) return `${diffHour}시간 전`;
-    if (diffDay === 1) return '어제';
+    if (diffMin < 1) return '방금 전';  // 1분 미만
+    if (diffMin < 60) return `${diffMin}분 전`; // 60분 미만
+    if (diffHour < 24) return `${diffHour}시간 전`; // 24시간 미만
+    if (diffDay === 1) return '어제'; // 하루 전
     return `${diffDay}일 전`;
   };
 
