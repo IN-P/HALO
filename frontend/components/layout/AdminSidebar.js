@@ -56,7 +56,7 @@ const AdminSidebar = () => {
             <Link href="/admin/reports">신고 관리</Link>
           </Menu.Item>,
           <Menu.Item key="inquiries" icon={<MessageOutlined />}>
-            <Link href="/admin/inquiries">문의 관리</Link>
+            <Link href="/admin/inquiry/inquiry">문의 관리</Link>
           </Menu.Item>,
           <Menu.Item key="security" icon={<LockOutlined />}>
             <Link href="/admin/security">보안 설정</Link>
@@ -92,7 +92,7 @@ const AdminSidebar = () => {
       case 4: // 문의 관리자
         items.push(
           <Menu.Item key="inquiries" icon={<MessageOutlined />}>
-            <Link href="/admin/inquiries">문의 관리</Link>
+            <Link href="/admin/inquiry/inquiry">문의 관리</Link>
           </Menu.Item>
         );
         break;
