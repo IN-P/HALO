@@ -8,8 +8,6 @@ const { isLoggedIn } = require('./middlewares');
 const { Op } = require('sequelize');
 const { sendNotification } = require('../notificationSocket');
 
-const { sendNotification } = require('../notificationSocket'); // 준혁추가 실시간 알림
-
 // uploads 폴더 생성
 try {
   fs.accessSync('uploads/post');
