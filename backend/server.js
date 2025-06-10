@@ -167,6 +167,28 @@ io.on('connection', (socket) => {
         console.log(`✅ ChatRoomExit 생성됨 for room ${chatRoomInstance.id}`);
       }
 
+      const chatRoomExit = await ChatRoomExit.findOne({
+  where: { chat_rooms_id: chatRoomInstance.id }
+});
+
+const isSenderUser1 = chatRoomInstance.user1_id === senderId;
+const isOpponentActive = isSenderUser1 ? chatRoomExit.user2_id_active : chatRoomExit.user1_id_active;
+
+console.log(`[send_message] isOpponentActive=${isOpponentActive}, user1_id_active=${chatRoomExit.user1_id_active}, user2_id_active=${chatRoomExit.user2_id_active}`);
+
+if (!isOpponentActive) {
+  if (socketMap[senderId]) {
+    const senderSocketId = socketMap[senderId].socketId;
+    const sortedIds = [chatRoomInstance.user1_id, chatRoomInstance.user2_id].sort((a, b) => a - b);
+
+    io.to(senderSocketId).emit('chat_room_closed', {
+      roomId: `chat-${sortedIds[0]}-${sortedIds[1]}`,
+      message: '상대방이 채팅방을 나간 상태입니다. 채팅을 새로 시작해야 합니다.',
+    });
+    console.log(`[send_message] chat_room_closed emit → senderId=${senderId}`);
+  }
+}
+
       const newMessage = await ChatMessage.create({
         rooms_id: chatRoomInstance.id,
         sender_id: senderId,

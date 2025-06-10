@@ -34,6 +34,19 @@ const ChatRoom = ({
   }, [onClose]);
 
   useEffect(() => {
+  const handleChatRoomClosed = (data) => {
+    console.log('💥 chat_room_closed 수신:', data);
+    alert(data.message || '상대방이 채팅방을 나갔습니다. 채팅을 새로 시작해야 합니다.');
+  };
+
+  socket.on('chat_room_closed', handleChatRoomClosed);
+
+  return () => {
+    socket.off('chat_room_closed', handleChatRoomClosed);
+  };
+},[roomId]);
+
+  useEffect(() => {
   const handleReadUpdate = (data) => {
     console.log('✅ read_update 수신:', data);
 
@@ -52,7 +65,18 @@ const ChatRoom = ({
   };
 }, [roomId, onReadUpdate]);
 
-
+useEffect(() => {
+  if (roomId) {
+    socket.emit('join_room', roomId);
+    console.log(`🔗 join_room emit: ${roomId}`);
+  }
+  return () => {
+    if (roomId) {
+      socket.emit('leave_room', me.id);
+      console.log(`🚪 leave_room emit: ${roomId}`);
+    }
+  };
+}, [roomId]);
 
 
   const handleExitConfirm = () => {

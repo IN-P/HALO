@@ -114,6 +114,21 @@ const handleReceive = useCallback((data) => {
     alert(`채팅방 나가기 실패: ${data.message || '알 수 없는 오류'}`);
   }, []);
 
+  useEffect(() => {
+  const handleConnect = () => {
+    console.log('🟢 소켓 connected, login emit 보냄:', me?.id);
+    if (me && me.id) {
+      socket.emit('login', me.id);
+    }
+  };
+
+  socket.on('connect', handleConnect);
+
+  return () => {
+    socket.off('connect', handleConnect);
+  };
+}, [me]);
+
 useEffect(() => {
   socket.on('receive_message', handleReceive);
   socket.on('exit_room_success', handleExitSuccess);
@@ -134,12 +149,18 @@ useEffect(() => {
   };
 
   socket.on('new_chat_room_created', handleNewChatRoom);
+  const handleChatRoomClosed = (data) => {
+    console.log('💥 chat_room_closed 수신 (global ChatPage):', data);
+    alert(data.message || '상대방이 채팅방을 나갔습니다. 채팅을 새로 시작해야 합니다.');
+  };
+  socket.on('chat_room_closed', handleChatRoomClosed);
 
   return () => {
     socket.off('receive_message', handleReceive);
     socket.off('exit_room_success', handleExitSuccess);
     socket.off('exit_room_failed', handleExitFailed);
     socket.off('read_update', handleReadUpdate);
+    socket.off('chat_room_closed', handleChatRoomClosed);
 
     // ⭐ clean up 도 같이
     socket.off('new_chat_room_created', handleNewChatRoom);

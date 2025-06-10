@@ -242,6 +242,26 @@ router.patch('/:chatRoomId/exit', isLoggedIn, async (req, res, next) => {
     const updatedChatRoomExit = await ChatRoomExit.findOne({ where: { chat_rooms_id: chatRoomId } });
     console.log(`[PATCH /:chatRoomId/exit] 업데이트된 ChatRoomExit 상태 조회 완료:`, updatedChatRoomExit.toJSON());
 
+    const user1Active = updatedChatRoomExit.user1_id_active;
+    const user2Active = updatedChatRoomExit.user2_id_active;
+
+    if (user1Active || user2Active) {
+  const opponentId = (chatRoom.user1_id === userId) ? chatRoom.user2_id : chatRoom.user1_id;
+
+  if (socketMap[opponentId]) {
+    const sortedIds = [chatRoom.user1_id, chatRoom.user2_id].sort((a, b) => a - b);
+    const opponentSocketId = socketMap[opponentId].socketId;
+
+  io.to(opponentSocketId).emit('chat_room_closed', {
+    roomId: `chat-${sortedIds[0]}-${sortedIds[1]}`,
+    message: '상대방이 채팅방을 나갔습니다. 채팅을 새로 시작해야 합니다.'
+  });
+  console.log(`[PATCH /:chatRoomId/exit] 남아있는 유저에게 알림 emit → opponentId=${opponentId}`);
+} else {
+  console.log(`[PATCH /:chatRoomId/exit] socketMap[opponentId=${opponentId}] 없음 → chat_room_closed emit 생략`);
+}
+}
+
     // 두 사용자 모두 나갔는지 확인
     if (!updatedChatRoomExit.user1_id_active && !updatedChatRoomExit.user2_id_active) {
   console.log(`[PATCH /:chatRoomId/exit] 유저 2명 모두 나감 → 채팅방 및 메시지 삭제 시작.`);
@@ -339,35 +359,37 @@ console.log(`[POST /message] roomsId 변환 확인 → Number: ${roomsIdNum}`);
       return res.status(403).send('채팅방에 참여하고 있지 않아.');
     }
 
-    const roomId = `chat-${[chatRoom.user1_id, chatRoom.user2_id].sort((a, b) => a - b).join('-')}`;
+        const chatRoomExit = await ChatRoomExit.findOne({
+      where: { chat_rooms_id: roomsIdNum }
+    });
 
-    console.log(`[POST /message] senderId=${senderId}, chatRoom.user1_id=${chatRoom.user1_id}, chatRoom.user2_id=${chatRoom.user2_id}`);
-    console.log(`[POST /message] senderId typeof=${typeof senderId}, senderId=${JSON.stringify(senderId)}`);
-
-let chatRoomExit = await ChatRoomExit.findOne({
-  where: { chat_rooms_id: roomsIdNum  }
-});
-
-// 2️⃣ 없으면 생성
-if (!chatRoomExit) {
-  chatRoomExit = await ChatRoomExit.create({
-    chat_rooms_id: roomsIdNum,
-    user1_id_active: true,
-    user2_id_active: true,
-    user1_exited_at: null,
-    user2_exited_at: null,
-  });
-  console.log(`[POST /message] ChatRoomExit 새로 생성 (두 사용자 active=true)`);
-} else {
-  // 강제 update 사용
-  
+    
 const senderFieldToUpdate = (chatRoom.user1_id === senderId) ? 'user1_id_active' : 'user2_id_active';
 const senderExitedAtField = (senderFieldToUpdate === 'user1_id_active') ? 'user1_exited_at' : 'user2_exited_at';
 
 const receiverFieldToUpdate = (chatRoom.user1_id === senderId) ? 'user2_id_active' : 'user1_id_active';
 const receiverExitedAtField = (receiverFieldToUpdate === 'user1_id_active') ? 'user1_exited_at' : 'user2_exited_at';
 
-// 👉 sender 쪽 active 복구
+// 2️⃣ emit 판단
+const isSenderUser1 = chatRoom.user1_id === senderId;
+const isOpponentActive = isSenderUser1 ? chatRoomExit.user2_id_active : chatRoomExit.user1_id_active;
+
+console.log(`[POST /message] isOpponentActive=${isOpponentActive}, chatRoomExit.user1_id_active=${chatRoomExit.user1_id_active}, chatRoomExit.user2_id_active=${chatRoomExit.user2_id_active}`);
+
+if (!isOpponentActive) {
+  const sortedIds = [chatRoom.user1_id, chatRoom.user2_id].sort((a, b) => a - b);
+
+  if (socketMap[senderId]) {
+    const senderSocketId = socketMap[senderId].socketId;
+    io.to(senderSocketId).emit('chat_room_closed', {
+      roomId: `chat-${sortedIds[0]}-${sortedIds[1]}`,
+      message: '상대방이 채팅방을 나간 상태입니다. 채팅을 새로 시작해야 합니다.',
+    });
+    console.log(`[POST /message] chat_room_closed emit → senderId=${senderId}`);
+  }
+}
+
+// 3️⃣ 그 다음 sender active 복구 (update)
 await ChatRoomExit.update(
   {
     [senderFieldToUpdate]: true,
@@ -378,19 +400,11 @@ await ChatRoomExit.update(
   }
 );
 
-// 👉 receiver 쪽도 active 복구
-await ChatRoomExit.update(
-  {
-    [receiverFieldToUpdate]: true,
-    [receiverExitedAtField]: null,
-  },
-  {
-    where: { chat_rooms_id: roomsIdNum },
-  }
-);
+    const roomId = `chat-${[chatRoom.user1_id, chatRoom.user2_id].sort((a, b) => a - b).join('-')}`;
 
-console.log(`[POST /message] ChatRoomExit sender(${senderFieldToUpdate})/receiver(${receiverFieldToUpdate}) active 복구 완료`);
-}
+    console.log(`[POST /message] senderId=${senderId}, chatRoom.user1_id=${chatRoom.user1_id}, chatRoom.user2_id=${chatRoom.user2_id}`);
+    console.log(`[POST /message] senderId typeof=${typeof senderId}, senderId=${JSON.stringify(senderId)}`);
+
 
     // 1. 메시지 저장
     const newMessage = await ChatMessage.create({
@@ -523,6 +537,8 @@ router.get('/message/:roomId', isLoggedIn, async (req, res, next) => {
     const chatRoomExit = await ChatRoomExit.findOne({
   where: { chat_rooms_id: roomIdAsNumber }
 });
+
+
 
 // 나간 시점 (exitedAt) 가져오기
 let exitedAt = null;
