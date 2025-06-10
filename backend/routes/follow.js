@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { Follow, User } = require('../models');
+const { Follow, User, ActiveLog, Notification } = require('../models'); // ActiveLog, Notification 준혁 추가
 const { where } = require('sequelize');
+const { isLoggedIn } = require('./middlewares');
 
-
-// 팔로우하기 http://localhost:3065/api/follow
-router.post('/', async (req, res, next) => {
+// 팔로우하기 http://localhost:3065/follow
+router.post('/',isLoggedIn, async (req, res, next) => {
+  console.log('📥 follow 요청 도착');
+  console.log('📦 req.body:', req.body);
+  console.log('👤 req.user:', req.user);
   console.log('......req.body:', req.body);
 
   try {
@@ -29,6 +32,29 @@ router.post('/', async (req, res, next) => {
       from_user_id: fromUserId,
       to_user_id: toUserId,
     });
+
+    // 활동 내역 생성 - 준혁 추가
+    await ActiveLog.create({
+      action: "FOLLOW",
+      target_id: toUserId,
+      users_id: fromUserId,
+      target_type_id: 3,
+    });
+    // 준혁 추가
+
+    // 알림 생성 - 준혁 추가
+    const fromUserName = await User.findOne({
+      where: { id : fromUserId },
+      attributes: [ "nickname" ],
+    });
+
+    await Notification.create({
+      content: `${fromUserName.nickname} 님이 당신을 팔로우 했습니다`,
+      users_id: toUserId,
+      target_type_id: 3
+    });
+    // 준혁 추가
+
     res.status(201).json(follow);
   } catch (err) {
     console.error(err);
@@ -37,7 +63,7 @@ router.post('/', async (req, res, next) => {
 });
 
 
-// 팔로우 삭제 http://localhost:3065/api/following/2
+// 팔로우 삭제 http://localhost:3065/following/2
 router.delete('/following/:toUserId', async (req, res, next) => {
   try {
     const fromUserId = req.user.id;
@@ -56,6 +82,20 @@ router.delete('/following/:toUserId', async (req, res, next) => {
     }
 
     await existing.destroy();
+
+    // 활동 내역 변경 - 준혁 추가
+    const log = await ActiveLog.findOne({
+      where: {
+        action: "FOLLOW",
+        target_id: toUserId,
+        users_id: fromUserId,
+        target_type_id: 3,
+      },
+    });
+    if (!log) { return res.status(403).send("해당되는 기록이 없습니다"); }
+    await log.update({ action: "UNFOLLOW" });
+    // 준혁 추가
+
     res.status(200).json({ message: '팔로우가 취소되었습니다' });
   } catch (err) {
     console.error(err);
@@ -85,6 +125,27 @@ router.delete('/follower/:fromUserId', async (req, res, next) => {
     }
 
     await existing.destroy();
+
+    // 활동 내역 추가 - 준혁 추가
+    await ActiveLog.create({
+      action: "REMOVE_FOLLOWER",
+      target_id: fromUserId,
+      users_id: toUserId,
+      target_type_id: 3,
+    });
+    // 활동 내역 변경
+    const log = await ActiveLog.findOne({
+      where: {
+        action: "FOLLOW",
+        target_id: toUserId,
+        users_id: fromUserId,
+        target_type_id: 3,
+      },
+    });
+    if (!log) { return res.status(403).send("해당되는 기록이 없습니다"); }
+    await log.update({ action: "REMOVED_FOLLOW" });
+    // 준혁 추가
+
     res.status(200).json({ message: '해당 팔로워를 제거했습니다.' });
   } catch (err) {
     console.error(err);
@@ -93,21 +154,19 @@ router.delete('/follower/:fromUserId', async (req, res, next) => {
 });
 
 
-// 팔로잉 목록조회 http://localhost:3065/api/followings
+// 팔로잉 목록조회 http://localhost:3065/follow/followings
 router.get('/followings', async (req, res, next) => {
   try {
     const fromUserId = req.user.id;
     const followings = await Follow.findAll({
       where: { from_user_id: fromUserId },
-      include: [
-        {
-          model: User,
-          as: 'Followings',
-          attributes: ['id', 'nickname'],
-        },
-      ],
+      include: [{
+        model: User,
+        as: 'Followers', // ✅ "to_user_id" 기준으로 '내가 팔로우한 대상'을 가져오려면
+        attributes: ['id', 'nickname', 'profile_img'],
+      }],
     });
-    res.status(200).json(followings.map(f => f.Followings));
+    res.status(200).json(followings.map(f => f.Followers)); // ✅ "팔로우 대상"
   } catch (err) {
     console.error(err);
     next(err);
@@ -119,16 +178,15 @@ router.get('/followings', async (req, res, next) => {
 router.get('/followers', async (req, res, next) => {
   try {
     const toUserId = req.user.id;
-
     const followers = await Follow.findAll({
       where: { to_user_id: toUserId },
       include: [{
         model: User,
-        as: 'Followers',
-        attributes: ['id', 'nickname'],
+        as: 'Followings', // ✅ "from_user_id" 기준으로 '나를 팔로우한 사람'을 가져오려면
+        attributes: ['id', 'nickname', 'profile_img'],
       }],
     });
-    res.status(200).json(followers.map(f => f.Followers));
+    res.status(200).json(followers.map(f => f.Followings)); // ✅ "팔로워"
   } catch (err) {
     console.error(err);
     next(err);

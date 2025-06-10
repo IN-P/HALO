@@ -1,60 +1,61 @@
-import React, { useState, useEffect } from "react";
-import axios from 'axios';
+import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import { useAuth } from "../hooks/useAuth";// 전역 로그인 상태 훅
+import { useSelector, useDispatch } from "react-redux";
+import axios from "axios";
+import { FOLLOW_REQUEST, UNFOLLOW_REQUEST } from "../reducers/follow_YB";
+import { useAuth } from "../hooks/useAuth";
 
-const FollowButton = ({ toUserId }) => {
-  const { user: currentUser } = useAuth(); // 현재 로그인 유저 정보
-  const [isFollowing, setIsFollowing] = useState(null); //현재 팔로우상태 초기값
-  const [loading, setLoading] = useState(true); //로딩상태
+const FollowButton = ({ toUserId, onRefetch }) => { 
+  const dispatch = useDispatch();
+  const { user: currentUser, loading } = useAuth();
+  const followLoading = useSelector(
+    (state) => state.follow_YB?.followLoading || false
+  );
+  const [isFollowing, setIsFollowing] = useState(false);
 
-  useEffect(()=>{
-    const fetchFollowStatus = async () =>{
-      if (!currentUser) return;
+  useEffect(() => {
+    const checkFollow = async () => {
       try {
-        const res = await axios.get(`http://localhost:3065/follow/check/${toUserId}`,
-          {withCredentials: true}
-        );
+        const res = await axios.get(`/follow/check/${toUserId}`, {
+          withCredentials: true,
+        });
         setIsFollowing(res.data.isFollowing);
-      }catch(err){
-        console.error("팔로우 상태 확인 실패",err);
-        setIsFollowing(false);
-      }finally{
-        setLoading(false);
+        console.log("🔎 팔로우 상태 확인:", res.data.isFollowing); 
+      } catch (err) {
+        console.error("❌ 팔로우 상태 확인 실패", err);
       }
     };
-    fetchFollowStatus();   
-  }, [toUserId, currentUser]);
 
-  const handleFollow = async () => {
-    try {
-      if (isFollowing) {
-        await axios.delete(`http://localhost:3065/follow/following/${toUserId}`,{withCredentials: true});
-      } else {
-        await axios.post(`http://localhost:3065/follow`, { toUserId },{withCredentials: true});
-      }
-      setIsFollowing(!isFollowing);
-    } catch (err) {
-      console.error('팔로우 처리 실패', err.response?.data?.message || err.message);
+    if (currentUser && toUserId !== currentUser.id) {
+      checkFollow(); 
     }
+  }, [toUserId, currentUser,onRefetch]); 
+
+  if (loading || !currentUser || currentUser.id === toUserId) return null;
+
+  const handleClick = () => {
+    console.log("📤 toUserId 전송:", toUserId);
+    if (isFollowing) {
+      dispatch({ type: UNFOLLOW_REQUEST, data: toUserId }); 
+      setIsFollowing(false); 
+    } else {
+      dispatch({ type: FOLLOW_REQUEST, data: toUserId }); 
+      setIsFollowing(true); 
+    }
+
+    onRefetch?.(); 
   };
 
-  if (!currentUser || currentUser.id === toUserId) return null;
-  if (loading) return <span>로딩 중...</span>;
-
   return (
-    <button onClick={handleFollow}>
-      {isFollowing ? '언팔로우' : '팔로우'}
+    <button onClick={handleClick} disabled={followLoading}>
+      {followLoading ? "처리 중..." : isFollowing ? "언팔로우" : "팔로우"} {/* 율비 */}
     </button>
   );
 };
 
 FollowButton.propTypes = {
   toUserId: PropTypes.number.isRequired,
-};
-
-FollowButton.defaultProps = {
-  initialIsFollowing: false,
+  onRefetch: PropTypes.func, 
 };
 
 export default FollowButton;

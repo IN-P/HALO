@@ -3,17 +3,45 @@ import createSagaMiddleware from 'redux-saga';
 import { composeWithDevTools } from 'redux-devtools-extension';
 import { createWrapper } from 'next-redux-wrapper';
 import rootSaga from '../sagas';
-import post_IN from '../reducers/post_IN'; // 인
-import comment_IN from '../reducers/comment_IN'; // 인
-import user_YG from '../reducers/user_YG'; // 윤기
-import chatReducer from '../reducers/chatReducer_JW'; // 재원
+import post_IN from '../reducers/post_IN';
+import comment_IN from '../reducers/comment_IN';
+import hashtag_IN from '../reducers/hashtag_IN';
+import regram_IN from '../reducers/regram_IN';
+import bookmark_IN from '../reducers/bookmark_IN';
+import follow_YB from '../reducers/follow_YB'; 
+import report_YB from '../reducers/report_YB';
+import user_YG from '../reducers/user_YG'; 
+import chatReducer from '../reducers/chatReducer_JW'; 
+import profile_jh from '../reducers/profile_jh';
+import reportReducer from '../reducers/report_YB';
+import block from '../reducers/block'// 율비 추가
+import notification_JH from '../reducers/notification_JH' // 준혁추가
+import quiz from '../reducers/quiz_GM';
+import adminQuiz from '../reducers/adminPlayer_GM';
+import adminPlayer from '../reducers/adminPlayer_GM';
+import playerDraw from '../reducers/playerDraw_GM'; 
+
 
 const rootReducer = combineReducers({
-  post_IN, // 인
-  comment_IN, // 인
-  user_YG, // 윤기
-  chat: chatReducer, // 재원
-  // 다른 리듀서들 추가 가능
+  post_IN,
+  comment_IN, 
+  hashtag_IN,
+  regram_IN,
+  bookmark_IN,
+  follow_YB,
+  report_YB: reportReducer,
+  block, // 율비
+  report_YB,
+  block,
+  user_YG, 
+  profile_jh,
+  notification_JH,
+  chat: chatReducer,
+  quiz,
+  adminQuiz,
+  adminPlayer,
+  playerDraw,
+
 });
 
 const configureStore = () => {

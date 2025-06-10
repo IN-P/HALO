@@ -12,6 +12,7 @@ export const LOG_OUT_FAILURE = 'LOG_OUT_FAILURE';
 export const SIGN_UP_REQUEST = 'SIGN_UP_REQUEST';
 export const SIGN_UP_SUCCESS = 'SIGN_UP_SUCCESS';
 export const SIGN_UP_FAILURE = 'SIGN_UP_FAILURE';
+export const SIGN_UP_RESET = 'SIGN_UP_RESET';
 
 export const LOAD_MY_INFO_REQUEST = 'LOAD_MY_INFO_REQUEST';
 export const LOAD_MY_INFO_SUCCESS = 'LOAD_MY_INFO_SUCCESS';
@@ -91,6 +92,10 @@ const reducer = (state = initialState, action) => produce(state, (draft) => {
       draft.signUpLoading = false;
       draft.signUpError = action.error;
       break;
+    case SIGN_UP_RESET:
+      draft.signUpDone = false;
+      draft.signUpError = null;
+    break;
 
     // 내 정보 불러오기
     case LOAD_MY_INFO_REQUEST:
