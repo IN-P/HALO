@@ -115,16 +115,16 @@ function* removePost(action) {
   }
 }
 
-function editPostAPI({ postId, content, images, isPublic }) {
+function editPostAPI({ postId, content, images, private_post }) {
   return axios.patch(
     `http://localhost:3065/post/${postId}`,
-    { content, images, isPublic },
+    { content, images, private_post },
     { withCredentials: true }
   );
 }
 function* editPost(action) {
   try {
-    const result = yield call(editPostAPI, action.data); // data에 images 포함!
+    const result = yield call(editPostAPI, action.data);
     yield put({ type: EDIT_POST_SUCCESS, data: result.data });
   } catch (error) {
     yield put({

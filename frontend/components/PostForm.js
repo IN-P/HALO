@@ -28,7 +28,10 @@ const PostForm = ({ editMode = false, originPost }) => {
       : []
   );
   const [content, setContent] = useState(editMode && originPost ? originPost.content : '');
-  const [isPublic, setIsPublic] = useState(editMode && originPost ? originPost.visibility === 'public' : true);
+  // **여기!**
+  const [private_post, setPrivatePost] = useState(
+    editMode && originPost ? !!originPost.private_post : false
+  );
 
   // 글 작성/수정 성공시 폼 리셋
   useEffect(() => {
@@ -51,7 +54,7 @@ const PostForm = ({ editMode = false, originPost }) => {
     if (editMode && originPost) {
       setContent(originPost.content || '');
       setOldImages(Array.isArray(originPost.Images) ? originPost.Images.map(img => img.src) : []);
-      setIsPublic(originPost.visibility === 'public');
+      setPrivatePost(!!originPost.private_post); // 여기!
       dispatch({ type: RESET_IMAGE_PATHS });
     }
   }, [editMode, originPost, dispatch]);
@@ -67,7 +70,8 @@ const PostForm = ({ editMode = false, originPost }) => {
   }, [dispatch]);
   const onRemoveImage = useCallback(index => dispatch({ type: REMOVE_IMAGE, index }), [dispatch]);
   const onRemoveOldImage = idx => setOldImages(prev => prev.filter((_, i) => i !== idx));
-  const onTogglePublic = useCallback(checked => setIsPublic(checked), []);
+  // 공개범위 토글
+  const onTogglePrivate = useCallback(checked => setPrivatePost(!checked), []);
 
   const onSubmit = useCallback(() => {
     if (!content.trim()) return message.warning('내용을 입력해주세요!');
@@ -83,7 +87,7 @@ const PostForm = ({ editMode = false, originPost }) => {
           postId: originPost.id,
           content,
           images: uniqueImages,
-          isPublic,
+          private_post, // 여기!
         },
       });
     } else {
@@ -92,11 +96,11 @@ const PostForm = ({ editMode = false, originPost }) => {
         data: {
           content,
           images: imagePaths,
-          isPublic,
+          private_post, // 여기!
         },
       });
     }
-  }, [content, imagePaths, isPublic, dispatch, editMode, oldImages, originPost]);
+  }, [content, imagePaths, private_post, dispatch, editMode, oldImages, originPost]);
 
   return (
     <Form layout="vertical" style={{ padding: 24, background: '#fff', borderRadius: 8 }}
@@ -134,7 +138,15 @@ const PostForm = ({ editMode = false, originPost }) => {
         </div>
       )}
       <Form.Item label="공개 설정">
-        <Switch checked={isPublic} onChange={onTogglePublic} />
+        <Switch
+          checked={!private_post}
+          onChange={onTogglePrivate}
+          checkedChildren="전체공개"
+          unCheckedChildren="나만보기"
+        />
+        <span style={{ marginLeft: 12 }}>
+          {private_post ? '나만보기' : '전체공개'}
+        </span>
       </Form.Item>
       <Form.Item>
         <Button type="primary" htmlType="submit"
