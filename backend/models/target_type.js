@@ -36,6 +36,11 @@ module.exports = (sequelize, DataTypes) => {
       { code: 'post' },
       { code: 'comment' },
       { code: 'user' },
+      // 준혁 추가
+      { code: 'reply'},
+      { code: 'like' },
+      { code: 'retweet' },
+      //
     ], {
       ignoreDuplicates: true, // 중복 데이터 무시
     });

@@ -1,8 +1,10 @@
 // routes/comment.js
 const express = require('express');
 const router = express.Router();
-const { Comment, CommentPath, User, Post, ActiveLog } = require('../models'); // ActiveLog 준혁 추가
+const { Comment, CommentPath, User, Post, ActiveLog, Notification } = require('../models'); // ActiveLog 준혁 추가
 const { isLoggedIn } = require('./middlewares');
+
+const { sendNotification } = require('../notificationSocket'); // 준혁추가 실시간 알림   
 
 // 1. 기본 댓글 등록: POST /comment/post/:postId
 router.post('/post/:postId', isLoggedIn, async (req, res, next) => {
@@ -24,14 +26,35 @@ router.post('/post/:postId', isLoggedIn, async (req, res, next) => {
     // 댓글 등록 후 최신 댓글 카운트도 같이 응답!
     const totalComments = await Comment.count({ where: { post_id: post.id, is_deleted: false } });
 
-    // 활동 내역 생성 - 준혁 추가
+    // 준혁 추가
+    // 활동 내역 생성
     await ActiveLog.create({
       action: "COMMENT",
       target_id: comment.id,
       users_id: req.user.id,
       target_type_id: 2,
     } );
-    // 준혁 추가
+    // 알림 생성
+    // 댓글이 달린 포스트의 내용과 user id 추출
+    const commentedPost = await Post.findOne({
+      where: { id: post.id },
+      attributes: [ "content", "user_id" ],
+    });
+    // 포스트 작성한 user id와 댓글을 단 user id가 다를 경우에만 알림 생성
+    if (commentedPost.user_id !== req.user.id) {
+      await Notification.create({
+        content: `${commentedPost.content}`,
+        users_id: commentedPost.user_id,
+        target_type_id: 2,
+      })
+      // 소켓 푸시
+      sendNotification(commentedPost.user_id, {
+        type: 'COMMENT',
+        message: '댓글이 달렸습니다',
+      });
+      //
+    }
+    //
 
     res.status(201).json({
       comment: fullComment,
@@ -82,14 +105,52 @@ router.post('/:commentId/reply', isLoggedIn, async (req, res, next) => {
     // 대댓글 등록 후 최신 댓글 카운트도 같이 응답!
     const totalComments = await Comment.count({ where: { post_id: parent.post_id, is_deleted: false } });
 
-    // 활동 내역 생성 - 준혁 추가
+    // 준혁 추가
+    // 활동 내역 생성
     await ActiveLog.create({
       action: "REPLY",
       target_id: reply.id,
       users_id: req.user.id,
       target_type_id: 2,
     } );
-    // 준혁 추가
+    // 알림 생성
+    // 원본 내용과 작성자 id 추출
+    const RepliedComment = await Comment.findOne({
+      where: { id: parent.id },
+      attributes: [ "content", "user_id" ],
+    })
+        // 해당 포스트 정보 가져오기 (포스트 주인 알림용)
+    const post = await Post.findOne({
+      where: { id: parent.post_id },
+      attributes: ["user_id", 'content'],
+    });
+    // 포스트 주인에게 알림 생성 (댓글 단 유저가 포스트 주인이 아닐 경우)
+    if (post.user_id !== req.user.id && post.user_id !== RepliedComment.user_id) {
+      await Notification.create({
+        content: `${post.content}`,
+        users_id: post.user_id,
+        target_type_id: 2,
+      });
+      sendNotification(post.user_id, {
+        type: 'COMMENT',
+        message: '포스트에 새로운 댓글이 달렸습니다',
+      });
+    }
+    // 원본 댓글 유저 id와 작성자 id가 다를경우 알림 생성
+    if ( RepliedComment.user_id !== req.user.id ) {
+      await Notification.create({
+        content: `${RepliedComment.content}`,
+        users_id: RepliedComment.user_id,
+        target_type_id: 4,
+      })
+      // 소켓 푸시
+      // 답장이 달린 댓글의 유저
+      sendNotification(RepliedComment.user_id, {
+        type: 'REPLY',
+        message: '답장이 달렸습니다',
+      });
+    }
+    //
 
     res.status(201).json({
       comment: reply,
@@ -181,7 +242,8 @@ router.patch('/:commentId', isLoggedIn, async (req, res, next) => {
 
     await comment.update({ content: req.body.content });
 
-    // 활동 내역 변경 - 준혁 추가
+    // 준혁 추가
+    // 활동 내역 변경
     const log = await ActiveLog.findOne({
       where: {
         target_id: comment.id,
@@ -192,7 +254,7 @@ router.patch('/:commentId', isLoggedIn, async (req, res, next) => {
     if (log.action !== "UPDATE") { await log.update({ action: "UPDATE" });
     // 강제 업데이트
     } else { log.changed('updatedAt', true); await log.save(); }
-    // 준혁 추가
+    //
 
     res.status(200).json({ CommentId: comment.id, content: req.body.content });
   } catch (error) {

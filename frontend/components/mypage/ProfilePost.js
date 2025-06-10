@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { InboxOutlined, HeartOutlined, TagOutlined } from "@ant-design/icons";
+import { InboxOutlined, HeartOutlined, TagOutlined, ContainerOutlined } from "@ant-design/icons";
 import MyPost from "./MyPost";
 import MyBookmark from "./MyBookmark";
 import MyLiked from "./MyLiked";
+import MySave from "./MySave";
 
 const ProfilePost = ({ data, isMyProfile, isBlocked, isBlockedByTarget }) => {//윫 수정
     const [activeTab, setActiveTab] = useState("posts");
@@ -51,7 +52,7 @@ const ProfilePost = ({ data, isMyProfile, isBlocked, isBlockedByTarget }) => {//
                 style={activeTab === "posts" ? activeTabStyle : inactiveTabStyle}
                 aria-selected={activeTab === "posts"}
                 >
-                <InboxOutlined />
+                <ContainerOutlined />
                 <span>게시물</span>
                 </div>
                 {isMyProfile && (
@@ -78,6 +79,17 @@ const ProfilePost = ({ data, isMyProfile, isBlocked, isBlockedByTarget }) => {//
                         <HeartOutlined />
                         <span>좋아요</span>
                         </div>
+                        <div
+                        role="tab"
+                        tabIndex={0}
+                        onClick={() => setActiveTab("save")}
+                        onKeyDown={(e) => e.key === "Enter" && setActiveTab("save")}
+                        style={activeTab === "save" ? activeTabStyle : inactiveTabStyle}
+                        aria-selected={activeTab === "save"}
+                        >
+                        <InboxOutlined />
+                        <span>보관함</span>
+                        </div>
                     </>
                 )}
             </nav>
@@ -91,6 +103,7 @@ const ProfilePost = ({ data, isMyProfile, isBlocked, isBlockedByTarget }) => {//
                     />} {/* 윫 수정 */}
             {activeTab === "bookmark" && isMyProfile && <MyBookmark data={data} />}
             {activeTab === "like" && isMyProfile && <MyLiked data={data} />}
+            {activeTab === "save" && isMyProfile && <MySave data={data} />}
             </div>
         </div>
     );

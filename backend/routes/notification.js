@@ -3,62 +3,8 @@ const router = express.Router();
 const { Notification, User, TargetType } = require("../models");
 const { isLoggedIn } = require("./middlewares");
 
-// 현재 알림에 sender_id가 존재하지 않아 중복 검증 어려움
-// 가능하면 content 내부의 ${} 값은 폰트색을 다르게 만들기
-
-/* FOLLOW
-to user 알림 생성
-──────────────────────────
-const fromUserName = await User.findOne({
-  where: { id : fromUserId },
-  attributes: [ "nickname" ],
-});
-
-await Notification.create({
-  content: `${fromUserName.nickname} 님이 당신을 팔로우 했습니다`,
-  users_id: toUserId,
-  target_type_id: 3
-});
-──────────────────────────
-*/
-
-/* LIKE
-좋아요 시 해당 게시글 작성자 알림 생성
-──────────────────────────
-const likedPost = await Post.findOne({
-  where: { id: post.id },
-  attributes: [ "content", "users_id" ],
-});
-
-await Notification.create({
-  content: `${likedPost.content} 좋아요를 받았습니다`
-  users_id: likedPost.users_id,
-  target_type_id: 3,
-})
-──────────────────────────
-*/
-
-/* COMMENT
-댓글 시 해당 게시글 작성자 알림 생성
-
-const commentedPost = await Post.findOne({
-  where: { id: post.id },
-  attributes: [ "content", "users_id" ],
-});
-
-await Notification.create({
-  content: `${commentedPost.content} 댓글이 달렸습니다`,
-  users_id: commentedPost.users_id,
-  target_type_id: 3,
-})
-*/
-
-/* 
-
-*/
-
 // userId(users의 id)로 알림 불러오기
-router.get('/:userId', /*isLoggedIn,*/ async (req, res, next) => {
+router.get('/:userId', isLoggedIn, async (req, res, next) => {
   try {
     const notifications = await Notification.findAll({
       where: { users_id: req.params.userId },
@@ -81,7 +27,7 @@ router.get('/:userId', /*isLoggedIn,*/ async (req, res, next) => {
   }
 });
 
-router.patch('/read/:userId', async (req, res, next) => {
+router.patch('/read/:userId', isLoggedIn, async (req, res, next) => {
   try {
     await Notification.update(
       { is_read: true },
@@ -108,6 +54,32 @@ router.patch('/read/:userId', async (req, res, next) => {
   } catch (error) {
     console.error(error);
     next(error);
+  }
+});
+
+router.delete('/delete/:userId/:notificationId', async (req, res) => {
+  const { userId, notificationId } = req.params;
+
+  try {
+    if (notificationId === 'all') {
+      // 전체 삭제
+      await Notification.destroy({
+        where: { users_id: userId },
+      });
+    } else {
+      // 개별 삭제
+      await Notification.destroy({
+        where: {
+          id: notificationId,
+          users_id: userId,
+        },
+      });
+    }
+
+    return res.status(200).json({ message: '삭제 완료' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json(error);
   }
 });
 

@@ -11,6 +11,14 @@ const GridWrapper = styled.div`
   margin: 20px auto 0;
 `;
 
+const NoDataMessage = styled.div`
+  width: 100%;
+  text-align: center;
+  margin-top: 40px;
+  font-size: 16px;
+  color: #888;
+`;
+
 const PostCard = styled.div`
   position: relative;
   border-radius: 10px;
@@ -53,11 +61,15 @@ const PostContent = styled.div`
 `;
 
 const MyBookmark = ({ data }) => {
-  const getPostById = (id) => data.Posts.find(post => post.id === id);
+  const getPostById = (id) => data?.Posts?.find(post => post.id === id);
+
+  if (!data?.BookmarkedPosts || data.BookmarkedPosts.length === 0) {
+    return <NoDataMessage>북마크한 게시물이 없습니다</NoDataMessage>;
+  }
 
   return (
     <GridWrapper>
-      {data?.BookmarkedPosts?.map((bookmark, idx) => {
+      {data.BookmarkedPosts.map((bookmark, idx) => {
         const post = getPostById(bookmark.id);
 
         if (!post) return null;

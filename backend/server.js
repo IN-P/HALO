@@ -212,8 +212,13 @@ socket.on('send_message', async (data) => {
 
   socket.on('disconnect', () => {
     console.log('🔴 유저 연결 해제:', socket.id);
+
   });
 });
+
+// 준혁추가 : 실시간 알림
+const { initSocket } = require('./notificationSocket');
+initSocket(io);
 
 const PORT = process.env.PORT || 3065;
 server.listen(PORT, () => {

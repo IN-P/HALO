@@ -5,8 +5,8 @@ import { useSelector, useDispatch  } from 'react-redux';
 
 // 알림창 - 준혁추가
 import Notification from './Notification';
-import { LOAD_USER_NOTIFICATION_REQUEST } from '../reducers/notification_JH';
-import { IS_READ_TRUE_LOADING } from '../reducers/notification_JH';
+import { LOAD_USER_NOTIFICATION_REQUEST, IS_READ_TRUE_REQUEST, DELETE_NOTIFICATION_REQUEST, DELETE_ALL_NOTIFICATION_REQUEST  } from '../reducers/notification_JH';
+import socket, { registerUserSocket, subscribeToNotifications, unsubscribeFromNotifications } from '../socket';
 //
 
 
@@ -23,32 +23,45 @@ const AppLayout = ({ children }) => {
   const onToggleNotification = () => {
     setShowNotification((prev) => {
       const next = !prev;
-      if (!prev && userId) {
+      if (userId) {
         dispatch({
-          type: IS_READ_TRUE_LOADING,
+          type: IS_READ_TRUE_REQUEST,
           data: userId,
         });
-        // 읽음 처리 후 알림 목록 재요청
         setTimeout(() => {
           dispatch({
             type: LOAD_USER_NOTIFICATION_REQUEST,
             data: userId,
           });
-        }, 300); // 딜레이 0.3초
+        }, 300);
       }
-    return next;
-  });
-};
+      return next;
+    });
+  };
   //
   // 해당하는 유저 아이디의 알림 가져오기
   const { notification } = useSelector((state) => state.notification_JH);
   useEffect(() => {
   if (userId) { dispatch({ type: LOAD_USER_NOTIFICATION_REQUEST, data: userId }); } }, [dispatch, userId]);
   // 미확인 알림 개수 카운트
-  const notificationCount = notification
-  ? notification.filter((item) => item.is_read === false).length
+  const notificationCount = Array.isArray(notification)
+  ? notification.filter(item => item.is_read === false).length
   : 0;
   console.log("읽지 않은 알림 개수:", notificationCount);
+  // 알림 삭제
+  const onDeleteNotification = (notificationId) => { if (!userId) return;
+    dispatch({ type: DELETE_NOTIFICATION_REQUEST, data: { userId, notificationId, }, }); };
+  // 전체 알림 삭제
+  const onDeleteAllNotification = () => { dispatch({ type: DELETE_ALL_NOTIFICATION_REQUEST, data: { userId }, }); };
+  // 실시간 알림
+  useEffect(() => { if (!userId) return;
+    registerUserSocket(userId); // 서버에 유저 ID 등록
+  // 알림 받기
+  subscribeToNotifications((data) => {
+    console.log('📩 알림 수신:', data);
+    dispatch({ type: LOAD_USER_NOTIFICATION_REQUEST, data: userId });
+  });
+  return () => { unsubscribeFromNotifications(); }; }, [userId]);
 
   return (
     <div style={{ display: 'flex' }}>
@@ -68,7 +81,7 @@ const AppLayout = ({ children }) => {
           zIndex: 1100,
           overflowY: 'auto',
         }}>
-          <Notification notification={notification} />
+          <Notification notification={notification} onDeleteNotification={onDeleteNotification} onDeleteAllNotification={onDeleteAllNotification} />
         </div>
       )}
 
