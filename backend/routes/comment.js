@@ -105,8 +105,36 @@ router.post('/:commentId/reply', isLoggedIn, async (req, res, next) => {
 // 3. 트리형 댓글 조회: GET /comment/post/:postId/tree
 router.get('/post/:postId/tree', async (req, res, next) => {
   try {
+    //윫추가
+    const { Block } = require('../models');
+    const { Op } = require('sequelize');
+
+    let blockedUserIds = [];
+
+    if (req.user) {
+      const blocks = await Block.findAll({
+        where: {
+          [Op.or]: [
+            { from_user_id: req.user.id },
+            { to_user_id: req.user.id },
+          ]
+        }
+      });
+
+      // 윫 나를 차단했거나 내가 차단한 사람 모두 필터링
+      blockedUserIds = blocks.map(b =>
+        b.from_user_id === req.user.id ? b.to_user_id : b.from_user_id
+      );
+    }
+
+    /////
     const comments = await Comment.findAll({
-      where: { post_id: req.params.postId },
+      where: {
+        post_id: req.params.postId,
+        user_id: {
+          [Op.notIn]: blockedUserIds, // 윫 추가
+        },
+      },
       include: [
         { model: User, attributes: ['id', 'nickname'] },
         { model: Comment, as: 'Parent', include: [{ model: User, attributes: ['id', 'nickname'] }] }

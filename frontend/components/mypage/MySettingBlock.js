@@ -1,7 +1,16 @@
 import React from 'react';
-import { Button } from 'antd';
-
-const MySettingBlock = ({ data }) => {
+import { Button,message } from 'antd';
+import axios from 'axios';
+const MySettingBlock = ({ data, onRefetch  }) => {
+      const onUnblock = async (userId) => {
+    try {
+      await axios.delete(`/block/${userId}`);
+      message.success('차단이 해제되었습니다.');
+      if (onRefetch) onRefetch(); // 목록 새로고침
+    } catch (error) {
+      message.error('차단 해제 중 오류가 발생했습니다.');
+    }
+  };
     return (
         <>
         <div style={{ marginTop: '3%', textAlign: 'center' }}>
@@ -36,7 +45,7 @@ const MySettingBlock = ({ data }) => {
                         {block.Blocked.nickname}
                     </span>
 
-                    <Button type="primary" danger style={{ minWidth: 80 }} onClick={() => { }} >
+                    <Button type="primary" danger style={{ minWidth: 80 }} onClick={() => onUnblock(block.Blocked.id)} >
                         해제
                     </Button>
                 </div>

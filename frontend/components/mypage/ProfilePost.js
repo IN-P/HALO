@@ -4,7 +4,7 @@ import MyPost from "./MyPost";
 import MyBookmark from "./MyBookmark";
 import MyLiked from "./MyLiked";
 
-const ProfilePost = ({ data, isMyProfile }) => {
+const ProfilePost = ({ data, isMyProfile, isBlocked, isBlockedByTarget }) => {//윫 수정
     const [activeTab, setActiveTab] = useState("posts");
 
     const tabStyle = {
@@ -42,52 +42,55 @@ const ProfilePost = ({ data, isMyProfile }) => {
 
     return (
         <div>
-        <nav style={tabStyle} aria-label="프로필 탭 메뉴">
-            <div
-            role="tab"
-            tabIndex={0}
-            onClick={() => setActiveTab("posts")}
-            onKeyDown={(e) => e.key === "Enter" && setActiveTab("posts")}
-            style={activeTab === "posts" ? activeTabStyle : inactiveTabStyle}
-            aria-selected={activeTab === "posts"}
-            >
-            <InboxOutlined />
-            <span>게시물</span>
-            </div>
-
-            {isMyProfile && (
-            <>
+            <nav style={tabStyle} aria-label="프로필 탭 메뉴">
                 <div
-                role="tab"
-                tabIndex={0}
-                onClick={() => setActiveTab("bookmark")}
-                onKeyDown={(e) => e.key === "Enter" && setActiveTab("bookmark")}
-                style={activeTab === "bookmark" ? activeTabStyle : inactiveTabStyle}
-                aria-selected={activeTab === "bookmark"}
-                >
-                <TagOutlined />
-                <span>북마크</span>
+                    role="tab"
+                    tabIndex={0}
+                    onClick={() => setActiveTab("posts")}
+                    onKeyDown={(e) => e.key === "Enter" && setActiveTab("posts")}
+                    style={activeTab === "posts" ? activeTabStyle : inactiveTabStyle}
+                    aria-selected={activeTab === "posts"}
+                    <InboxOutlined />
+                    <span>게시물</span>
                 </div>
-                <div
-                role="tab"
-                tabIndex={0}
-                onClick={() => setActiveTab("like")}
-                onKeyDown={(e) => e.key === "Enter" && setActiveTab("like")}
-                style={activeTab === "like" ? activeTabStyle : inactiveTabStyle}
-                aria-selected={activeTab === "like"}
-                >
-                <HeartOutlined />
-                <span>좋아요</span>
-                </div>
-            </>
-            )}
-        </nav>
+                {isMyProfile && (
+                    <>
+                        <div
+                            role="tab"
+                            tabIndex={0}
+                            onClick={() => setActiveTab("bookmark")}
+                            onKeyDown={(e) => e.key === "Enter" && setActiveTab("bookmark")}
+                            style={activeTab === "bookmark" ? activeTabStyle : inactiveTabStyle}
+                            aria-selected={activeTab === "bookmark"}
+                        >
+                            <TagOutlined />
+                            <span>북마크</span>
+                        </div>
+                        <div
+                        role="tab"
+                        tabIndex={0}
+                        onClick={() => setActiveTab("like")}
+                        onKeyDown={(e) => e.key === "Enter" && setActiveTab("like")}
+                        style={activeTab === "like" ? activeTabStyle : inactiveTabStyle}
+                        aria-selected={activeTab === "like"}
+                        >
+                        <HeartOutlined />
+                        <span>좋아요</span>
+                        </div>
+                    </>
+                )}
+            </nav>
 
-        <div style={{ marginTop: 24 }}>
-            {activeTab === "posts" && <MyPost data={data} />}
+            <div style={{ marginTop: 24 }}>
+                {activeTab === "posts" &&
+                    <MyPost
+                        data={data}
+                        isBlocked={data?.isBlocked}
+                        isBlockedByTarget={data?.isBlockedByTarget}
+                    />} {/* 윫 수정 */}
             {activeTab === "bookmark" && isMyProfile && <MyBookmark data={data} />}
             {activeTab === "like" && isMyProfile && <MyLiked data={data} />}
-        </div>
+            </div>
         </div>
     );
 };
