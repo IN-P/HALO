@@ -11,6 +11,10 @@ import profile_jh from './profile_jh';
 import chatSaga from './chatSaga_JW';
 import blockSaga from './block';;//율비
 import notification_JH from './notification_JH';
+import quizSaga from './quiz_GM';
+import adminQuizSaga from './adminQuiz_GM';
+import playerDrawSaga from './playerDraw_GM';
+import adminPlayer from './adminPlayer_GM'
 
 export default function* rootSaga() {
   yield all([
@@ -21,10 +25,15 @@ export default function* rootSaga() {
     fork(bookmark_IN),
     fork(followSaga),
     fork(reportSaga),
+    fork(blockSaga),
     fork(user_YG),
     fork(profile_jh),
     fork(chatSaga),
     fork(blockSaga),//율비
     fork(notification_JH), // 준혁추가
+    fork(quizSaga),
+    fork(adminQuizSaga),
+    fork(playerDrawSaga),
+    fork(adminPlayer),
   ]);
 }

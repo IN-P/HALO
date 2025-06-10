@@ -4,7 +4,9 @@ const { Quiz, QuizOption } = require('../models');
 
 // 퀴즈 등록
 router.post('/quizzes', async(req, res) => {
-    const { question, type, point_reward } = req.body
+    const { question, type, point_reward, options } = req.body;
+
+    console.log("받은 options: ", options);
 
     try {
         const quiz = await Quiz.create({
@@ -13,29 +15,41 @@ router.post('/quizzes', async(req, res) => {
             point_reward,
         })
 
-        res.status(201).json({id: quiz.id})
+        // options 처리
+        if (Array.isArray(options)) {
+            const quizOptions = options.map((opt) => ({
+                quizzes_id: quiz.id,
+                question_option: opt.question_option,
+                answer: opt.answer
+            }));
+
+            console.log("저장할 보기: ", quizOptions);
+            await QuizOption.bulkCreate(quizOptions);
+            console.log("보기 저장 완료");
+        }
+        res.status(201).json({id: quiz.id});
     } catch (err) {
-        console.error(err)
-        res.status(500).json({error: "퀴즈 저장 실패"})
+        console.error(err);
+        res.status(500).json({error: "퀴즈 저장 실패"});
     }
-})
+});
 
-// 보기 등록
-router.post('/quiz-options', async (req, res) => {
-    const { quizzes_id, question_option, answer } = req.body
+// 퀴즈 수정
+router.put("/quizzes/:id", async (req, res) => {
+    const { id } = req.params;
+    const { question, point_reward, type, options } = req.body;
+    const quiz = await Quiz.findByPk(id);
+    if(!quiz) return res.status(404).json({error: "퀴즈 없음"});
 
-    try {
-        await QuizOption.create({
-            quizzes_id,
-            question_option,
-            answer,  // 1 또는 0
-        })
+    await quiz.update({question, point_reward, type});
+    await QuizOption.destroy({where: {quizzes_id: id}});
+    const newOptions = options.map((opt) => ({
+        ...opt,
+        quizzes_id: id,
+    }));
+    await QuizOption.bulkCreate(newOptions);
 
-        res.status(201).json({message: "옵션 등록 완료"})
-    } catch (err) {
-        console.error(err)
-        res.status(500).json({error: "보기 저장 실패"})
-    }
-})
+    res.status(200).json({message: "수정 완료"});
+});
 
 module.exports = router;

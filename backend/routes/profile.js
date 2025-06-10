@@ -39,11 +39,12 @@ router.get("/:nickname", async (req, res, next) => {
       // 민감한 정보
       { model: UserPoint },
       { model: UserPayment },
+
       ],
     })
 
     // 계정 비공개 상태일 시 정보 접근 제한
-    if (fullUser.is_private==1) {
+    if (fullUser.is_private == 1) {
       res.status(403).json("접근이 제한된 계정입니다");
     }
 
@@ -52,6 +53,8 @@ router.get("/:nickname", async (req, res, next) => {
       //////////// 율비 isBlocked 여부 추가
       if (req.user) {
         const me = req.user.id;
+
+        // 내가 이 유저를 차단했는지
         const blocked = await Block.findOne({
           where: {
             from_user_id: me,
@@ -59,8 +62,18 @@ router.get("/:nickname", async (req, res, next) => {
           },
         });
         data.isBlocked = !!blocked;
+
+        // ✅ 이 유저가 나를 차단했는지 (추가)
+        const blockedByTarget = await Block.findOne({
+          where: {
+            from_user_id: fullUser.id,
+            to_user_id: me,
+          },
+        });
+        data.isBlockedByTarget = !!blockedByTarget;
       } else {
         data.isBlocked = false;
+        data.isBlockedByTarget = false;
       }
       //////////////////////////////
       res.status(200).json(data);
@@ -77,7 +90,7 @@ router.get("/:nickname", async (req, res, next) => {
 router.patch("/update", isLoggedIn, async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { nickname, email, is_private, profile_img, myteam_id, theme_mode, } = req.body; 
+    const { nickname, email, is_private, profile_img, myteam_id, theme_mode, } = req.body;
     const { introduce, phone } = req.body;
 
     // 수정 필드 모음

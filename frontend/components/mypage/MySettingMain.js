@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { Col, Row } from "antd";
 import MySettingSidebar from "./MySettingSidebar";
 import { CloseOutlined } from "@ant-design/icons";
@@ -10,8 +11,12 @@ import MySettingProfile from "./MySettingProfile";
 import MySettingPassword from "./MySettingPassword";
 import MySettingFollowers from "./MySettingFollowers";
 import MySettingFollowings from "./MySettingFollowings";
+import MySettingBalance from "./MySettingBalance";
 
 const MySettingMain = ({ data, onClose, reload, reloadLogInUser }) => {
+
+  const { user } = useSelector((state) => state.user_YG);
+
   const [selectedTab, setSelectedTab] = useState("profile");
 
   useEffect(() => {
@@ -59,6 +64,7 @@ const MySettingMain = ({ data, onClose, reload, reloadLogInUser }) => {
           </div>
 
           {selectedTab === "profile" && <MySettingProfile data={data} reload={reload} reloadLogInUser={reloadLogInUser} />}
+          {selectedTab === "balance" && <MySettingBalance user={user} />}
           {selectedTab === "password" && <MySettingPassword data={data} />}
           {selectedTab === "block" && <MySettingBlock data={data} />}
           {selectedTab === "achievement" && <MySettingAchievement data={data} />}

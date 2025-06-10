@@ -108,8 +108,15 @@ const Sidebar = ({ showNotification, onToggleNotification, notificationCount }) 
             <SidebarButton icon={<MessageOutlined />}>채팅 (DM)</SidebarButton>
           </Link>
           <SidebarButton icon={<ShopOutlined />}>상점</SidebarButton>
-          <SidebarButton icon={<GiftOutlined />}>이벤트</SidebarButton>
-          <SidebarButton icon={<ShopOutlined />}>문의</SidebarButton> {/*조율비 추가*/}
+          <Link href="/quiz" passHref>
+            <SidebarButton icon={<GiftOutlined />}>이벤트</SidebarButton>
+          </Link>
+          <Link href="/inquiry/inquiry" passHref>
+          <SidebarButton icon={<ShopOutlined />}>문의</SidebarButton>
+          </Link>
+          <Link href="/charge" passHref>
+            <SidebarButton icon={<GiftOutlined />}>캐시 충전</SidebarButton>
+          </Link>
         </div>
       </div>
 

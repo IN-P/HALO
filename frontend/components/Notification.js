@@ -1,6 +1,11 @@
 import React from 'react';
 import styled from 'styled-components';
-import { BellOutlined } from '@ant-design/icons';
+import {
+  BellOutlined,
+  UsergroupAddOutlined,
+  CommentOutlined,
+  HeartOutlined,
+} from '@ant-design/icons';
 
 const NotificationWrapper = styled.div`
   padding: 16px;
@@ -27,30 +32,62 @@ const Title = styled.h3`
 `;
 
 const NotificationList = styled.ul`
-  max-height: 280px;
+  max-height: 400px;
   overflow-y: auto;
   padding: 0;
   margin: 0;
   list-style: none;
 `;
 
-const NotificationItem = styled.li`
+const NotificationItem = styled.div`
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
-  padding: 10px 0;
+  padding: 16px 0;
   border-bottom: 1px solid #eee;
-  font-size: 14px;
+  font-size: 15px;
+  line-height: 1.4;
   color: #444;
+  cursor: pointer;
+  white-space: normal;
+
+  &:hover {
+    color: #1890ff;
+  }
 `;
 
-const NotificationIcon = styled(BellOutlined)`
+const IconStyle = `
   font-size: 20px;
+`;
+
+const StyledBellOutlined = styled(BellOutlined)`
+  ${IconStyle}
   color: #1890ff;
+`;
+
+const StyledUsergroupAddOutlined = styled(UsergroupAddOutlined)`
+  ${IconStyle}
+  color: #52c41a;
+`;
+
+const StyledCommentOutlined = styled(CommentOutlined)`
+  ${IconStyle}
+  color: #fa8c16;
+`;
+
+const StyledHeartOutlined = styled(HeartOutlined)`
+  ${IconStyle}
+  color: #eb2f96;
 `;
 
 const NotificationText = styled.div`
   flex: 1;
+  white-space: normal;
+`;
+
+const ExtraText = styled.span`
+  color: #666;
+  margin-left: 6px;
 `;
 
 const NotificationTime = styled.span`
@@ -59,7 +96,38 @@ const NotificationTime = styled.span`
   white-space: nowrap;
 `;
 
-const Notification = ({ notification }) => {
+const DeleteAllButton = styled.button`
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #1890ff;
+  }
+`;
+
+// 아이콘 및 추가 메시지 반환
+const getIconAndExtraText = (target_type_id) => {
+  switch (target_type_id) {
+    case 1:
+      return { icon: <StyledUsergroupAddOutlined />, extra: ' 기본알림.' };
+    case 2:
+      return { icon: <StyledCommentOutlined />, extra: '댓글이 달렸습니다.' };
+    case 3:
+      return { icon: <StyledUsergroupAddOutlined />, extra: '님이 팔로우했습니다.' }; 
+    case 4:
+      return { icon: <StyledBellOutlined />, extra: '답장이 달렸습니다' };
+    case 5:
+      return { icon: <StyledHeartOutlined />, extra: '좋아요를 받았습니다.' };
+    default:
+      return { icon: <StyledBellOutlined />, extra: '' };
+  }
+};
+
+const Notification = ({ notification, onDeleteNotification, onDeleteAllNotification }) => {
   const getTimeAgo = (createdAt) => {
     const now = new Date();
     const createdDate = new Date(createdAt);
@@ -82,18 +150,35 @@ const Notification = ({ notification }) => {
         <Title>
           <BellOutlined /> 알림
         </Title>
+        {Array.isArray(notification) && notification.length > 0 && (
+          <DeleteAllButton onClick={onDeleteAllNotification}>모두 삭제</DeleteAllButton>
+        )}
       </Header>
       <NotificationList>
-        {!notification || notification.length === 0 ? (
+        {!Array.isArray(notification) || notification.length === 0 ? (
           <NotificationItem>알림이 없습니다.</NotificationItem>
         ) : (
-          notification.map(({ id, content, createdAt }) => (
-            <NotificationItem key={id}>
-              <NotificationIcon />
-              <NotificationText>{content}</NotificationText>
-              <NotificationTime>{getTimeAgo(createdAt)}</NotificationTime>
-            </NotificationItem>
-          ))
+          notification.map(({ id, content, createdAt, target_type_id }) => {
+            const { icon, extra } = getIconAndExtraText(target_type_id);
+            return (
+              <NotificationItem
+                key={id}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteNotification(id);
+                }}
+                tabIndex={0}
+                role="button"
+              >
+                {icon}
+                <NotificationText>
+                  {content}
+                  {extra && <ExtraText>{extra}</ExtraText>}
+                </NotificationText>
+                <NotificationTime>{getTimeAgo(createdAt)}</NotificationTime>
+              </NotificationItem>
+            );
+          })
         )}
       </NotificationList>
     </NotificationWrapper>

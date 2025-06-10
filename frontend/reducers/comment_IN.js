@@ -2,13 +2,12 @@ import produce from 'immer';
 
 export const initialState = {
   comments: {}, // { [postId]: [댓글트리...] }
-
+  loadCommentsDone: {},
   addCommentLoading: false,
   addCommentDone: false,
   addCommentError: null,
 
   loadCommentsLoading: false,
-  loadCommentsDone: false,
   loadCommentsError: null,
 
   editCommentLoading: false,
@@ -43,12 +42,12 @@ const reducer = (state = initialState, action) =>
       case LOAD_COMMENTS_REQUEST:
         draft.loadCommentsLoading = true;
         draft.loadCommentsError = null;
-        draft.loadCommentsDone = false; 
+        draft.loadCommentsDone[action.postId]= false;
         break;
       case LOAD_COMMENTS_SUCCESS:
         draft.loadCommentsLoading = false;
-        draft.loadCommentsDone = true;
-        draft.comments[action.postId] = action.data; 
+        draft.loadCommentsDone[action.postId] = true;
+        draft.comments[action.postId] = action.data;
         break;
       case LOAD_COMMENTS_FAILURE:
         draft.loadCommentsLoading = false;
@@ -58,7 +57,7 @@ const reducer = (state = initialState, action) =>
       case ADD_COMMENT_REQUEST:
         draft.addCommentLoading = true;
         draft.addCommentError = null;
-        draft.addCommentDone = false; 
+        draft.addCommentDone = false;
         break;
       case ADD_COMMENT_SUCCESS:
         draft.addCommentLoading = false;
@@ -96,7 +95,7 @@ const reducer = (state = initialState, action) =>
         draft.removeCommentLoading = false;
         draft.removeCommentError = action.error;
         break;
-      
+
       default:
         break;
     }

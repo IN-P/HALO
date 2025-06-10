@@ -1,6 +1,7 @@
 import React from 'react';
 
 const ChatList = ({ chatRooms, onSelectUser }) => {
+  console.log('🔥 ChatList 렌더링됨 chatRooms:', chatRooms);
   return (
     <div style={{
       width: 300,
@@ -10,7 +11,7 @@ const ChatList = ({ chatRooms, onSelectUser }) => {
       background: '#fff',
       padding: 16
     }}>
-      <h3 style={{ marginBottom: 20 }}>CHATROOM</h3>
+      <h3 style={{ marginBottom: 20 }}>ChatList</h3>
 
       {chatRooms.length === 0 && (
         <div style={{ color: '#999' }}>채팅방이 없습니다</div>
@@ -30,7 +31,7 @@ const ChatList = ({ chatRooms, onSelectUser }) => {
           }}
         >
           <img
-            src={room.otherUser.profileImage}
+            src={room.otherUser?.profileImage || '/default.png'}
             alt=""
             style={{ width: 40, height: 40, borderRadius: '50%' }}
           />

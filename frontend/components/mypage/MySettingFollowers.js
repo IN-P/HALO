@@ -44,8 +44,8 @@ const MySettingFollowings = ({ data }) => {
                 title={user.nickname}
               >
                 <img
-                  src={user.profile_img || '/default-profile.png'}
-                  alt={user.nickname || 'profile'}
+                  src={`http://localhost:3065${user.profile_img}` || '/default-profile.png'}
+                  alt={user?.nickname || 'profile'}
                   style={{
                     width: 48,
                     height: 48,
