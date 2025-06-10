@@ -39,7 +39,7 @@ const authRouter = require('./routes/auth'); // 윤기 간편 로그인 라우�
 const achievements = require('./routes/achievements'); // 준혁
 const badges = require('./routes/badges'); // 준혁
 const kakaopayRouter = require('./routes/kakaopay'); //윤기
-
+const adminRouter = require('./routes/useradmin');
 
 // .env 적용
 dotenv.config();
@@ -110,6 +110,7 @@ app.use('/userSearch', userSearchRouter); // 재원 유저검색
 app.use('/user/reset-password', resetPasswordRouter); //윤기 비번재발급
 app.use('/auth', authRouter); //윤기추가 /auth/google, /auth/google/callback 용
 app.use('/pay', kakaopayRouter); //윤기추가
+app.use('/api/admin', adminRouter);
 
 module.exports = app;
 
