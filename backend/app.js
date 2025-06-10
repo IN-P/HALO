@@ -40,11 +40,14 @@ const achievements = require('./routes/achievements'); // 준혁
 const badges = require('./routes/badges'); // 준혁
 const kakaopayRouter = require('./routes/kakaopay'); //윤기
 const adminRouter = require('./routes/useradmin');
+const advertisementRouter = require('./routes/advertisement'); // 재원
 
 // .env 적용
 dotenv.config();
 
 app.use('/img', express.static(path.join(__dirname, 'uploads'))); //##윤기 추가
+app.use('/advertisement_uploads', express.static('advertisement_uploads')); // 재원 광고 이미지
+
 
 // 미들웨어
 app.use(morgan('dev'));
@@ -111,6 +114,7 @@ app.use('/user/reset-password', resetPasswordRouter); //윤기 비번재발급
 app.use('/auth', authRouter); //윤기추가 /auth/google, /auth/google/callback 용
 app.use('/pay', kakaopayRouter); //윤기추가
 app.use('/api/admin', adminRouter);
+app.use('/advertisement', advertisementRouter); // 재원 광고 라우터
 
 module.exports = app;
 
