@@ -10,7 +10,7 @@ import { UPDATE_COMMENT_COUNT_IN_POST } from '../reducers/post_IN';
 
 // 트리 전체 불러오기
 function loadCommentsAPI(postId) {
-  return axios.get(`http://localhost:3065/comment/post/${postId}/tree`);
+  return axios.get(`http://localhost:3065/comment/post/${postId}/tree`,{withCredentials: true,});
 }
 function* loadComments(action) {
   try {

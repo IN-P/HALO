@@ -23,25 +23,29 @@ const Comment = ({
 }) => {
   const dispatch = useDispatch();
   const router = useRouter();
-  const { comments, addCommentLoading } = useSelector((state) => state.comment_IN);
+  const { comments, addCommentLoading, loadCommentsDone } = useSelector((state) => state.comment_IN);
 
-  // SSR fallback
-  let listFromRedux = comments[postId];
-  let listFromProps = Array.isArray(initialComments) ? initialComments : [];
-  let effectiveComments =
-    Array.isArray(listFromRedux) && listFromRedux.length > 0
-      ? listFromRedux
-      : listFromProps;
-
-  useEffect(() => {
+useEffect(() => {
+  if (!loadCommentsDone?.[postId]) {
     dispatch({ type: LOAD_COMMENTS_REQUEST, postId });
-  }, [dispatch, postId]);
+  }
+}, [dispatch, postId, loadCommentsDone]);;
 
-  if (preview) {
-    // 삭제 댓글 포함 전체 평탄화+정렬
-    const allComments = flattenComments(effectiveComments);
-    const sorted = [...allComments].sort((a, b) => b.id - a.id);
-    const previewComments = sorted.slice(0, previewCount);
+const hasReduxComments = loadCommentsDone?.[postId];
+const effectiveComments =
+  comments[postId] && loadCommentsDone?.[postId]
+    ? comments[postId]
+    : initialComments || [];
+
+
+
+
+if (preview) {
+  if (!hasReduxComments) return null; // ✅ Redux 댓글 로드 완료됐을 때만 렌더링
+
+  const allComments = flattenComments(effectiveComments);
+  const sorted = [...allComments].sort((a, b) => b.id - a.id);
+  const previewComments = sorted.slice(0, previewCount);
 
     return (
       <div
