@@ -8,7 +8,6 @@ import comment_IN from '../reducers/comment_IN';
 import hashtag_IN from '../reducers/hashtag_IN';
 import regram_IN from '../reducers/regram_IN';
 import bookmark_IN from '../reducers/bookmark_IN';
-import block from '../reducers/block'
 import follow_YB from '../reducers/follow_YB'; 
 import report_YB from '../reducers/report_YB';
 import user_YG from '../reducers/user_YG'; 
