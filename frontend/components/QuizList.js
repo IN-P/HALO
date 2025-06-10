@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Table, Button } from 'antd';
+import { Button } from 'antd';
 import Link from 'next/link';
 import { LOAD_QUIZZES_REQUEST } from '../reducers/quiz_GM';
 
@@ -14,36 +14,48 @@ const EventPage = () => {
         });
     }, [dispatch]);
 
-    const columns = [
-        {
-            title: "NO",
-            dataIndex: "id",
-            key: "id"
-        },
-        {
-            title: "퀴즈 제목",
-            dataIndex: "question",
-            key: "question"
-        },
-        {
-            title: "응시",
-            render: (text, record) => (
-                <Link href={`/event/quizzes/${record.id}`}>도전하기</Link>
-            ),
-        },
-    ];
+    // 스타일 정의
+    const thStyle = {
+        padding: "10px",
+        textAlign: "left",
+        borderBottom: "2px solid #ccc",
+        backgroundColor: "#f5f5f5"
+    };
+
+    const tdStyle = {
+        padding: "10px",
+        verticalAlign: "top"
+    };
 
     return (
         <div style={{padding: '2rem'}}>
             <h2>🎲 전체 퀴즈 목록</h2>
-            <Link href="/adminQuiz" passHref>
-                <Button>퀴즈 등록하기 (관리자용)</Button>
-            </Link>
-            <Table
-                dataSource={quizList}
-                columns={columns}
-                rowKey="id"
-            ></Table>
+            {quizList && (
+                <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "1rem" }}>
+                    <thead>
+                        <tr>
+                            <th style={thStyle}>NO</th>
+                            <th style={thStyle}>문제</th>
+                            <th style={thStyle}>포인트</th>
+                            <th style={thStyle} />
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {quizList.map((item) => (
+                            <tr key={item.id} style={{ borderBottom: "1px solid #ddd" }}>
+                                <td style={tdStyle}><strong>{item.id}</strong></td>
+                                <td style={tdStyle}>{item.question}</td>
+                                <td style={tdStyle}>{item.point_reward}</td>
+                                <td style={tdStyle}>
+                                    <Link href={`/event/quizzes/${item.id}`} legacyBehavior>
+                                        <a><Button type="link">도전하기</Button></a>
+                                    </Link>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
         </div>
     );
 };

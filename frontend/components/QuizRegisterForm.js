@@ -1,6 +1,7 @@
 // 관리자 퀴즈 등록 페이지
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useRouter } from "next/router";  // ##
 import {
   Form, Input, InputNumber, Button, Select, Radio, message
 } from "antd";
@@ -11,6 +12,7 @@ import {
 
 const QuizRegisterForm = () => {
   const dispatch = useDispatch();
+  const router = useRouter();  // ##
   const [form] = Form.useForm();
   const { quizRegisterDone, quizRegisterError } = useSelector((state) => state.adminQuiz ?? {});
   const watchType = Form.useWatch("type", form);
@@ -31,8 +33,6 @@ const QuizRegisterForm = () => {
   }, [quizRegisterError]);
   
   const onFinish = (values) => {
-    alert("📝 등록 요청을 보냅니다.");
-    
     const payload = {
       question: values.question,
       type: values.type,
@@ -51,6 +51,8 @@ const QuizRegisterForm = () => {
       ]
     }
     dispatch({ type: REGISTER_QUIZ_REQUEST, data: payload });
+    message.success("퀴즈 등록 완료");
+    router.push("/adminQuizList");
   }
 
   return(
