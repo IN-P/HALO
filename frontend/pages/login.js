@@ -44,7 +44,7 @@ const LoginPage = () => {
       <div className="branding">
         <h1>Welcome</h1>
         <div className="logo-box">
-          <img src="/img/logo.png" alt="Halo 로고" />
+          <img src="images/HALOlogo.png" alt="Halo 로고" />
           <h2>Halo</h2>
         </div>
       </div>

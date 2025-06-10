@@ -1,24 +1,24 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import Sidebar from './Sidebar';
 import RightSidebar from './RightSidebar';
-import { useSelector, useDispatch  } from 'react-redux';
-
-// 알림창 - 준혁추가
 import Notification from './Notification';
 import { LOAD_USER_NOTIFICATION_REQUEST, IS_READ_TRUE_REQUEST, DELETE_NOTIFICATION_REQUEST, DELETE_ALL_NOTIFICATION_REQUEST  } from '../reducers/notification_JH';
+import { setChatRooms } from '../reducers/chatReducer_JW';
 import socket, { registerUserSocket, subscribeToNotifications, unsubscribeFromNotifications } from '../socket';
-//
-
+import axios from 'axios';
 
 const AppLayout = ({ children }) => {
   const dispatch = useDispatch();
 
-  // 준혁 추가 : 로그인 한 사용자의 ID 추출
+  // ✅ 유저 정보
   const { user } = useSelector((state) => state.user_YG);
-  console.log("ID:", user?.id);
   const userId = user?.id;
-  //
-  // 준혁 추가 : 알림창 토글
+
+  // ✅ 채팅용 me 정보
+  const me = useSelector((state) => state.chat.me);
+
+  // ✅ 알림창 토글
   const [showNotification, setShowNotification] = useState(false);
   const onToggleNotification = () => {
     setShowNotification((prev) => {
@@ -38,7 +38,7 @@ const AppLayout = ({ children }) => {
       return next;
     });
   };
-  //
+  
   // 해당하는 유저 아이디의 알림 가져오기
   const { notification } = useSelector((state) => state.notification_JH);
   useEffect(() => {
@@ -63,15 +63,104 @@ const AppLayout = ({ children }) => {
   });
   return () => { unsubscribeFromNotifications(); }; }, [userId]);
 
+  // ✅ socket connect 시 내 채팅방들 join
+  useEffect(() => {
+    const handleConnect = () => {
+      if (me && me.id) {
+        socket.emit('login', me.id);
+
+        axios.get('http://localhost:3065/api/chat/my-rooms', { withCredentials: true })
+          .then((res) => {
+            res.data.forEach((room) => {
+              socket.emit('join_room', room.roomId, me.id);
+            });
+          })
+          .catch((err) => {
+            console.error('❌ [connect 후] my-rooms 조회 실패:', err);
+          });
+      }
+    };
+
+    socket.on('connect', handleConnect);
+
+    return () => {
+      socket.off('connect', handleConnect);
+    };
+  }, [me]);
+
+  // ✅ me 변경 시 채팅방 join 다시
+  useEffect(() => {
+    if (socket.connected && me && me.id) {
+      socket.emit('login', me.id);
+
+      axios.get('http://localhost:3065/api/chat/my-rooms', { withCredentials: true })
+        .then((res) => {
+          res.data.forEach((room) => {
+            socket.emit('join_room', room.roomId, me.id);
+          });
+        })
+        .catch((err) => {
+          console.error('❌ [me 변경] my-rooms 조회 실패:', err);
+        });
+    }
+  }, [me]);
+
+  // ✅ receive_message 수신 시 my-rooms 갱신
+  useEffect(() => {
+    const handleReceiveMessage = (data) => {
+      console.log('📩 AppLayout에서 받은 메시지:', data);
+      axios.get('http://localhost:3065/api/chat/my-rooms', { withCredentials: true })
+        .then((res) => {
+          dispatch(setChatRooms(res.data));
+          console.log('🌍 AppLayout → receive_message 후 my-rooms 갱신:', res.data);
+        })
+        .catch((err) => {
+          console.error('❌ AppLayout receive_message 후 my-rooms 갱신 실패:', err);
+        });
+    };
+
+    socket.on('receive_message', handleReceiveMessage);
+
+    return () => {
+      socket.off('receive_message', handleReceiveMessage);
+    };
+  }, [dispatch]);
+
+  // ✅ new_chat_room_created 수신 시 my-rooms 갱신
+  useEffect(() => {
+    const handleNewChatRoom = (data) => {
+      console.log('🌍 [AppLayout] new_chat_room_created 수신:', data);
+      axios.get('http://localhost:3065/api/chat/my-rooms', { withCredentials: true })
+        .then((res) => {
+          dispatch(setChatRooms(res.data));
+        })
+        .catch((err) => {
+          console.error('❌ AppLayout my-rooms 갱신 실패:', err);
+        });
+    };
+
+    socket.on('new_chat_room_created', handleNewChatRoom);
+
+    return () => {
+      socket.off('new_chat_room_created', handleNewChatRoom);
+    };
+  }, [dispatch]);
+
+  // ✅ 화면 렌더링
   return (
     <div style={{ display: 'flex' }}>
-      {/* 좌측 고정 사이드바 | 준혁추가 : showNotification={showNotification} onToggleNotification={onToggleNotification} userId={userId} */}
-      <Sidebar showNotification={showNotification} onToggleNotification={onToggleNotification} notificationCount={notificationCount}/>
-      {/* 알림창 팝업 (showNotification true일 때만 보이게) */}
+      {/* 좌측 고정 사이드바 */}
+      <Sidebar
+        showNotification={showNotification}
+        onToggleNotification={onToggleNotification}
+        notificationCount={notificationCount}
+      />
+
+      {/* 알림창 팝업 */}
       {showNotification && (
         <div style={{
           position: 'fixed',
-          top: 0, 
+          top: 0,
           left: 240,
           height: '100vh',
           width: '20vw',
@@ -86,13 +175,22 @@ const AppLayout = ({ children }) => {
       )}
 
       {/* 메인 콘텐츠 */}
-      <div style={{ marginLeft: 240, flex: 1, padding:24, minHeight: '100vh', background: '#ffffff' }} id='mainContents'>
+      <div
+        style={{
+          marginLeft: 240,
+          flex: 1,
+          padding: 24,
+          minHeight: '100vh',
+          background: '#ffffff',
+        }}
+        id="mainContents"
+      >
         {children}
       </div>
-      {/* 우측 사이드바 자리 (디자인만 잡아둠) */}
-          <RightSidebar/>
-      </div>
-    
+
+      {/* 우측 사이드바 */}
+      <RightSidebar />
+    </div>
   );
 };
 
