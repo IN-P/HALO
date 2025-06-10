@@ -343,7 +343,16 @@ if (!isOpponentActive) {
       console.error('❌ send_message 중 에러 발생:', err);
     }
   });
+
+  socket.on('disconnect', () => {
+    console.log('🔴 유저 연결 해제:', socket.id);
+
+  });
 });
+
+// 준혁추가 : 실시간 알림
+const { initSocket } = require('./notificationSocket');
+initSocket(io);
 
 // 서버 실행
 const PORT = process.env.PORT || 3065;

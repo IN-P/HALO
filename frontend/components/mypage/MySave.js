@@ -1,7 +1,7 @@
 import React from "react";
 import { Image } from "antd";
 import styled from "styled-components";
-import { HeartOutlined } from "@ant-design/icons";  // 변경: HeartOutlined 아이콘 import
+import { TagOutlined } from "@ant-design/icons";
 
 const GridWrapper = styled.div`
   display: grid;
@@ -9,6 +9,14 @@ const GridWrapper = styled.div`
   gap: 15px;
   width: 800px;
   margin: 20px auto 0;
+`;
+
+const NoDataMessage = styled.div`
+  width: 100%;
+  text-align: center;
+  margin-top: 40px;
+  font-size: 16px;
+  color: #888;
 `;
 
 const PostCard = styled.div`
@@ -31,12 +39,12 @@ const StyledImage = styled(Image)`
   border-radius: 10px;
 `;
 
-const HeartIcon = styled(HeartOutlined)`
+const TagIcon = styled(TagOutlined)`
   position: absolute;
   top: 10px;
   right: 10px;
   font-size: 24px;
-  color: #ff4081;
+  color: #52c41a;
   text-shadow: 0 0 6px rgba(0,0,0,0.3);
   pointer-events: none;
 `;
@@ -52,25 +60,17 @@ const PostContent = styled.div`
   text-overflow: ellipsis;
 `;
 
-const NoDataMessage = styled.div`
-  width: 100%;
-  text-align: center;
-  margin-top: 40px;
-  font-size: 16px;
-  color: #888;
-`;
-
-const MyLiked = ({ data }) => {
+const MySave = ({ data }) => {
   const getPostById = (id) => data?.Posts?.find(post => post.id === id);
 
-  if (!data || !data.Liked || data.Liked.length === 0) {
-    return <NoDataMessage>좋아요한 게시물이 없습니다</NoDataMessage>;
+  if (!data?.BookmarkedPosts || data.BookmarkedPosts.length === 0) {
+    return <NoDataMessage>보관한 게시물이 없습니다</NoDataMessage>;
   }
 
   return (
     <GridWrapper>
-      {data?.Liked?.map((likedPost, idx) => {
-        const post = getPostById(likedPost.id);
+      {data.BookmarkedPosts.map((bookmark, idx) => {
+        const post = getPostById(bookmark.id);
 
         if (!post) return null;
 
@@ -83,9 +83,9 @@ const MyLiked = ({ data }) => {
                   : "https://image.utoimage.com/preview/cp872722/2022/12/202212008462_500.jpg"
               }
               preview={false}
-              alt={post.content || "liked post image"}
+              alt={post.content || "bookmarked post image"}
             />
-            <HeartIcon />
+            <TagIcon />
             <PostContent>{post.content}</PostContent>
           </PostCard>
         );
@@ -94,4 +94,4 @@ const MyLiked = ({ data }) => {
   );
 };
 
-export default MyLiked;
+export default MySave;

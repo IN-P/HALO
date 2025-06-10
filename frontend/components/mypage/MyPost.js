@@ -5,7 +5,7 @@ import styled from "styled-components";
 const GridWrapper = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px; /* 간격 좀 더 넓게 */
+  gap: 10px;
   width: 800px;
   margin: 20px auto 0;
 `;
@@ -26,25 +26,37 @@ const StyledImage = styled(Image)`
   }
 `;
 
+const MessageWrapper = styled.div`
+  width: 800px;
+  margin: 40px auto 0;
+  text-align: center;
+  color: #999;
+`;
+
+const NoDataMessage = styled.div`
+  width: 100%;
+  text-align: center;
+  margin-top: 40px;
+  font-size: 16px;
+  color: #888;
+`;
+
 const MyPost = ({ data, isBlocked, isBlockedByTarget }) => {
   if (isBlockedByTarget) {
-    return (
-      <div style={{ width: '800px', margin: '0 auto', textAlign: 'center', marginTop: '40px', color: '#999' }}>
-        <p> </p>
-      </div>
-    );
+    return <MessageWrapper><p> </p></MessageWrapper>; // 숨김 메시지
   }
 
   if (isBlocked) {
-    return (
-      <div style={{ width: '800px', margin: '0 auto', textAlign: 'center', marginTop: '40px', color: '#999' }}>
-        <p>차단한 사용자의 게시글은 표시되지 않습니다.</p>
-      </div>
-    );
+    return <MessageWrapper><p>차단한 사용자의 게시글은 표시되지 않습니다.</p></MessageWrapper>;
   }
+
+  if (!data?.Posts || data.Posts.length === 0) {
+    return <NoDataMessage><p>작성한 게시물이 없습니다</p></NoDataMessage>;
+  }
+
   return (
     <GridWrapper>
-      {data?.Posts?.map((post, idx) => (
+      {data.Posts.map((post, idx) => (
         <StyledImage
           key={post.id || idx}
           src={`http://localhost:3065/uploads/post/${post.Images[0]?.src}`}
