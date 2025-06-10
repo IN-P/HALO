@@ -83,7 +83,7 @@ const RightSidebar = () => {
     const adminViews = {
         2: { label: '광고 관리', path: '/admin/ads' },
         3: { label: '신고 관리', path: '/admin/reports' },
-        4: { label: '문의 관리', path: '/admin/inquiries' },
+        4: { label: '문의 관리', path: '/admin/inquiry/inquiry' },
         5: { label: '유저 관리', path: '/admin/users' },
         6: { label: '보안 로그', path: '/admin/security' },
         7: { label: '커스텀 관리', path: '/admin/custom' },
