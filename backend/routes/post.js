@@ -3,15 +3,16 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { Post, User, Image, Comment, Hashtag, ActiveLog, Block } = require('../models');
+const { Post, User, Image, Comment, Hashtag, ActiveLog, Notification, Block } = require('../models');
 const { isLoggedIn } = require('./middlewares');
-const { Op } = require('sequelize'); // 윫
+const { Op } = require('sequelize');
+const { sendNotification } = require('../notificationSocket');
 
 // uploads 폴더 생성
 try {
   fs.accessSync('uploads/post');
 } catch (error) {
-  console.log('📁 uploads/post 폴더가 없어서 생성합니다.');
+  console.log('uploads/post 폴더가 없어서 생성합니다.');
   fs.mkdirSync('uploads/post', { recursive: true });
 }
 
@@ -77,6 +78,7 @@ router.post('/', isLoggedIn, async (req, res, next) => {
       users_id: req.user.id,
       target_type_id: 1,
     })
+    // 준혁 추가
 
     // 윫 - 차단된 댓글 필터링
     if (req.user) {
@@ -148,6 +150,7 @@ router.delete('/:postId', isLoggedIn, async (req, res, next) => {
       users_id: req.user.id,
       target_type_id: 1,
     });
+    // 준혁 추가
 
     res.status(200).json({
       PostId: parseInt(req.params.postId, 10),
@@ -212,6 +215,7 @@ router.patch('/:postId', isLoggedIn, async (req, res, next) => {
     if (log.action !== "UPDATE") { await log.update({ action: "UPDATE" });
     // 강제 업데이트
     } else { log.changed('updatedAt', true); await log.save(); }
+    // 준혁 추가
 
     res.status(200).json({ PostId: post.id, content: req.body.content });
   } catch (error) {
@@ -269,13 +273,34 @@ router.patch('/:postId/like', isLoggedIn, async (req, res, next) => {
       ]
     });
 
-    // 활동 내역 추가 - 준혁 추가
+    // 준혁 추가 : 활동 내역 생성
     await ActiveLog.create({
       action: "LIKE",
       target_id: post.id,
       users_id: req.user.id,
       target_type_id: 1,
     });
+    // 알림 생성
+    // 좋아요를 받은 게시글의 내용 및 유저 추출
+    const likedPost = await Post.findOne({
+      where: { id: post.id },
+      attributes: [ "content", "user_id" ],
+    });
+    // 좋아요를 받은 게시물의 user id와 좋아요를 남긴 유저 id가 다를 경우 알림 생성
+    if ( likedPost.user_id !== req.user.id ) {
+      await Notification.create({
+        content: `${likedPost.content}`,
+        users_id: likedPost.user_id,
+        target_type_id: 5,
+      })
+      // 소켓 푸시
+      sendNotification(likedPost.user_id, {
+        type: 'LIKE',
+        message: '좋아요를 받았습니다',
+      });
+      //
+    }
+    //
 
     res.status(200).json({ basePost: fullOrigin });
   } catch (error) {
@@ -320,6 +345,7 @@ router.delete('/:postId/like', isLoggedIn, async (req, res, next) => {
     } });
     if (!log) { return res.status(403).send("해당되는 기록이 없습니다");}
     await log.update({ action: "UNLIKE" });
+    // 준혁 추가
 
     res.status(200).json({ basePost: fullOrigin });
   } catch (error) {
