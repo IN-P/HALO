@@ -7,6 +7,9 @@ import {
   EDIT_COMMENT_REQUEST,
   REMOVE_COMMENT_REQUEST,
 } from "../reducers/comment_IN";
+import ReportButton from "./ReportButton";//윫
+import ReportModal from "./ReportModal";//윫
+
 
 const BASKET_STYLE = [
   {}, // 0단: 안씀
@@ -44,6 +47,8 @@ const Comment = ({ postId, currentUserId }) => {
   const [editId, setEditId] = useState(null);
   const [editValue, setEditValue] = useState("");
   const menuRefs = useRef({}); // 댓글마다 ref 분리
+  const [reportModalOpen, setReportModalOpen] = useState(false);//윫
+  const [reportTargetId, setReportTargetId] = useState(null);//윫
 
   useEffect(() => {
     dispatch({ type: LOAD_COMMENTS_REQUEST, postId });
@@ -123,6 +128,11 @@ const Comment = ({ postId, currentUserId }) => {
   const onReport = (comment) => {
     window.alert("신고가 접수되었습니다.");
     setMenuOpenMap({});
+  };
+  //윫 :ReportButton 클릭 시 모달 열기
+  const onOpenReportModal = (commentId) => {
+    setReportTargetId(commentId);
+    setReportModalOpen(true);
   };
 
   const toggleMenu = (id) => {
@@ -249,9 +259,13 @@ const Comment = ({ postId, currentUserId }) => {
                           </button>
                         </>
                       ) : (
-                        <button onClick={() => onReport(c)} style={menuItemStyle}>
-                          신고
-                        </button>
+                        // 윫 : 리포트버튼 추가
+                        <div style={{ padding: "4px 16px" }}>
+                          <ReportButton
+                            postId={c.id} // 댓글 ID를 postId로 넘김 (컴포넌트 내부에서 target_id로 사용)
+                            onClick={() => onOpenReportModal(c.id)}
+                          />
+                        </div>
                       )}
                     </div>
                   )}
@@ -389,6 +403,13 @@ const Comment = ({ postId, currentUserId }) => {
         <div style={{ color: "#aaa", marginLeft: 8 }}>아직 댓글이 없습니다.</div>
       )}
       {Array.isArray(comments[postId]) && renderTree(comments[postId], 0)}
+      {/* 윫 수정 리포트 모달 */}
+      <ReportModal
+        visible={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        postId={reportTargetId}
+        targetType={2}
+      />
     </div>
   );
 };

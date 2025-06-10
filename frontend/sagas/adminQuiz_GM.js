@@ -10,6 +10,7 @@ const registerQuizAPI = async (data) => {
         question: data.question,
         type: data.type,
         point_reward: data.point_reward,
+        options: data.options,
     })
 
     const quizId = quizRes.data.id

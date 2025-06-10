@@ -71,7 +71,7 @@ const ProfilePage = () => {
               onRefetch={() => setRefetchTrigger((prev) => prev + 1)}
             />
           </div>
-          <ProfilePost data={data} isMyProfile={isMyProfile} />
+          <ProfilePost data={data} isMyProfile={isMyProfile} isBlocked={data?.isBlocked || data?.isBlockedByTarget} />
         </div>
       )}
     </AppLayout>

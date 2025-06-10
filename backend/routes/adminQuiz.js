@@ -4,7 +4,9 @@ const { Quiz, QuizOption } = require('../models');
 
 // 퀴즈 등록
 router.post('/quizzes', async(req, res) => {
-    const { question, type, point_reward } = req.body
+    const { question, type, point_reward, options } = req.body
+
+    console.log("받은 options: ", options)
 
     try {
         const quiz = await Quiz.create({
@@ -13,28 +15,22 @@ router.post('/quizzes', async(req, res) => {
             point_reward,
         })
 
+        // options 처리
+        if (Array.isArray(options)) {
+            const quizOptions = options.map((opt) => ({
+                quizzes_id: quiz.id,
+                question_option: opt.question_option,
+                answer: opt.answer
+            }))
+
+            console.log("저장할 보기: ", quizOptions)
+            await QuizOption.bulkCreate(quizOptions)
+            console.log("보기 저장 완료")
+        }
         res.status(201).json({id: quiz.id})
     } catch (err) {
         console.error(err)
         res.status(500).json({error: "퀴즈 저장 실패"})
-    }
-})
-
-// 보기 등록
-router.post('/quiz-options', async (req, res) => {
-    const { quizzes_id, question_option, answer } = req.body
-
-    try {
-        await QuizOption.create({
-            quizzes_id,
-            question_option,
-            answer,  // 1 또는 0
-        })
-
-        res.status(201).json({message: "옵션 등록 완료"})
-    } catch (err) {
-        console.error(err)
-        res.status(500).json({error: "보기 저장 실패"})
     }
 })
 

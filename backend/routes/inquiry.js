@@ -47,6 +47,23 @@ router.get('/', isLoggedIn, async (req, res, next) => {
   }
 });
 
+
+
+// 내 문의 목록 조회 (R)
+router.get('/my', isLoggedIn, async (req, res, next) => {
+  console.log('🧍‍♀️ req.user:', req.user);
+  try {
+    const inquiries = await Inquiry.findAll({
+      where: { users_id: req.user.id },
+      order: [['createdAt', 'DESC']],
+    });
+    res.status(200).json(inquiries);
+  } catch (error) {
+    console.error('내 문의 조회 실패:', error);
+    next(error);
+  }
+});
+
 // 문의 상세 조회 (R)
 router.get('/:id', isLoggedIn, async (req, res, next) => {
   try {
@@ -63,6 +80,32 @@ router.get('/:id', isLoggedIn, async (req, res, next) => {
     next(error);
   }
 });
+
+// 문의 내용 수정 (U)
+router.patch('/:id', isLoggedIn, async (req, res, next) => {
+  try {
+    const { title, message } = req.body;
+    const inquiry = await Inquiry.findByPk(req.params.id);
+
+    if (!inquiry) return res.status(404).json({ message: '문의 없음' });
+
+    // 본인만 수정 가능
+    if (inquiry.users_id !== req.user.id) {
+      return res.status(403).json({ message: '본인만 수정할 수 있습니다.' });
+    }
+
+    if (title) inquiry.title = title;
+    if (message) inquiry.message = message;
+
+    await inquiry.save();
+
+    res.status(200).json(inquiry);
+  } catch (error) {
+    console.error('문의 수정 실패:', error);
+    next(error);
+  }
+});
+
 
 // 문의 답변 등록/수정 (U)
 router.patch('/:id/answer', isLoggedIn, async (req, res, next) => {
@@ -102,5 +145,6 @@ router.delete('/:id', isLoggedIn, async (req, res, next) => {
     next(error);
   }
 });
+
 
 module.exports = router;
