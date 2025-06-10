@@ -10,8 +10,10 @@ import {
   REGISTER_QUIZ_REQUEST,
   RESET_QUIZ_FORM,
 } from "../reducers/adminQuiz_GM";
+import AppLayout from "../components/AppLayout";
+import QuizRegisterForm from "../components/QuizRegisterForm";
 
-const AdminQuizRegister = () => {
+const AdminQuizRegister = ({ onSuccess }) => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
   const { quizRegisterDone, quizRegisterError } = useSelector((state) => state.adminQuiz ?? {});
@@ -22,6 +24,7 @@ const AdminQuizRegister = () => {
       alert("퀴즈 등록 완료");
       form.resetFields();
       dispatch({ type: RESET_QUIZ_FORM });
+      onSuccess?.();  // 성공 시 부모에게 알려줌
     }
   }, [quizRegisterDone]);
   
@@ -56,75 +59,12 @@ const AdminQuizRegister = () => {
   }
 
   return(
-    <div style={{maxWidth: 600, margin: '2rem auto'}}>
-      <h1>🛠️ 퀴즈 등록</h1>
-      <Form layout="vertical" form={form} onFinish={onFinish}>
-        <Form.Item name="question" label="문제" rules={[{required: true}]}>
-          <Input />
-        </Form.Item>
-
-        <Form.Item name="type" label="유형" rules={[{required: true}]}>
-          <Select>
-            <Select.Option value="multiple">객관식</Select.Option>
-            <Select.Option value="ox">OX</Select.Option>
-          </Select>
-        </Form.Item>
-
-        <Form.Item name="point_reward" label="포인트" rules={[{required: true}]}>
-          <InputNumber min={1} />
-        </Form.Item>
-
-        {/* 객관식 퀴즈 */}
-        {watchType === "multiple" && (
-          <>
-            <Form.List name="options">
-              {(fields, {add, remove}) => (
-                <>
-                  <Form.Item label="선택지">
-                    <Button onClick={() => add()}>선택지 추가</Button>
-                  </Form.Item>
-                  {fields.map((field, index)=> (
-                    <Form.Item
-                      key={field.key}
-                      label={`선택지 ${index + 1}`}
-                      name={[field.name]}
-                      rules={[{required: true, message: "선택지를 입력하세요"}]}
-                    >
-                      <Input />
-                    </Form.Item>
-                  ))}
-                </>
-              )}
-            </Form.List>
-
-            <Form.Item
-              name="correctIndex"
-              label="정답 인덱스 (0부터 시작)"
-              rules={[{required: true}]}
-            >
-              <InputNumber min={0} />
-            </Form.Item>
-          </>
-        )}
-
-        {/* OX 퀴즈 */}
-        {watchType === "ox" && (
-          <Form.Item
-            name="correctOX"
-            label="정답 (OX)"
-            rules={[{required: true}]}
-          >
-            <Radio.Group>
-              <Radio.Button value="O">O</Radio.Button>
-              <Radio.Button value="X">X</Radio.Button>
-            </Radio.Group>
-          </Form.Item>
-        )}
-
-        <Button htmlType="submit" type="primary" style={{marginTop: 20}}>등록하기</Button>
-      </Form>
-    </div>
+    <AppLayout>
+      <div style={{padding: "20px", boxSizing: "border-box"}}>
+        <QuizRegisterForm />
+      </div>
+    </AppLayout>
   )
 }
 
-export default AdminQuizRegister
+export default AdminQuizRegister;

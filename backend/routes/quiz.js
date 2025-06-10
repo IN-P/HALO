@@ -5,7 +5,7 @@ const { Quiz, QuizOption, UsersQuiz } = require("../models");
 // 1. 전체 퀴즈 목록 (문제만)
 router.get("/", async (req, res) => {
     const quizzes = await Quiz.findAll({
-        attributes: ["id", "question"],
+        attributes: ["id", "question", "point_reward", "createdAt"],
         order: [["createdAt", "desc"]],
     });
     res.json(quizzes);
