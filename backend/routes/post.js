@@ -3,9 +3,8 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { Post, User, Image, Comment, Hashtag, ActiveLog } = require('../models'); // ActiveLog 준혁추가
+const { Post, User, Image, Comment, Hashtag, ActiveLog, Block } = require('../models');
 const { isLoggedIn } = require('./middlewares');
-const { Block } = require('../models');//윫
 const { Op } = require('sequelize'); // 윫
 
 // uploads 폴더 생성
@@ -38,7 +37,7 @@ router.post('/', isLoggedIn, async (req, res, next) => {
     const post = await Post.create({
       content: req.body.content,
       user_id: req.user.id,
-      visibility: req.body.isPublic ? 'public' : 'private',
+      private_post: req.body.private_post ?? false,
     });
 
     // 해시태그 등록/연결
@@ -78,7 +77,6 @@ router.post('/', isLoggedIn, async (req, res, next) => {
       users_id: req.user.id,
       target_type_id: 1,
     })
-    // 준혁 추가
 
     // 윫 - 차단된 댓글 필터링
     if (req.user) {
@@ -150,7 +148,6 @@ router.delete('/:postId', isLoggedIn, async (req, res, next) => {
       users_id: req.user.id,
       target_type_id: 1,
     });
-    // 준혁 추가
 
     res.status(200).json({
       PostId: parseInt(req.params.postId, 10),
@@ -167,7 +164,7 @@ router.patch('/:postId', isLoggedIn, async (req, res, next) => {
   const hashtags = req.body.content.match(/#[^\s#]+/g);
   try {
     await Post.update(
-      { content: req.body.content, visibility: req.body.isPublic ? 'public' : 'private' },
+      { content: req.body.content, private_post: req.body.private_post ?? false },
       { where: { id: req.params.postId, user_id: req.user.id } }
     );
 
@@ -215,7 +212,6 @@ router.patch('/:postId', isLoggedIn, async (req, res, next) => {
     if (log.action !== "UPDATE") { await log.update({ action: "UPDATE" });
     // 강제 업데이트
     } else { log.changed('updatedAt', true); await log.save(); }
-    // 준혁 추가
 
     res.status(200).json({ PostId: post.id, content: req.body.content });
   } catch (error) {
@@ -280,7 +276,6 @@ router.patch('/:postId/like', isLoggedIn, async (req, res, next) => {
       users_id: req.user.id,
       target_type_id: 1,
     });
-    // 준혁 추가
 
     res.status(200).json({ basePost: fullOrigin });
   } catch (error) {
@@ -325,7 +320,6 @@ router.delete('/:postId/like', isLoggedIn, async (req, res, next) => {
     } });
     if (!log) { return res.status(403).send("해당되는 기록이 없습니다");}
     await log.update({ action: "UNLIKE" });
-    // 준혁 추가
 
     res.status(200).json({ basePost: fullOrigin });
   } catch (error) {
@@ -352,7 +346,7 @@ router.post('/:postId/regram', isLoggedIn, async (req, res, next) => {
       user_id: req.user.id,
       regram_id: targetPost.id,
       content: req.body.content || '',
-      visibility: req.body.isPublic ? 'public' : 'private',
+      private_post: req.body.private_post ?? false,
     });
 
     // 원본글 최신 데이터 포함 응답 (여기도 마찬가지!)

@@ -129,7 +129,21 @@ const PostCard = ({ post }) => {
             onClick={() => window.location.href = `/profile/${post.User?.nickname}`}
           />
           <div>
-            <div style={{ fontWeight: 'bold', fontSize: 20 }}>{post.User?.nickname}</div>
+            <div style={{ fontWeight: 'bold', fontSize: 20, display: 'flex', alignItems: 'center', gap: 6 }}>
+              {post.User?.nickname}
+              {post.private_post && (
+                <span style={{
+                  display: 'inline-block',
+                  background: '#ffe3e3',
+                  color: '#e50000',
+                  fontWeight: 700,
+                  fontSize: 12,
+                  padding: '2px 8px',
+                  borderRadius: 10,
+                  marginLeft: 6,
+                }}>나만보기</span>
+              )}
+            </div>
             <div style={{ fontSize: 14, color: '#888' }}>
               {(() => {
                 const baseDate = post.User?.last_active ? new Date(post.User.last_active) : new Date(post.createdAt);
