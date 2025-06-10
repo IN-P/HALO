@@ -161,7 +161,7 @@ const detailBoxStyle = {
 
 const modalStyle = {
   position: 'fixed',
-  zIndex: 9999,
+  zIndex: 3000,
   left: 0,
   top: 0,
   width: '100vw',
