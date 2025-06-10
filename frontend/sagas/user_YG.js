@@ -15,6 +15,7 @@ import {
   LOAD_MY_INFO_FAILURE,
 } from '../reducers/user_YG';
 
+import { setMe } from '../reducers/chatReducer_JW';
 //  로그인
 function loginAPI(data) {
   return axios.post('http://localhost:3065/user/login', data, {
@@ -29,6 +30,8 @@ function* login(action) {
       type: LOG_IN_SUCCESS,
       data: result.data,
     });
+    yield put(setMe(result.data)); // 👈 이 줄을 추가!
+    console.log('✅ Saga: chatReducer_JW의 me 상태 업데이트 성공:', result.data);
   } catch (err) {
     yield put({
       type: LOG_IN_FAILURE,

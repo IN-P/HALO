@@ -33,11 +33,13 @@ const playerDrawRouter = require('./routes/playerDraw');   //## 경미
 const adminPlayerRouter = require('./routes/adminPlayer');   //## 경미
 const weatherRouter = require('./routes/weather'); //## 재원
 const chatRouter = require('./routes/chat') //## 재원
+const userSearchRouter = require('./routes/userSearch'); // ## 재원
 const resetPasswordRouter = require('./routes/resetPassword'); //윤기
 const authRouter = require('./routes/auth'); // 윤기 간편 로그인 라우터 추가
 const achievements = require('./routes/achievements'); // 준혁
 const badges = require('./routes/badges'); // 준혁
 const kakaopayRouter = require('./routes/kakaopay'); //윤기
+const adminRouter = require('./routes/useradmin');
 
 // .env 적용
 dotenv.config();
@@ -104,9 +106,11 @@ app.use('/store/draw', playerDrawRouter);   //## 경미
 app.use('/store/admin', adminPlayerRouter);   //## 경미
 app.use('/api/chat', chatRouter); //## 재원
 app.use('/api/weather', weatherRouter); //## 재원 날씨
+app.use('/userSearch', userSearchRouter); // 재원 유저검색
 app.use('/user/reset-password', resetPasswordRouter); //윤기 비번재발급
 app.use('/auth', authRouter); //윤기추가 /auth/google, /auth/google/callback 용
 app.use('/pay', kakaopayRouter); //윤기추가
+app.use('/api/admin', adminRouter);
 
 module.exports = app;
 

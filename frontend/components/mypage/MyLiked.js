@@ -52,11 +52,19 @@ const PostContent = styled.div`
   text-overflow: ellipsis;
 `;
 
+const NoDataMessage = styled.div`
+  width: 100%;
+  text-align: center;
+  margin-top: 40px;
+  font-size: 16px;
+  color: #888;
+`;
+
 const MyLiked = ({ data }) => {
   const getPostById = (id) => data?.Posts?.find(post => post.id === id);
 
   if (!data || !data.Liked || data.Liked.length === 0) {
-    return <div>좋아요 누른 게시물이 없습니다.</div>;
+    return <NoDataMessage>좋아요한 게시물이 없습니다</NoDataMessage>;
   }
 
   return (
