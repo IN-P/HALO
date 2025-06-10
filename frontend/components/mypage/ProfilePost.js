@@ -44,14 +44,15 @@ const ProfilePost = ({ data, isMyProfile, isBlocked, isBlockedByTarget }) => {//
         <div>
             <nav style={tabStyle} aria-label="프로필 탭 메뉴">
                 <div
-                    role="tab"
-                    tabIndex={0}
-                    onClick={() => setActiveTab("posts")}
-                    onKeyDown={(e) => e.key === "Enter" && setActiveTab("posts")}
-                    style={activeTab === "posts" ? activeTabStyle : inactiveTabStyle}
-                    aria-selected={activeTab === "posts"}
-                    <InboxOutlined />
-                    <span>게시물</span>
+                role="tab"
+                tabIndex={0}
+                onClick={() => setActiveTab("posts")}
+                onKeyDown={(e) => e.key === "Enter" && setActiveTab("posts")}
+                style={activeTab === "posts" ? activeTabStyle : inactiveTabStyle}
+                aria-selected={activeTab === "posts"}
+                >
+                <InboxOutlined />
+                <span>게시물</span>
                 </div>
                 {isMyProfile && (
                     <>

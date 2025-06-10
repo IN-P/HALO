@@ -6,7 +6,6 @@ import regram_IN from './regram_IN';
 import bookmark_IN from './bookmark_IN'; 
 import followSaga from './follow_YB';
 import reportSaga from './report_YB';
-import blockSaga from './block';
 import user_YG from './user_YG'; 
 import profile_jh from './profile_jh'; 
 import chatSaga from './chatSaga_JW';
