@@ -9,6 +9,22 @@ import { getRoleName } from '../../../utils/roleNames';
 
 const { Title } = Typography;
 
+// 유저 상태 텍스트 반환 함수
+const getUserStatusLabel = (statusId) => {
+  switch (statusId) {
+    case 1:
+      return '일반';
+    case 2:
+      return '탈퇴';
+    case 3:
+      return '휴면';
+    case 4:
+      return '정지';
+    default:
+      return '알수없음';
+  }
+};
+
 const AdminUserPage = () => {
   const router = useRouter();
   const { user } = useSelector((state) => state.user_YG);
@@ -47,6 +63,18 @@ const AdminUserPage = () => {
     setUsers(filtered);
   };
 
+  const handleDelete = async (id) => {
+    if (!confirm('정말로 이 유저를 탈퇴 처리하시겠습니까?')) return;
+    try {
+      await axios.delete(`/api/admin/users/${id}`, { withCredentials: true });
+      alert('유저가 소프트 딜리트 처리되었습니다.');
+      fetchUsers();
+    } catch (err) {
+      console.error('유저 삭제 실패:', err.response?.data || err);
+      alert('유저 삭제 중 오류가 발생했습니다.');
+    }
+  };
+
   const columns = [
     {
       title: 'ID',
@@ -69,7 +97,18 @@ const AdminUserPage = () => {
     {
       title: '권한',
       dataIndex: 'role',
-      render: (role) => <Tag color={role === 1 ? 'volcano' : 'geekblue'}>{getRoleName(role)}</Tag>,
+      render: (role) => (
+        <Tag color={role === 1 ? 'volcano' : 'geekblue'}>{getRoleName(role)}</Tag>
+      ),
+    },
+    {
+      title: '상태',
+      dataIndex: 'user_status_id',
+      render: (status) => {
+        const label = getUserStatusLabel(status);
+        const color = status === 2 ? 'red' : status === 3 ? 'orange' : 'green';
+        return <Tag color={color}>{label}</Tag>;
+      },
     },
     {
       title: 'IP',
@@ -77,17 +116,24 @@ const AdminUserPage = () => {
     },
     {
       title: '관리',
-      render: (_, record) =>
-        record.role === 1 ? (
-          <span style={{ color: '#999' }}>수정 불가</span>
-        ) : (
+      render: (_, record) => {
+        if (record.role === 1) {
+          return <span style={{ color: '#999' }}>수정 불가</span>;
+        }
+
+        if (record.user_status_id === 2) {
+          return <span style={{ color: '#999' }}>탈퇴됨</span>;
+        }
+
+        return (
           <Space>
             <Link href={`/admin/users/${record.id}`}>
               <Button type="primary" size="small">상세</Button>
             </Link>
-            <Button danger size="small">삭제</Button>
+            <Button danger size="small" onClick={() => handleDelete(record.id)}>삭제</Button>
           </Space>
-        ),
+        );
+      },
       width: 160,
     },
   ];
