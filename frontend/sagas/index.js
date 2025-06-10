@@ -6,10 +6,11 @@ import regram_IN from './regram_IN';
 import bookmark_IN from './bookmark_IN'; 
 import followSaga from './follow_YB';
 import reportSaga from './report_YB';
-import blockSaga from './block';
 import user_YG from './user_YG'; 
 import profile_jh from './profile_jh'; 
 import chatSaga from './chatSaga_JW';
+import blockSaga from './block';;//율비
+import notification_JH from './notification_JH';
 import quizSaga from './quiz_GM';
 import adminQuizSaga from './adminQuiz_GM';
 import playerDrawSaga from './playerDraw_GM';
@@ -28,6 +29,8 @@ export default function* rootSaga() {
     fork(user_YG),
     fork(profile_jh),
     fork(chatSaga),
+    fork(blockSaga),//율비
+    fork(notification_JH), // 준혁추가
     fork(quizSaga),
     fork(adminQuizSaga),
     fork(playerDrawSaga),

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useDispatch, useSelector } from 'react-redux';
-import { SIGN_UP_REQUEST } from '../reducers/user_YG';
+import { SIGN_UP_REQUEST, SIGN_UP_RESET } from '../reducers/user_YG';
 
 const SignupPage = () => {
   const router = useRouter();
@@ -37,9 +37,15 @@ const SignupPage = () => {
     });
   };
 
+  /// 회원가입 완료 시 초기화
+    useEffect(() => {
+    dispatch({ type: SIGN_UP_RESET });
+  }, [dispatch]);
+  
   useEffect(() => {
     if (signUpDone) {
       alert('회원가입 성공');
+      dispatch({ type: SIGN_UP_RESET });
       router.push('/login');
     }
   }, [signUpDone]);

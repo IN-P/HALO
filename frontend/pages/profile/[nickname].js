@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import AppLayout from "../../components/AppLayout";
 import MyHeader from "../../components/mypage/MyHeader";
@@ -10,6 +10,7 @@ import ProfilePost from "../../components/mypage/ProfilePost";
 import { InboxOutlined, NumberOutlined, TagOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { LOAD_USER_INFO_REQUEST } from "../../reducers/profile_jh";
+import { LOAD_MY_INFO_REQUEST } from '../../reducers/user_YG';
 import wrapper from "../../store/configureStore";
 import { END } from "redux-saga";
 import axios from "axios";
@@ -43,16 +44,16 @@ const ProfilePage = () => {
     }
   }, []);
 
+  const reloadLogInUser = useCallback(() => { dispatch({ type: LOAD_MY_INFO_REQUEST }); }, [dispatch]);
+
   // 데이터 갱신용
-  const fetchUserInfo = () => {
-    dispatch({ type: LOAD_USER_INFO_REQUEST, data: nickname });
-  };
+  const fetchUserInfo = () => { dispatch({ type: LOAD_USER_INFO_REQUEST, data: nickname }); };
 
   return (
     <AppLayout>
       {showSetting && isMyProfile ? (
         <>
-          <MySettingMain onClose={() => setShowSetting(false)} data={data} reload={fetchUserInfo} />
+          <MySettingMain onClose={() => setShowSetting(false)} data={data} reload={fetchUserInfo} reloadLogInUser={reloadLogInUser} />
         </>
       ) : (
         <div>
@@ -70,7 +71,7 @@ const ProfilePage = () => {
               onRefetch={() => setRefetchTrigger((prev) => prev + 1)}
             />
           </div>
-          <ProfilePost data={data} isMyProfile={isMyProfile} />
+          <ProfilePost data={data} isMyProfile={isMyProfile} isBlocked={data?.isBlocked || data?.isBlockedByTarget} />
         </div>
       )}
     </AppLayout>
