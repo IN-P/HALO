@@ -47,6 +47,12 @@ const MySettingSidebar = ({ selectedTab, onSelectTab }) => {
           프로필 편집
         </ListItem>
         <ListItem
+          selected={selectedTab === "balance"}
+          onClick={() => onSelectTab("balance")}
+        >
+          잔액 조회
+        </ListItem>
+        <ListItem
           selected={selectedTab === "password"}
           onClick={() => onSelectTab("password")}
         >

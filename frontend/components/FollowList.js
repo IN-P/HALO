@@ -49,7 +49,7 @@ const FollowList = ({ userId, type, onUpdate }) => {
           users.map(user => (
             <li key={user.id} style={{ display: 'flex', alignItems: 'center', margin: '10px 0' }}>
               <img
-                src={user.profile_img || '/default-profile.png'}
+                src={`http://localhost:3065${user.profile_img}` || '/default-profile.png'}
                 alt="프로필"
                 style={{ width: 40, height: 40, borderRadius: '50%', marginRight: 10 }}
               />
