@@ -1,11 +1,13 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
+import { getTotalCommentCount,flattenComments } from '../utils/comment';
 
 function PostCommentPreview({ postId, onShowDetailModal }) {
   // 항상 리덕스에서 최신 댓글 불러옴
   const comments = useSelector(state => state.comment_IN.comments[postId] || []);
-  const commentCount = comments.length;
-  const previewComments = comments.slice(0, 2);
+  const commentCount = getTotalCommentCount(comments);
+  const allComments = flattenComments(comments);
+const previewComments = allComments.slice(0, 2);
   const showMoreComments = commentCount > 2;
 
   return (

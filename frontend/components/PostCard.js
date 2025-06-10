@@ -9,6 +9,7 @@ import { FaHeart, FaRegHeart, FaRegComment, FaBookmark, FaRegBookmark, FaRetweet
 import PostMenu from './PostMenu';
 import PostDetailModal from './PostDetailModal';
 import ReportModal from './ReportModal';
+import { getTotalCommentCount } from '../utils/comment';
 
 const IMAGE_SIZE = { width: 540, height: 640 };
 
@@ -37,7 +38,7 @@ const reduxComments = useSelector(state => state.comment_IN.comments[post.id]);
 const commentList = reduxComments && Array.isArray(reduxComments)
   ? reduxComments
   : (Array.isArray(post.Comments) ? post.Comments : []);
-const commentCount = commentList.length;
+const commentCount = getTotalCommentCount(commentList);
 const previewComments = commentList.slice(0, 2);
 const showMoreComments = commentCount > 2;
 
