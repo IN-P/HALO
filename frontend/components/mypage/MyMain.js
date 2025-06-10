@@ -45,24 +45,32 @@ const MyMain = ({ data, isMyProfile, loginUser, onRefetch }) => {
   const [isFollowerModalOpen, setIsFollowerModalOpen] = useState(false);
   const [isFollowingModalOpen, setIsFollowingModalOpen] = useState(false);
   //윫 추가
-if (data?.isBlocked|| data?.isBlockedByTarget) {
-  return (
-    <div style={{ width: '25%', padding: '20px', textAlign: 'center', color: '#888' }}>
-      <p>이 사용자는 차단되어 있어 정보를 볼 수 없습니다.</p>
-      {/* 👇 차단 해제 버튼은 항상 노출 */}
-      <div style={{ marginTop: '12px' }}>
-        <BlockButton
-          toUserId={data?.id}
-          isBlocked={data?.isBlocked}
-          onRefetch={() => {
-            setRefetchTrigger((v) => v + 1);
-            onRefetch?.();
-          }}
-        />
+  if (data?.isBlockedByTarget) {
+    return (
+      <div style={{ width: '25%', padding: '20px', textAlign: 'center', color: '#888' }}>
+        <p> </p>
       </div>
-    </div>
-  );
-}
+    );
+  }
+
+  if (data?.isBlocked) {
+    return (
+      <div style={{ width: '25%', padding: '20px', textAlign: 'center', color: '#888' }}>
+        <p>차단한 사용자입니다. 차단을 해제하면 정보를 볼 수 있습니다.</p>
+        <div style={{ marginTop: '12px' }}>
+          <BlockButton
+            toUserId={data?.id}
+            isBlocked={data?.isBlocked}
+            onRefetch={() => {
+              setRefetchTrigger((v) => v + 1);
+              onRefetch?.();
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
   //
   return (
     <div style={{ width: '25%' }}>
