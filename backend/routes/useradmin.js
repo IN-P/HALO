@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { User, UserInfo, Social } = require('../models');
+const { User, UserInfo, Social, DeleteUser } = require('../models');
 const isAdminUserManager = require('../middlewares/isAdminUserManager');
+
 
 // [1] 유저 목록 조회
 router.get('/users', isAdminUserManager, async (req, res) => {
@@ -104,5 +105,39 @@ router.patch('/users/:id', isAdminUserManager, async (req, res) => {
     return res.status(500).json({ message: '서버 오류로 유저 수정 실패' });
   }
 });
+
+// [4] 유저 삭제 (소프트 딜리트)
+router.delete('/users/:id', isAdminUserManager, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id, 10);
+    if (isNaN(userId)) {
+      return res.status(400).json({ message: '잘못된 유저 ID입니다.' });
+    }
+
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ message: '유저를 찾을 수 없습니다.' });
+    }
+
+    if (user.user_status_id === 2) {
+      return res.status(400).json({ message: '이미 탈퇴 처리된 유저입니다.' });
+    }
+
+    // 1. 유저 상태를 탈퇴로 변경
+    await User.update(
+      { user_status_id: 2 },
+      { where: { id: userId } }
+    );
+
+    // 2. 삭제 로그 테이블에 기록
+    await DeleteUser.create({ users_id: userId });
+
+    return res.status(200).json({ message: '유저 탈퇴 처리 완료 (소프트 딜리트)' });
+  } catch (error) {
+    console.error('[관리자] 유저 소프트 딜리트 실패:', error);
+    return res.status(500).json({ message: '서버 오류로 유저 삭제에 실패했습니다.' });
+  }
+});
+
 
 module.exports = router;
