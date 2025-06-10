@@ -7,72 +7,137 @@ import {
   EDIT_COMMENT_REQUEST,
   REMOVE_COMMENT_REQUEST,
 } from "../reducers/comment_IN";
-import ReportButton from "./ReportButton";//윫
-import ReportModal from "./ReportModal";//윫
+import ReportButton from "./ReportButton";
+import ReportModal from "./ReportModal";
+import { getTotalCommentCount, flattenComments } from "../utils/comment";
 
+// 스타일 정의 생략(아래쪽에 있음)
 
-const BASKET_STYLE = [
-  {}, // 0단: 안씀
-  {
-    borderLeft: '2px solid #ffd2d2',
-    borderRight: '2px solid #ffd2d2',
-    borderBottom: '2px solid #ffd2d2',
-    borderTop: 'none',
-    borderRadius: '0 0 12px 12px',
-    margin: '10px 0 10px 0',
-    padding: '2px 0 2px 0',
-    background: 'none',
-  },
-  {
-    borderLeft: '2px solid #70b3ff',
-    borderRight: '2px solid #70b3ff',
-    borderBottom: '2px solid #70b3ff',
-    borderTop: 'none',
-    borderRadius: '0 0 12px 12px',
-    margin: '10px 0 10px 0',
-    padding: '2px 0 2px 0',
-    background: 'none',
-  },
-];
-
-const Comment = ({ postId, currentUserId }) => {
+const Comment = ({
+  postId,
+  currentUserId,
+  preview = false,
+  previewCount = 3,
+  onShowDetailModal,
+  initialComments, // SSR/post.Comments
+}) => {
   const dispatch = useDispatch();
   const router = useRouter();
   const { comments, addCommentLoading } = useSelector((state) => state.comment_IN);
 
+  // SSR fallback
+  let listFromRedux = comments[postId];
+  let listFromProps = Array.isArray(initialComments) ? initialComments : [];
+  let effectiveComments =
+    Array.isArray(listFromRedux) && listFromRedux.length > 0
+      ? listFromRedux
+      : listFromProps;
+
+  useEffect(() => {
+    dispatch({ type: LOAD_COMMENTS_REQUEST, postId });
+  }, [dispatch, postId]);
+
+  if (preview) {
+    // 삭제 댓글 포함 전체 평탄화+정렬
+    const allComments = flattenComments(effectiveComments);
+    const sorted = [...allComments].sort((a, b) => b.id - a.id);
+    const previewComments = sorted.slice(0, previewCount);
+
+    return (
+      <div
+        style={{
+          margin: '8px 0 0 0',
+          background: '#fafbfc',
+          borderRadius: 10,
+          minHeight: 40,
+          padding: '10px 14px 8px 14px',
+          border: '1px solid #f2f2f2',
+          fontSize: 15,
+          color: '#333',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+          cursor: onShowDetailModal ? "pointer" : "default", // 커서
+        }}
+        onClick={onShowDetailModal}
+      >
+        {previewComments.length === 0 && (
+          <div style={{ color: '#b0b0b0', margin: '6px 2px', fontStyle: 'italic', fontSize: 15 }}>
+            아직 댓글이 없습니다 🙃
+          </div>
+        )}
+        {previewComments.map((c) =>
+          c && c.User ? (
+            <div
+              key={c.id}
+              style={{
+                display: "flex",
+                gap: 10,
+                alignItems: "center",
+                padding: "12px 0 0 0",
+                borderBottom: "1px solid #f1f1f1",
+                background: "none",
+              }}
+            >
+              <img
+                src={
+                  c.User?.profile_img
+                    ? `http://localhost:3065${c.User.profile_img}`
+                    : "http://localhost:3065/img/profile/default.jpg"
+                }
+                alt="avatar"
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  border: "1px solid #eee",
+                  flexShrink: 0,
+                  cursor: "default",
+                }}
+              />
+              <div style={{ flex: 1 }}>
+                <b>{c.User?.nickname || "알 수 없음"}</b>
+                <div
+                  style={{
+                    whiteSpace: "pre-wrap",
+                    fontSize: 15,
+                    color: c.is_deleted ? "#721c24" : "#222",
+                  }}
+                >
+                  {c.is_deleted
+                    ? "삭제된 댓글입니다."
+                    : c.content}
+                </div>
+              </div>
+            </div>
+          ) : null
+        )}
+        {allComments.length > previewCount && (
+          <div
+            style={{
+              color: "#2995f4",
+              fontSize: 15,
+              fontWeight: 500,
+              marginTop: 3,
+              userSelect: "none",
+            }}
+          >
+            댓글 더보기
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // [코멘트 입력 등 상태]
   const [openMap, setOpenMap] = useState({});
   const [inputMap, setInputMap] = useState({});
   const [showInputMap, setShowInputMap] = useState({});
   const [menuOpenMap, setMenuOpenMap] = useState({});
   const [editId, setEditId] = useState(null);
   const [editValue, setEditValue] = useState("");
-  const menuRefs = useRef({}); // 댓글마다 ref 분리
-  const [reportModalOpen, setReportModalOpen] = useState(false);//윫
-  const [reportTargetId, setReportTargetId] = useState(null);//윫
-
-  useEffect(() => {
-    dispatch({ type: LOAD_COMMENTS_REQUEST, postId });
-  }, [dispatch, postId]);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (Object.keys(menuOpenMap).length === 0) return;
-      const openIds = Object.keys(menuOpenMap).filter(id => menuOpenMap[id]);
-      let clickedInsideAny = false;
-      for (const id of openIds) {
-        const ref = menuRefs.current[id];
-        if (ref && ref.contains(e.target)) {
-          clickedInsideAny = true;
-          break;
-        }
-      }
-      if (!clickedInsideAny) {
-        setMenuOpenMap({});
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [menuOpenMap]);
+  const menuRefs = useRef({});
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportTargetId, setReportTargetId] = useState(null);
 
   const onReplyShow = (id) => {
     setOpenMap((prev) => ({ ...prev, [id]: true }));
@@ -107,7 +172,6 @@ const Comment = ({ postId, currentUserId }) => {
     setEditValue(comment.content);
     setMenuOpenMap({});
   };
-
   const onEditSubmit = (comment) => {
     if (!editValue.trim()) return;
     dispatch({
@@ -117,45 +181,31 @@ const Comment = ({ postId, currentUserId }) => {
     setEditId(null);
     setEditValue("");
   };
-
   const onDelete = (comment) => {
     if (window.confirm("정말 삭제하시겠습니까?")) {
       dispatch({ type: REMOVE_COMMENT_REQUEST, data: { commentId: comment.id, postId } });
       setMenuOpenMap({});
     }
   };
-
-  const onReport = (comment) => {
-    window.alert("신고가 접수되었습니다.");
-    setMenuOpenMap({});
-  };
-  //윫 :ReportButton 클릭 시 모달 열기
   const onOpenReportModal = (commentId) => {
     setReportTargetId(commentId);
     setReportModalOpen(true);
   };
-
   const toggleMenu = (id) => {
     setMenuOpenMap((prev) => ({
       ...prev,
       [id]: !prev[id],
     }));
   };
-
-  // 아바타 클릭 시 프로필 페이지로 이동
   const onAvatarClick = (nickname) => {
     if (nickname) router.push(`/profile/${nickname}`);
   };
-
-  // 부모 아이디 부분만 볼드로 빼고 본문에서 @부모아이디 중복 제거 처리 함수
   const renderCommentContent = (content, parentNickname) => {
     if (!content) return null;
     let text = content;
-
     if (parentNickname && content.startsWith(`@${parentNickname}`)) {
       text = content.slice(parentNickname.length + 1).trimStart();
     }
-
     return (
       <>
         {parentNickname && <b>@{parentNickname} </b>}
@@ -163,7 +213,6 @@ const Comment = ({ postId, currentUserId }) => {
       </>
     );
   };
-
   const renderTree = (list, level = 0) => {
     if (!Array.isArray(list)) return null;
     return list.map((c) => {
@@ -175,7 +224,6 @@ const Comment = ({ postId, currentUserId }) => {
 
       return (
         <React.Fragment key={c.id}>
-          {/* 댓글/대댓글 */}
           <div
             style={{
               display: "block",
@@ -259,10 +307,9 @@ const Comment = ({ postId, currentUserId }) => {
                           </button>
                         </>
                       ) : (
-                        // 윫 : 리포트버튼 추가
                         <div style={{ padding: "4px 16px" }}>
                           <ReportButton
-                            postId={c.id} // 댓글 ID를 postId로 넘김 (컴포넌트 내부에서 target_id로 사용)
+                            postId={c.id}
                             onClick={() => onOpenReportModal(c.id)}
                           />
                         </div>
@@ -318,8 +365,6 @@ const Comment = ({ postId, currentUserId }) => {
               )}
             </div>
           </div>
-
-          {/* 수정폼을 댓글 바로 아래 렌더링 */}
           {editId === c.id && !c.is_deleted && (
             <div style={{ marginTop: 6 }}>
               <input
@@ -349,8 +394,6 @@ const Comment = ({ postId, currentUserId }) => {
               </button>
             </div>
           )}
-
-          {/* 자식 댓글들 렌더링 */}
           {openMap[c.id] && replyList.length > 0 && (
             <div style={BASKET_STYLE[level + 1] || BASKET_STYLE[BASKET_STYLE.length - 1]}>
               {renderTree(replyList, level + 1)}
@@ -399,11 +442,10 @@ const Comment = ({ postId, currentUserId }) => {
           등록
         </button>
       </div>
-      {Array.isArray(comments[postId]) && comments[postId].length === 0 && (
+      {Array.isArray(effectiveComments) && effectiveComments.length === 0 && (
         <div style={{ color: "#aaa", marginLeft: 8 }}>아직 댓글이 없습니다.</div>
       )}
-      {Array.isArray(comments[postId]) && renderTree(comments[postId], 0)}
-      {/* 윫 수정 리포트 모달 */}
+      {Array.isArray(effectiveComments) && renderTree(effectiveComments, 0)}
       <ReportModal
         visible={reportModalOpen}
         onClose={() => setReportModalOpen(false)}
@@ -414,6 +456,29 @@ const Comment = ({ postId, currentUserId }) => {
   );
 };
 
+const BASKET_STYLE = [
+  {},
+  {
+    borderLeft: '2px solid #ffd2d2',
+    borderRight: '2px solid #ffd2d2',
+    borderBottom: '2px solid #ffd2d2',
+    borderTop: 'none',
+    borderRadius: '0 0 12px 12px',
+    margin: '10px 0 10px 0',
+    padding: '2px 0 2px 0',
+    background: 'none',
+  },
+  {
+    borderLeft: '2px solid #70b3ff',
+    borderRight: '2px solid #70b3ff',
+    borderBottom: '2px solid #70b3ff',
+    borderTop: 'none',
+    borderRadius: '0 0 12px 12px',
+    margin: '10px 0 10px 0',
+    padding: '2px 0 2px 0',
+    background: 'none',
+  },
+];
 const menuItemStyle = {
   display: "block",
   width: "100%",
@@ -425,7 +490,6 @@ const menuItemStyle = {
   fontSize: 15,
   color: "#444",
 };
-
 const replyButtonStyle = {
   marginTop: 2,
   background: "none",

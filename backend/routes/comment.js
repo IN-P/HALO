@@ -22,7 +22,7 @@ router.post('/post/:postId', isLoggedIn, async (req, res, next) => {
     });
 
     // 댓글 등록 후 최신 댓글 카운트도 같이 응답!
-    const totalComments = await Comment.count({ where: { post_id: post.id, is_deleted: false } });
+    const totalComments = await Comment.count({ where: { post_id: post.id, } });
 
     res.status(201).json({
       comment: fullComment,
@@ -71,7 +71,7 @@ router.post('/:commentId/reply', isLoggedIn, async (req, res, next) => {
     await CommentPath.bulkCreate(uniquePaths);
 
     // 대댓글 등록 후 최신 댓글 카운트도 같이 응답!
-    const totalComments = await Comment.count({ where: { post_id: parent.post_id, is_deleted: false } });
+    const totalComments = await Comment.count({ where: { post_id: parent.post_id, } });
 
     res.status(201).json({
       comment: reply,
@@ -179,7 +179,7 @@ router.delete('/:commentId', isLoggedIn, async (req, res, next) => {
     await comment.update({ is_deleted: true });
 
     // 삭제 후 최신 댓글 카운트도 같이 응답!
-    const totalComments = await Comment.count({ where: { post_id: comment.post_id, is_deleted: false } });
+    const totalComments = await Comment.count({ where: { post_id: comment.post_id,} });
 
     res.status(200).json({
       CommentId: comment.id,

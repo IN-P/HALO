@@ -124,7 +124,11 @@ const PostDetailModal = ({
           </div>
           {/* 댓글 전체 */}
           <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: '#fafbfc', borderRadius: 14, padding: '14px 10px 10px 10px' }}>
-            <Comment postId={post.id} currentUserId={user?.id} />
+            <Comment
+              postId={post.id}
+              currentUserId={user?.id}
+              initialComments={post.Comments}
+            />
           </div>
           {/* 신고 모달 */}
           {showReportModal && (
