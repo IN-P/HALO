@@ -124,7 +124,11 @@ const PostDetailModal = ({
           </div>
           {/* 댓글 전체 */}
           <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: '#fafbfc', borderRadius: 14, padding: '14px 10px 10px 10px' }}>
-            <Comment postId={post.id} currentUserId={user?.id} />
+            <Comment
+              postId={post.id}
+              currentUserId={user?.id}
+              initialComments={post.Comments}
+            />
           </div>
           {/* 신고 모달 */}
           {showReportModal && (
@@ -161,7 +165,7 @@ const detailBoxStyle = {
 
 const modalStyle = {
   position: 'fixed',
-  zIndex: 9999,
+  zIndex: 3000,
   left: 0,
   top: 0,
   width: '100vw',

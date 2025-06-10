@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+// components/PostCard.js
+import React, { useState, useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   LIKE_POST_REQUEST, UNLIKE_POST_REQUEST, REMOVE_POST_REQUEST,
@@ -10,6 +11,7 @@ import PostMenu from './PostMenu';
 import PostDetailModal from './PostDetailModal';
 import ReportModal from './ReportModal';
 import { getTotalCommentCount } from '../utils/comment';
+import Comment from './Comment';
 
 const IMAGE_SIZE = { width: 540, height: 640 };
 
@@ -32,16 +34,6 @@ const PostCard = ({ post }) => {
   const likeCount = basePost.Likers?.length || 0;
   const regramCount = basePost.Regrams?.length || 0;
   const bookmarkCount = basePost.Bookmarkers?.length || 0;
-
-  // *** 댓글 미리보기 ***
-const reduxComments = useSelector(state => state.comment_IN.comments[post.id]);
-const commentList = reduxComments && Array.isArray(reduxComments)
-  ? reduxComments
-  : (Array.isArray(post.Comments) ? post.Comments : []);
-const commentCount = getTotalCommentCount(commentList);
-const previewComments = commentList.slice(0, 2);
-const showMoreComments = commentCount > 2;
-
 
   const isPureRegram = isRegram && (!post.content || post.content.trim() === '');
   const images = isPureRegram && origin ? origin.Images : post.Images;
@@ -203,7 +195,8 @@ const showMoreComments = commentCount > 2;
         <div style={{ display: 'flex', alignItems: 'center', gap: 22, fontSize: 26, margin: '12px 0 0 0', borderTop: '1.5px solid #f2f2f2', paddingTop: 10 }}>
           <button style={iconBtnStyle} onClick={() => setShowDetailModal(true)}>
             <FaRegComment />
-            <span style={countStyle}>{commentCount}</span>
+            {/* 댓글 카운트 표시는 getTotalCommentCount로 */}
+            <span style={countStyle}>{getTotalCommentCount(post.Comments || [])}</span>
           </button>
           <button style={iconBtnStyle} onClick={liked ? onUnlike : onLike}>
             {liked ? <FaHeart color="red" /> : <FaRegHeart />}
@@ -219,73 +212,14 @@ const showMoreComments = commentCount > 2;
           </button>
         </div>
         {/* 댓글 미리보기 */}
-        <div style={{
-          margin: '8px 0 0 0',
-          background: '#fafbfc',
-          borderRadius: 10,
-          minHeight: 40,
-          padding: '10px 14px 8px 14px',
-          border: '1px solid #f2f2f2',
-          fontSize: 15,
-          color: '#333',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-        }}>
-          {commentCount === 0 && (
-            <div style={{ color: '#b0b0b0', margin: '6px 2px', fontStyle: 'italic', fontSize: 15 }}>
-              아직 댓글이 없습니다 🙃
-            </div>
-          )}
-          {previewComments.map((c, idx) =>
-            c && c.User ? (
-              <div key={c.id} style={{
-                marginBottom: 4,
-                padding: '2px 0 2px 0',
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 7,
-                fontSize: 15,
-                lineHeight: 1.6,
-                borderRadius: 8,
-                background: idx % 2 === 0 ? '#fff' : '#f4f9ff',
-                boxShadow: '0 0.5px 1.5px rgba(100,140,210,0.04)',
-                wordBreak: 'break-word'
-              }}>
-                <b style={{ marginRight: 7, color: '#1976d2', minWidth: 62 }}>{c.User.nickname}</b>
-                <span style={{
-                  color: '#222',
-                  flex: 1,
-                  whiteSpace: 'pre-line',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical'
-                }}>
-                  {c.content.length > 120 ? c.content.slice(0, 120) + '...' : c.content}
-                </span>
-              </div>
-            ) : null
-          )}
-          {showMoreComments && (
-            <button
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#2995f4',
-                padding: 0,
-                cursor: 'pointer',
-                fontSize: 15,
-                margin: '4px 0 2px 0',
-                fontWeight: 500,
-                display: 'block',
-                textAlign: 'left'
-              }}
-              onClick={() => setShowDetailModal(true)}
-            >
-              댓글 {commentCount}개 모두 보기
-            </button>
-          )}
-        </div>
+        <Comment
+          postId={post.id}
+          currentUserId={user?.id}
+          preview={true}
+          initialComments={post.Comments}
+          previewCount={3} // 최신 3개만
+          onShowDetailModal={() => setShowDetailModal(true)} // 박스 전체 클릭시 모달 오픈
+        />
         {showReportModal && (
           <ReportModal
             visible={showReportModal}
@@ -313,7 +247,7 @@ const showMoreComments = commentCount > 2;
         likeCount={likeCount}
         regramCount={regramCount}
         bookmarkCount={bookmarkCount}
-        commentCount={commentCount}
+        commentCount={getTotalCommentCount(post.Comments || [])}
         onRegram={onRegram}
         regramIconColor={regramIconColor}
         regramDisabled={regramDisabled}
@@ -369,5 +303,3 @@ const countStyle = {
 };
 
 export default PostCard;
-
-
