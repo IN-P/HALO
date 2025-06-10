@@ -55,7 +55,7 @@ const QuizRegisterForm = () => {
 
   return(
     <div style={{maxWidth: 600, margin: '2rem auto'}}>
-      <h1>🛠️ 퀴즈 등록</h1>
+      <h1>🛠️ 퀴즈 등록(관리자 페이지)</h1>
       <Form layout="vertical" form={form} onFinish={onFinish}>
         <Form.Item name="question" label="문제" rules={[{required: true}]}>
           <Input />

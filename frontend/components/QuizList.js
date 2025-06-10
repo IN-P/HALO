@@ -16,6 +16,11 @@ const EventPage = () => {
 
     const columns = [
         {
+            title: "NO",
+            dataIndex: "id",
+            key: "id"
+        },
+        {
             title: "퀴즈 제목",
             dataIndex: "question",
             key: "question"
@@ -32,7 +37,7 @@ const EventPage = () => {
         <div style={{padding: '2rem'}}>
             <h2>🎲 전체 퀴즈 목록</h2>
             <Link href="/adminQuiz" passHref>
-                <Button>퀴즈 등록하기</Button>
+                <Button>퀴즈 등록하기 (관리자용)</Button>
             </Link>
             <Table
                 dataSource={quizList}

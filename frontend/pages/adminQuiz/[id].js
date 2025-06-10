@@ -22,9 +22,9 @@ const AdminQuizEditPage = () => {
                 const q = res.data;
                 const options = q.QuizOptions.map((opt) => opt.question_option);
                 const correctIndex = q.QuizOptions.findIndex((opt) => opt.answer === 1);
-                form.setFieldValue({
+                form.setFieldsValue({
                     question: q.question,
-                    point_reward: point_reward,
+                    point_reward: q.point_reward,
                     type: q.type,
                     options,
                     correctIndex,
