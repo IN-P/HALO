@@ -38,7 +38,7 @@ router.post('/',isLoggedIn, async (req, res, next) => {
     // 준혁 추가
     // 활동 내역 생성
     await ActiveLog.create({
-      action: "FOLLOW",
+      action: "CREATE",
       target_id: toUserId,
       users_id: fromUserId,
       target_type_id: 3,
@@ -88,18 +88,14 @@ router.delete('/following/:toUserId', async (req, res, next) => {
 
     await existing.destroy();
 
-    // 활동 내역 변경 - 준혁 추가
-    const log = await ActiveLog.findOne({
-      where: {
-        action: "FOLLOW",
-        target_id: toUserId,
-        users_id: fromUserId,
-        target_type_id: 3,
-      },
+    // 준혁 : 활동 내역
+    await ActiveLog.create({
+      action: "DELETE",
+      target_id: toUserId,
+      users_id: fromUserId,
+      target_type_id: 3,
     });
-    if (!log) { return res.status(403).send("해당되는 기록이 없습니다"); }
-    await log.update({ action: "UNFOLLOW" });
-    // 준혁 추가
+    //
 
     res.status(200).json({ message: '팔로우가 취소되었습니다' });
   } catch (err) {
@@ -131,25 +127,14 @@ router.delete('/follower/:fromUserId', async (req, res, next) => {
 
     await existing.destroy();
 
-    // 활동 내역 추가 - 준혁 추가
+    // 준혁 : 활동 내역 생성
     await ActiveLog.create({
-      action: "REMOVE_FOLLOWER",
+      action: "DELETE",
       target_id: fromUserId,
       users_id: toUserId,
       target_type_id: 3,
     });
-    // 활동 내역 변경
-    const log = await ActiveLog.findOne({
-      where: {
-        action: "FOLLOW",
-        target_id: toUserId,
-        users_id: fromUserId,
-        target_type_id: 3,
-      },
-    });
-    if (!log) { return res.status(403).send("해당되는 기록이 없습니다"); }
-    await log.update({ action: "REMOVED_FOLLOW" });
-    // 준혁 추가
+    //
 
     res.status(200).json({ message: '해당 팔로워를 제거했습니다.' });
   } catch (err) {
