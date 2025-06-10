@@ -46,6 +46,7 @@ const ReportModal = ({ visible, onClose, postId, targetType }) => {
       confirmLoading={reportLoading}
       okText="신고"
       cancelText="취소"
+       zIndex={3000}
     >
       <TextArea
         rows={4}

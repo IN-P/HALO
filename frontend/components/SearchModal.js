@@ -7,6 +7,7 @@ const SearchModal = ({ onClose, onUserSelect, userMap }) => {
   const [localTerm, setLocalTerm] = useState('');
 
   const { searchTerm, handleSearchChange, filteredData: searchedUsers } = useSearch(
+  '', // 초기 검색어는 빈 문자열
   dataForSearch,
   'nickname'
 );
