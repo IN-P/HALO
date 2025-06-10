@@ -1,7 +1,7 @@
 // routes/comment.js
 const express = require('express');
 const router = express.Router();
-const { Comment, CommentPath, User, Post } = require('../models');
+const { Comment, CommentPath, User, Post, ActiveLog } = require('../models'); // ActiveLog 준혁 추가
 const { isLoggedIn } = require('./middlewares');
 
 // 1. 기본 댓글 등록: POST /comment/post/:postId
@@ -23,6 +23,15 @@ router.post('/post/:postId', isLoggedIn, async (req, res, next) => {
 
     // 댓글 등록 후 최신 댓글 카운트도 같이 응답!
     const totalComments = await Comment.count({ where: { post_id: post.id, is_deleted: false } });
+
+    // 활동 내역 생성 - 준혁 추가
+    await ActiveLog.create({
+      action: "COMMENT",
+      target_id: comment.id,
+      users_id: req.user.id,
+      target_type_id: 2,
+    } );
+    // 준혁 추가
 
     res.status(201).json({
       comment: fullComment,
@@ -72,6 +81,15 @@ router.post('/:commentId/reply', isLoggedIn, async (req, res, next) => {
 
     // 대댓글 등록 후 최신 댓글 카운트도 같이 응답!
     const totalComments = await Comment.count({ where: { post_id: parent.post_id, is_deleted: false } });
+
+    // 활동 내역 생성 - 준혁 추가
+    await ActiveLog.create({
+      action: "REPLY",
+      target_id: reply.id,
+      users_id: req.user.id,
+      target_type_id: 2,
+    } );
+    // 준혁 추가
 
     res.status(201).json({
       comment: reply,
@@ -162,6 +180,20 @@ router.patch('/:commentId', isLoggedIn, async (req, res, next) => {
     if (comment.user_id !== req.user.id) return res.status(403).send('수정 권한이 없습니다.');
 
     await comment.update({ content: req.body.content });
+
+    // 활동 내역 변경 - 준혁 추가
+    const log = await ActiveLog.findOne({
+      where: {
+        target_id: comment.id,
+        users_id: req.user.id,
+        target_type_id: 2, 
+    } });
+    if (!log) { return res.status(403).send("해당되는 기록이 없습니다"); }
+    if (log.action !== "UPDATE") { await log.update({ action: "UPDATE" });
+    // 강제 업데이트
+    } else { log.changed('updatedAt', true); await log.save(); }
+    // 준혁 추가
+
     res.status(200).json({ CommentId: comment.id, content: req.body.content });
   } catch (error) {
     console.error(error);
@@ -180,6 +212,15 @@ router.delete('/:commentId', isLoggedIn, async (req, res, next) => {
 
     // 삭제 후 최신 댓글 카운트도 같이 응답!
     const totalComments = await Comment.count({ where: { post_id: comment.post_id, is_deleted: false } });
+
+    // 활동 내역 생성 - 준혁 추가
+    await ActiveLog.create({
+      action: "DELETE",
+      target_id: comment.id,
+      users_id: req.user.id,
+      target_type_id: 2,
+    } );
+    // 준혁 추가
 
     res.status(200).json({
       CommentId: comment.id,

@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { InboxOutlined, NumberOutlined, TagOutlined } from "@ant-design/icons";
+import { InboxOutlined, HeartOutlined, TagOutlined } from "@ant-design/icons";
 import MyPost from "./MyPost";
 import MyBookmark from "./MyBookmark";
-import TaggedMe from "./TaggedMe";
-// import MyTagged from "./MyTagged"; // 태그된 게시물이 있으면 사용
+import MyLiked from "./MyLiked";
 
 const ProfilePost = ({ data, isMyProfile, isBlocked, isBlockedByTarget }) => {//윫 수정
     const [activeTab, setActiveTab] = useState("posts");
@@ -51,11 +50,9 @@ const ProfilePost = ({ data, isMyProfile, isBlocked, isBlockedByTarget }) => {//
                     onKeyDown={(e) => e.key === "Enter" && setActiveTab("posts")}
                     style={activeTab === "posts" ? activeTabStyle : inactiveTabStyle}
                     aria-selected={activeTab === "posts"}
-                >
                     <InboxOutlined />
                     <span>게시물</span>
                 </div>
-
                 {isMyProfile && (
                     <>
                         <div
@@ -70,15 +67,15 @@ const ProfilePost = ({ data, isMyProfile, isBlocked, isBlockedByTarget }) => {//
                             <span>북마크</span>
                         </div>
                         <div
-                            role="tab"
-                            tabIndex={0}
-                            onClick={() => setActiveTab("tagged")}
-                            onKeyDown={(e) => e.key === "Enter" && setActiveTab("tagged")}
-                            style={activeTab === "tagged" ? activeTabStyle : inactiveTabStyle}
-                            aria-selected={activeTab === "tagged"}
+                        role="tab"
+                        tabIndex={0}
+                        onClick={() => setActiveTab("like")}
+                        onKeyDown={(e) => e.key === "Enter" && setActiveTab("like")}
+                        style={activeTab === "like" ? activeTabStyle : inactiveTabStyle}
+                        aria-selected={activeTab === "like"}
                         >
-                            <NumberOutlined />
-                            <span>태그됨</span>
+                        <HeartOutlined />
+                        <span>좋아요</span>
                         </div>
                     </>
                 )}
@@ -91,8 +88,8 @@ const ProfilePost = ({ data, isMyProfile, isBlocked, isBlockedByTarget }) => {//
                         isBlocked={data?.isBlocked}
                         isBlockedByTarget={data?.isBlockedByTarget}
                     />} {/* 윫 수정 */}
-                {activeTab === "bookmark" && isMyProfile && <MyBookmark data={data} />}
-                {activeTab === "tagged" && isMyProfile && <TaggedMe data={data} />}
+            {activeTab === "bookmark" && isMyProfile && <MyBookmark data={data} />}
+            {activeTab === "like" && isMyProfile && <MyLiked data={data} />}
             </div>
         </div>
     );

@@ -1,7 +1,7 @@
 import React from "react";
 import { Image } from "antd";
 import styled from "styled-components";
-import { TagOutlined } from "@ant-design/icons";
+import { HeartOutlined } from "@ant-design/icons";  // 변경: HeartOutlined 아이콘 import
 
 const GridWrapper = styled.div`
   display: grid;
@@ -31,12 +31,12 @@ const StyledImage = styled(Image)`
   border-radius: 10px;
 `;
 
-const TagIcon = styled(TagOutlined)`
+const HeartIcon = styled(HeartOutlined)`
   position: absolute;
   top: 10px;
   right: 10px;
   font-size: 24px;
-  color: #52c41a;
+  color: #ff4081;
   text-shadow: 0 0 6px rgba(0,0,0,0.3);
   pointer-events: none;
 `;
@@ -52,13 +52,17 @@ const PostContent = styled.div`
   text-overflow: ellipsis;
 `;
 
-const MyBookmark = ({ data }) => {
-  const getPostById = (id) => data.Posts.find(post => post.id === id);
+const MyLiked = ({ data }) => {
+  const getPostById = (id) => data?.Posts?.find(post => post.id === id);
+
+  if (!data || !data.Liked || data.Liked.length === 0) {
+    return <div>좋아요 누른 게시물이 없습니다.</div>;
+  }
 
   return (
     <GridWrapper>
-      {data?.BookmarkedPosts?.map((bookmark, idx) => {
-        const post = getPostById(bookmark.id);
+      {data?.Liked?.map((likedPost, idx) => {
+        const post = getPostById(likedPost.id);
 
         if (!post) return null;
 
@@ -71,9 +75,9 @@ const MyBookmark = ({ data }) => {
                   : "https://image.utoimage.com/preview/cp872722/2022/12/202212008462_500.jpg"
               }
               preview={false}
-              alt={post.content || "bookmarked post image"}
+              alt={post.content || "liked post image"}
             />
-            <TagIcon />
+            <HeartIcon />
             <PostContent>{post.content}</PostContent>
           </PostCard>
         );
@@ -82,4 +86,4 @@ const MyBookmark = ({ data }) => {
   );
 };
 
-export default MyBookmark;
+export default MyLiked;

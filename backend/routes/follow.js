@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { Follow, User } = require('../models');
+const { Follow, User, ActiveLog, Notification } = require('../models'); // ActiveLog, Notification 준혁 추가
 const { where } = require('sequelize');
 const { isLoggedIn } = require('./middlewares');
 
 // 팔로우하기 http://localhost:3065/follow
 router.post('/',isLoggedIn, async (req, res, next) => {
- console.log('📥 follow 요청 도착');
+  console.log('📥 follow 요청 도착');
   console.log('📦 req.body:', req.body);
   console.log('👤 req.user:', req.user);
   console.log('......req.body:', req.body);
@@ -32,6 +32,28 @@ router.post('/',isLoggedIn, async (req, res, next) => {
       from_user_id: fromUserId,
       to_user_id: toUserId,
     });
+
+    // 활동 내역 생성 - 준혁 추가
+    await ActiveLog.create({
+      action: "FOLLOW",
+      target_id: toUserId,
+      users_id: fromUserId,
+      target_type_id: 3,
+    });
+    // 준혁 추가
+
+    // 알림 생성 - 준혁 추가
+    const fromUserName = await User.findOne({
+      where: { id : fromUserId },
+      attributes: [ "nickname" ],
+    });
+
+    await Notification.create({
+      content: `${fromUserName.nickname} 님이 당신을 팔로우 했습니다`,
+      users_id: toUserId,
+      target_type_id: 3
+    });
+    // 준혁 추가
 
     res.status(201).json(follow);
   } catch (err) {
@@ -60,6 +82,19 @@ router.delete('/following/:toUserId', async (req, res, next) => {
     }
 
     await existing.destroy();
+
+    // 활동 내역 변경 - 준혁 추가
+    const log = await ActiveLog.findOne({
+      where: {
+        action: "FOLLOW",
+        target_id: toUserId,
+        users_id: fromUserId,
+        target_type_id: 3,
+      },
+    });
+    if (!log) { return res.status(403).send("해당되는 기록이 없습니다"); }
+    await log.update({ action: "UNFOLLOW" });
+    // 준혁 추가
 
     res.status(200).json({ message: '팔로우가 취소되었습니다' });
   } catch (err) {
@@ -90,6 +125,27 @@ router.delete('/follower/:fromUserId', async (req, res, next) => {
     }
 
     await existing.destroy();
+
+    // 활동 내역 추가 - 준혁 추가
+    await ActiveLog.create({
+      action: "REMOVE_FOLLOWER",
+      target_id: fromUserId,
+      users_id: toUserId,
+      target_type_id: 3,
+    });
+    // 활동 내역 변경
+    const log = await ActiveLog.findOne({
+      where: {
+        action: "FOLLOW",
+        target_id: toUserId,
+        users_id: fromUserId,
+        target_type_id: 3,
+      },
+    });
+    if (!log) { return res.status(403).send("해당되는 기록이 없습니다"); }
+    await log.update({ action: "REMOVED_FOLLOW" });
+    // 준혁 추가
+
     res.status(200).json({ message: '해당 팔로워를 제거했습니다.' });
   } catch (err) {
     console.error(err);
