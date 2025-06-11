@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import {LIKE_POST_REQUEST, UNLIKE_POST_REQUEST,} from '../reducers/post_IN';
-import {BOOKMARK_POST_REQUEST, UNBOOKMARK_POST_REQUEST,} from '../reducers/bookmark_IN';
+import { LIKE_POST_REQUEST, UNLIKE_POST_REQUEST } from '../reducers/post_IN';
+import { BOOKMARK_POST_REQUEST, UNBOOKMARK_POST_REQUEST } from '../reducers/bookmark_IN';
 import { REGRAM_REQUEST } from '../reducers/regram_IN';
 import { FaHeart, FaRegHeart, FaRegComment, FaBookmark, FaRegBookmark, FaRetweet } from 'react-icons/fa';
 import PostMenu from './PostMenu';
@@ -11,6 +11,19 @@ import { getTotalCommentCount } from '../utils/comment';
 import Comment from './Comment';
 
 const IMAGE_SIZE = { width: 540, height: 640 };
+
+function getRelativeTime(date) {
+  if (!date) return '';
+  const d = new Date(date);
+  const diffMs = Date.now() - d.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return '방금 전';
+  if (diffMin < 60) return `${diffMin}분 전`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}시간 전`;
+  const diffDay = Math.floor(diffHr / 24);
+  return `${diffDay}일 전`;
+}
 
 const PostCard = ({ post }) => {
   const dispatch = useDispatch();
@@ -31,9 +44,7 @@ const PostCard = ({ post }) => {
   const likeCount = basePost.Likers?.length || 0;
   const regramCount = basePost.Regrams?.length || 0;
   const bookmarkCount = basePost.Bookmarkers?.length || 0;
-
-  const isPureRegram = isRegram && (!post.content || post.content.trim() === '');
-  const images = isPureRegram && origin ? origin.Images : post.Images;
+  const images = isRegram && origin ? origin.Images : post.Images;
   const [currentImages, setCurrentImages] = useState(images || []);
   useEffect(() => { setCurrentImages(images || []); }, [images]);
 
@@ -50,23 +61,24 @@ const PostCard = ({ post }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showMenu]);
 
-  const isOriginMine = origin?.User?.id === user?.id;
-  const isMyOriginRegrammed = isRegram && isOriginMine && post.User?.id !== user?.id;
-  const isMyRegram = isRegram && post.User?.id === user?.id && !isOriginMine;
-  const iRegrammedThis = !isRegram && post.Regrams?.some(rg => rg.User?.id === user?.id);
-  const isOthersRegram = isRegram && !isOriginMine && post.User?.id !== user?.id;
+  const isMyRegram =
+    (!isRegram && post.Regrams?.some(rg => rg.User?.id === user?.id))
+    || (isRegram && post.User?.id === user?.id);
 
-  let regramIconColor = '#000', regramDisabled = false, regramTooltip = '리그램하기';
-  if (isMine && !isRegram) {
-    regramIconColor = '#aaa'; regramDisabled = true; regramTooltip = '내 게시글은 리그램할 수 없습니다.';
-  } else if (isMyOriginRegrammed || isMyRegram || iRegrammedThis || isOthersRegram) {
-    regramIconColor = '#32e732'; regramDisabled = true; regramTooltip = '이미 리그램된 글입니다.';
+  let regramIconColor = '#000';
+  let regramDisabled = false;
+  let regramTooltip = '리그램하기';
+
+  if (isMyRegram) {
+    regramIconColor = '#32e732';
+    regramDisabled = true;
+    regramTooltip = '이미 리그램한 글입니다.';
   }
 
   const onRegram = () => {
     if (regramDisabled) return;
     if (window.confirm('리그램하시겠습니까?')) {
-      dispatch({ type: REGRAM_REQUEST, data: { postId: basePost.id, content: '', isPublic: true } });
+      dispatch({ type: REGRAM_REQUEST, data: { postId: basePost.id, content: basePost.content, isPublic: true } });
     }
   };
 
@@ -139,12 +151,9 @@ const PostCard = ({ post }) => {
                 }}>나만보기</span>
               )}
             </div>
-            <div style={{ fontSize: 14, color: '#888' }}>
-              {(() => {
-                const baseDate = post.User?.last_active ? new Date(post.User.last_active) : new Date(post.createdAt);
-                const minutesAgo = Math.floor((Date.now() - baseDate.getTime()) / 60000);
-                return minutesAgo < 1 ? '방금 전' : `${minutesAgo}분 전`;
-              })()}
+            <div style={{ fontSize: 13, color: '#aaa', marginTop: 2 }}>
+              마지막 접속&nbsp;
+              {getRelativeTime(post.User?.last_active)}
             </div>
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -159,6 +168,15 @@ const PostCard = ({ post }) => {
             />
           </div>
         </div>
+
+        <div style={{ fontSize: 13, color: '#bbb', margin: '2px 0 6px 0' }}>
+          작성일&nbsp;
+          {post.createdAt ? new Date(post.createdAt).toLocaleString('ko-KR', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit'
+          }) : ''}
+        </div>
+
         <div style={{
           fontSize: 17, lineHeight: 1.6, marginBottom: 12,
           minHeight: 60, maxHeight: 130, overflowY: 'auto', overflowX: 'hidden', wordBreak: 'break-all',
