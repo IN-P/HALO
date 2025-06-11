@@ -7,7 +7,7 @@ import {
 } from '../reducers/report_YB';
 
 function reportPostAPI(data) {
-  return axios.post('/report', data);
+  return axios.post('/report', data,{ withCredentials: true, });
 }
 
 function* reportPost(action) {

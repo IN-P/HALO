@@ -37,7 +37,7 @@ router.get('/me', isLoggedIn, async (req, res) => {
   "password": "1234"
 }
 */
-router.post('/', async (req, res, next) => { 
+router.post('/', async (req, res, next) => {
   try {
     const { email, nickname, password } = req.body;
 
@@ -53,7 +53,7 @@ router.post('/', async (req, res, next) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
-    
+
     let rawIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
     if (rawIp.includes(',')) {
       rawIp = rawIp.split(',')[0]; // 프록시 체인일 경우 첫 번째 IP 사용
@@ -93,7 +93,7 @@ router.post('/', async (req, res, next) => {
 }
 */
 router.post('/login', isNotLoggedIn, (req, res, next) => {
-  passport.authenticate('local', (err, user, info) => {
+  passport.authenticate('local', async (err, user, info) => {
     if (err) {
       console.error(err);
       return next(err);
@@ -107,7 +107,18 @@ router.post('/login', isNotLoggedIn, (req, res, next) => {
       return res.status(403).send('탈퇴한 회원입니다.');
     }
     if (user.user_status_id === 3) {
-      return res.status(403).send('정지된 회원입니다.');
+      //  윫 정지 해제 시간 확인
+      const result = await db.ReportResult.findOne({
+        where: { user_id: user.id },
+        order: [['updatedAt', 'DESC']], // 가장 최근 정지 기록
+      });
+
+      if (result && new Date(result.updatedAt) < new Date()) {
+        // 윫 시간이 지났으면 정지 해제
+        await user.update({ user_status_id: 1 });
+      } else {
+        return res.status(403).send('정지된 회원입니다.');
+      }
     }
     if (user.user_status_id === 4) {
       return res.status(403).send('휴면 상태입니다. 이메일 인증 후 복구해주세요.');
@@ -226,7 +237,7 @@ router.post('/uploadProfileImage', isLoggedIn, upload.single('profile_img'), asy
   } catch (error) {
     console.error('이미지 업로드 실패:', error);
     // 업로드된 이미지도 삭제
-    if (req.file) { fs.unlink(path.join(__dirname, '..', 'uploads/profile', req.file.filename), () => {}); }
+    if (req.file) { fs.unlink(path.join(__dirname, '..', 'uploads/profile', req.file.filename), () => { }); }
     res.status(500).send('이미지 업로드 실패');
   }
 });
@@ -277,8 +288,8 @@ router.patch('/', isLoggedIn, async (req, res, next) => {
         }
       }
     }
-            console.log("요청 profile_img:", profile_img);
-        console.log("DB에 저장된 profile_img:", user.profile_img);
+    console.log("요청 profile_img:", profile_img);
+    console.log("DB에 저장된 profile_img:", user.profile_img);
     // 준혁 추가 <<
 
     // userinfos 테이블
@@ -345,7 +356,7 @@ router.delete('/withdraw', isLoggedIn, async (req, res, next) => {
     });
   } catch (err) {
     console.error(err);
-     return res.status(200).send('탈퇴 완료');
+    return res.status(200).send('탈퇴 완료');
   }
 });
 
@@ -427,7 +438,7 @@ router.patch('/restore', async (req, res, next) => {
     await user.update({ user_status_id: 1 });
 
     // 2. 삭제 로그 제거
-    await db.DeleteUser.destroy({ where: { users_id: user.id } }); 
+    await db.DeleteUser.destroy({ where: { users_id: user.id } });
 
     return res.status(200).json({ message: '계정이 복구되었습니다.' });
   } catch (err) {

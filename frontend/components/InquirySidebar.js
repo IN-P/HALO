@@ -18,10 +18,10 @@ const InquirySidebar = () => {
       style={{ height: '100vh', width: 220, borderRight: 0 }}
     >
       <Menu.Item key="write">
-        <Link href="/inquiry">문의 작성</Link>
+        <Link href="/inquiry/inquiry">문의 작성</Link>
       </Menu.Item>
       <Menu.Item key="list">
-        <Link href="/InquiryListPage">문의 내역</Link>
+        <Link href="/inquiry/InquiryListPage">문의 내역</Link>
       </Menu.Item>
     </Menu>
   );
