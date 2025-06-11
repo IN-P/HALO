@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { LIKE_POST_REQUEST, UNLIKE_POST_REQUEST } from '../reducers/post_IN';
 import { BOOKMARK_POST_REQUEST, UNBOOKMARK_POST_REQUEST } from '../reducers/bookmark_IN';
-import { FaHeart, FaRegHeart, FaRegComment, FaBookmark, FaRegBookmark, FaRetweet } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaRegComment, FaBookmark, FaRegBookmark, FaRetweet, FaShareAlt } from 'react-icons/fa';
 import PostMenu from './PostMenu';
 import PostDetailModal from './PostDetailModal';
 import ReportModal from './ReportModal';
@@ -33,6 +33,15 @@ const PostCard = ({ post }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const menuRef = useRef(null);
+
+  // 👉 공유 링크 복사용 상태/함수 추가
+  const [showCopyToast, setShowCopyToast] = useState(false);
+  const handleCopyLink = () => {
+    const postUrl = `${window.location.origin}/post/${post.id}`;
+    navigator.clipboard.writeText(postUrl);
+    setShowCopyToast(true);
+    setTimeout(() => setShowCopyToast(false), 1300);
+  };
 
   const isRegram = !!post.regram_id;
   const origin = post.Regram;
@@ -198,7 +207,10 @@ const PostCard = ({ post }) => {
         }}>
           {renderContent(post.content)}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 22, fontSize: 26, margin: '12px 0 0 0', borderTop: '1.5px solid #f2f2f2', paddingTop: 10 }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 22, fontSize: 26, margin: '12px 0 0 0',
+          borderTop: '1.5px solid #f2f2f2', paddingTop: 10
+        }}>
           <button style={iconBtnStyle} onClick={() => setShowDetailModal(true)}>
             <FaRegComment />
             <span style={countStyle}>{getTotalCommentCount(post.Comments || [])}</span>
@@ -214,6 +226,15 @@ const PostCard = ({ post }) => {
           <button style={iconBtnStyle} onClick={bookmarked ? onUnbookmark : onBookmark}>
             {bookmarked ? <FaBookmark color="#007bff" /> : <FaRegBookmark />}
             <span style={countStyle}>{bookmarkCount}</span>
+          </button>
+          {/* 👉 공유(주소복사) 아이콘 추가 */}
+          <button
+            style={iconBtnStyle}
+            onClick={handleCopyLink}
+            title="공유 링크 복사"
+          >
+            <FaShareAlt />
+            <span style={{ fontSize: 16, marginLeft: 2, fontWeight: 500 }}>공유</span>
           </button>
         </div>
         <Comment
@@ -259,6 +280,16 @@ const PostCard = ({ post }) => {
         showReportModal={showReportModal}
         setShowReportModal={setShowReportModal}
       />
+      {/* 👉 복사 완료 토스트 알림 */}
+      {showCopyToast && (
+        <div style={{
+          position: 'fixed', bottom: 48, left: '50%', transform: 'translateX(-50%)',
+          background: '#222', color: '#fff', padding: '12px 26px', borderRadius: 10, fontSize: 16,
+          zIndex: 3000, boxShadow: '0 4px 16px rgba(0,0,0,0.15)'
+        }}>
+          링크가 복사되었습니다!
+        </div>
+      )}
     </div>
   );
 };
