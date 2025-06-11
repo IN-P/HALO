@@ -2,6 +2,9 @@ import React from 'react';
 
 const ChatList = ({ chatRooms, onSelectUser }) => {
   console.log('🔥 ChatList 렌더링됨 chatRooms:', chatRooms);
+
+  const API_URL = 'http://localhost:3065';
+
   return (
     <div style={{
       width: 300,
@@ -31,7 +34,7 @@ const ChatList = ({ chatRooms, onSelectUser }) => {
           }}
         >
           <img
-            src={room.otherUser?.profileImage || '/default.png'}
+            src={room.otherUser?.profileImage ? `${API_URL}${room.otherUser.profileImage}` : '/default.png'}
             alt=""
             style={{ width: 40, height: 40, borderRadius: '50%' }}
           />
@@ -40,22 +43,22 @@ const ChatList = ({ chatRooms, onSelectUser }) => {
             <div style={{ fontSize: 12, color: '#999' }}>{room.lastMessage}</div>
           </div>
           <div style={{ fontSize: 12, color: '#ccc', display: 'flex', alignItems: 'center' }}>
-  <span>{room.lastTime}</span>
-  {room.unreadCount > 0 && (
-    <span style={{
-      backgroundColor: 'red',
-      color: 'white',
-      borderRadius: '999px',
-      padding: '2px 8px',
-      fontSize: '11px',
-      marginLeft: 8,
-      minWidth: 20,
-      textAlign: 'center'
-    }}>
-      {room.unreadCount}
-    </span>
-  )}
-</div>
+            <span>{room.lastTime}</span>
+            {room.unreadCount > 0 && (
+              <span style={{
+                backgroundColor: 'red',
+                color: 'white',
+                borderRadius: '999px',
+                padding: '2px 8px',
+                fontSize: '11px',
+                marginLeft: 8,
+                minWidth: 20,
+                textAlign: 'center'
+              }}>
+                {room.unreadCount}
+              </span>
+            )}
+          </div>
         </div>
       ))}
     </div>

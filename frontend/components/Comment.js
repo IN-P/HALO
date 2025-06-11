@@ -10,6 +10,7 @@ import {
 import ReportButton from "./ReportButton";
 import ReportModal from "./ReportModal";
 import { getTotalCommentCount, flattenComments } from "../utils/comment";
+import MentionTextArea from '../components/MentionTextArea'; // ㅈㅇ ㅁㅅ
 
 // 스타일 정의 생략(아래쪽에 있음)
 
@@ -24,6 +25,7 @@ const Comment = ({
   const dispatch = useDispatch();
   const router = useRouter();
   const { comments, addCommentLoading, loadCommentsDone } = useSelector((state) => state.comment_IN);
+  const [receiverIdMap, setReceiverIdMap] = useState({});
 
 useEffect(() => {
   if (!loadCommentsDone?.[postId]) {
@@ -165,6 +167,7 @@ if (preview) {
           ? inputMap[parentId]
           : `@${nickname} ${inputMap[parentId]}`,
         parentId,
+        receiver_id: receiverIdMap[parentId],
       },
     });
     setInputMap((prev) => ({ ...prev, [parentId]: "" }));
@@ -332,20 +335,16 @@ if (preview) {
                 <>
                   {showInputMap[c.id] && !c.is_deleted && (
                     <div style={{ margin: "8px 0" }}>
-                      <input
-                        value={inputMap[c.id] || ""}
-                        onChange={(e) =>
-                          setInputMap((prev) => ({ ...prev, [c.id]: e.target.value }))
-                        }
-                        placeholder={`@${c.User?.nickname} 님에게 대댓글 입력`}
-                        style={{
-                          width: "70%",
-                          padding: 6,
-                          borderRadius: 4,
-                          border: "1px solid #ccc",
-                          marginRight: 8,
-                        }}
-                      />
+                      <MentionTextArea
+  value={inputMap[c.id] || ""}
+  onChange={(e) =>
+    setInputMap((prev) => ({ ...prev, [c.id]: e.target.value }))
+  }
+  onMentionSelect={(user) => {
+    console.log('선택한 유저 (대댓글):', user);
+    setReceiverIdMap((prev) => ({ ...prev, [c.id]: user.id }));
+  }}
+/>
                       <button
                         disabled={addCommentLoading}
                         onClick={() => onReplySubmit(c.id, c.User?.nickname)}
@@ -419,25 +418,21 @@ if (preview) {
       }}
     >
       <div style={{ marginBottom: 20 }}>
-        <input
-          value={inputMap[0] || ""}
-          onChange={(e) => setInputMap((prev) => ({ ...prev, 0: e.target.value }))}
-          placeholder="댓글 입력"
-          style={{
-            width: "80%",
-            padding: 8,
-            borderRadius: 6,
-            border: "1px solid #ccc",
-            marginRight: 8,
-          }}
-        />
+        <MentionTextArea
+  value={inputMap[0] || ""}
+  onChange={(e) => setInputMap((prev) => ({ ...prev, 0: e.target.value }))}
+  onMentionSelect={(user) => {
+    console.log('선택한 유저 (댓글):', user);
+    setReceiverIdMap((prev) => ({ ...prev, 0: user.id }));
+  }}
+/>
         <button
           disabled={addCommentLoading}
           onClick={() => {
             if (!inputMap[0]?.trim()) return;
             dispatch({
               type: ADD_COMMENT_REQUEST,
-              data: { postId, content: inputMap[0], parentId: null },
+              data: { postId, content: inputMap[0], parentId: null,receiver_id: receiverIdMap[0], },
             });
             setInputMap((prev) => ({ ...prev, 0: "" }));
           }}

@@ -10,6 +10,7 @@ import {
 import { useRouter } from 'next/router';
 import KakaoMapPicker from '../components/KakaoMapPicker';
 import MentionInput from '../components/MentionInput';
+import MentionTextArea from '../components/MentionTextArea';
 
 const PostForm = ({ editMode = false, originPost }) => {
   const dispatch = useDispatch();
@@ -22,6 +23,8 @@ const PostForm = ({ editMode = false, originPost }) => {
   const router = useRouter();
 
   const imageInput = useRef();
+
+  const [receiverId, setReceiverId] = useState(null);
 
   // 기존 이미지(수정모드)
   const [oldImages, setOldImages] = useState(
@@ -98,6 +101,8 @@ const PostForm = ({ editMode = false, originPost }) => {
           postId: originPost.id,
           content,
           images: uniqueImages,
+          private_post, // 여기!
+          receiver_id: receiverId,
           private_post,
           location,
           latitude,
@@ -110,6 +115,8 @@ const PostForm = ({ editMode = false, originPost }) => {
         data: {
           content,
           images: imagePaths,
+          private_post, // 여기!
+          receiver_id: receiverId,
           private_post,
           location,
           latitude,
@@ -123,9 +130,16 @@ const PostForm = ({ editMode = false, originPost }) => {
     <Form layout="vertical" style={{ padding: 24, background: '#fff', borderRadius: 8 }}
       encType="multipart/form-data" onFinish={onSubmit}>
       <Form.Item label="게시글 내용" required>
-        <Input.TextArea rows={4} placeholder="게시글 내용을 입력하세요"
-          value={content} onChange={onChangeContent} />
-      </Form.Item>
+  <MentionTextArea
+    value={content}
+    onChange={(e) => setContent(e.target.value)}
+    onMentionSelect={(user) => {
+      console.log('선택한 유저:', user);
+      setReceiverId(user.id);
+      // 나중에 receiver_id 상태 저장하기
+    }}
+  />
+</Form.Item>
       <Form.Item label="이미지 업로드">
         <input type="file" multiple hidden ref={imageInput} onChange={onChangeImages} accept="image/*" />
         <Button onClick={onClickImageUpload} loading={uploadImagesLoading}>이미지 선택</Button>

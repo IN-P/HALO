@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { Post, User, Image, Comment, Hashtag, ActiveLog, Notification, Block } = require('../models');
+const { Post, User, Image, Comment, Hashtag, ActiveLog, Notification, Block , Mention } = require('../models'); // 재원 맨션
 const { isLoggedIn } = require('./middlewares');
 const { Op } = require('sequelize');
 const { sendNotification } = require('../notificationSocket');
@@ -35,6 +35,7 @@ const upload = multer({
 // 게시글 등록
 router.post('/', isLoggedIn, async (req, res, next) => {
   try {
+    console.log('req.body.receiver_id:', req.body.receiver_id); // ← 여기에 넣으면 됨 ✅ // ㅈㅇ
     const hashtags = req.body.content.match(/#[^\s#]+/g);
     const post = await Post.create({
       content: req.body.content,
@@ -70,7 +71,31 @@ router.post('/', isLoggedIn, async (req, res, next) => {
         await Image.create({ src, post_id: post.id });
       }
     }
+    // ㅈㅇ ㅁㅅ
+    if (req.body.receiver_id) {
+  await Mention.create({
+    senders_id: req.user.id,
+    receiver_id: req.body.receiver_id,
+    target_type: 'POST',
+    target_id: post.id,
+    context: req.body.content,
+    createAt: new Date(),
+  });
+  console.log('✅ Mention 저장 완료');
 
+  const fullPost = await Post.findOne({
+  where: { id: post.id },
+  include: [
+    { model: Image },
+    { model: User, attributes: ['id', 'nickname'] },
+    { model: Comment, include: [{ model: User, attributes: ['id', 'nickname'] }] },
+    { model: User, as: 'Likers', attributes: ['id'] },
+    { model: User, as: 'Bookmarkers', attributes: ['id'] },
+    { model: Hashtag, attributes: ['id', 'name'] },
+  ],
+});
+}
+//
     const fullPost = await Post.findOne({
       where: { id: post.id },
       include: [

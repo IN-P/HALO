@@ -1,7 +1,7 @@
 // routes/comment.js
 const express = require('express');
 const router = express.Router();
-const { Comment, CommentPath, User, Post, ActiveLog, Notification } = require('../models'); // ActiveLog 준혁 추가
+const { Comment, CommentPath, User, Post, ActiveLog, Notification, Mention  } = require('../models'); // ActiveLog 준혁 추가 mention추가
 const { isLoggedIn } = require('./middlewares');
 const { sendNotification } = require('../notificationSocket'); // 준혁추가 실시간 알림   
 
@@ -33,6 +33,19 @@ router.post('/post/:postId', isLoggedIn, async (req, res, next) => {
       users_id: req.user.id,
       target_type_id: 2,
     } );
+    // 재원 맨션
+    if (req.body.receiver_id) {
+  await Mention.create({
+    senders_id: req.user.id,
+    receiver_id: req.body.receiver_id,
+    target_type: 'COMMENT',
+    target_id: comment.id,
+    context: req.body.content,
+    createAt: new Date(),
+  });
+  console.log('✅ 댓글 Mention 저장 완료');
+}
+//
     // 알림 생성
     // 댓글이 달린 포스트의 내용과 user id 추출
     const commentedPost = await Post.findOne({
@@ -112,6 +125,19 @@ router.post('/:commentId/reply', isLoggedIn, async (req, res, next) => {
       users_id: req.user.id,
       target_type_id: 4,
     } );
+    // ㅈㅇ ㅁㅅ
+    if (req.body.receiver_id) {
+  await Mention.create({
+    senders_id: req.user.id,
+    receiver_id: req.body.receiver_id,
+    target_type: 'COMMENT',
+    target_id: reply.id,
+    context: req.body.content,
+    createAt: new Date(),
+  });
+  console.log('✅ 대댓글 Mention 저장 완료');
+}
+//
     // 알림 생성
     // 원본 내용과 작성자 id 추출
     const RepliedComment = await Comment.findOne({
