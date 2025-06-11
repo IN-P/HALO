@@ -10,6 +10,7 @@ import { AuthProvider } from '../hooks/useAuth'; // 율비 추가
 import { LOAD_MY_INFO_REQUEST } from '../reducers/user_YG'; // 윤기
 import { LOAD_FOLLOWINGS_REQUEST } from '../reducers/follow_YB'; // 율비
 import '../utils/axiosConfig'; // axios 설정
+import '../styles/global.css';
 
 import AdminSidebar from '../components/layout/AdminSidebar'; //  관리자 사이드바 컴포넌트 추가
 
