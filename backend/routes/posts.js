@@ -52,12 +52,12 @@ router.get('/', async (req, res, next) => {
         [Comment, 'createdAt', 'DESC'],
       ],
       include: [
-        { model: User, attributes: ['id', 'nickname', 'profile_img'] },
+        { model: User, attributes: ['id', 'nickname', 'profile_img', 'last_active'] }, 
         { model: Image },
         {
           model: Comment,
           include: [
-            { model: User, attributes: ['id', 'nickname'] },
+            { model: User, attributes: ['id', 'nickname', 'profile_img', 'last_active'] },
           ],
         },
         { model: User, as: 'Likers', attributes: ['id'] },
@@ -66,20 +66,20 @@ router.get('/', async (req, res, next) => {
         {
           model: Post,
           as: 'Regrams',
-          include: [{ model: User, attributes: ['id', 'nickname', 'profile_img'] }],
+          include: [{ model: User, attributes: ['id', 'nickname', 'profile_img', 'last_active'] }],
         },
         {
           model: Post,
           as: 'Regram',
           include: [
-            { model: User, attributes: ['id', 'nickname'] },
+            { model: User, attributes: ['id', 'nickname', 'profile_img', 'last_active'] },
             { model: Image },
             { model: User, as: 'Likers', attributes: ['id'] },
             { model: User, as: 'Bookmarkers', attributes: ['id'] },
             {
               model: Post,
               as: 'Regrams',
-              include: [{ model: User, attributes: ['id', 'nickname', 'profile_img'] }],
+              include: [{ model: User, attributes: ['id', 'nickname', 'profile_img', 'last_active'] }],
             },
           ],
         },

@@ -350,9 +350,6 @@ router.post('/:postId/regram', isLoggedIn, async (req, res, next) => {
   try {
     const targetPost = await Post.findOne({ where: { id: req.params.postId } });
     if (!targetPost) return res.status(403).send('원본 게시글이 존재하지 않습니다.');
-    if (req.user.id === targetPost.user_id) {
-      return res.status(403).send('자기 글은 리그램할 수 없습니다.');
-    }
     const existingRegram = await Post.findOne({
       where: { user_id: req.user.id, regram_id: targetPost.id }
     });

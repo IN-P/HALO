@@ -18,6 +18,8 @@ const AppLayout = ({ children }) => {
   // ✅ 채팅용 me 정보
   const me = useSelector((state) => state.chat.me);
 
+  const chatMe = useSelector((state) => state.chat.me);
+
   // ✅ 알림창 토글
   const [showNotification, setShowNotification] = useState(false);
   const onToggleNotification = () => {
@@ -62,6 +64,13 @@ const AppLayout = ({ children }) => {
     dispatch({ type: LOAD_USER_NOTIFICATION_REQUEST, data: userId });
   });
   return () => { unsubscribeFromNotifications(); }; }, [userId]);
+
+useEffect(() => {
+  if (user && user.id && (!chatMe || !chatMe.id)) {
+    console.log('🌍 AppLayout → user_YG.user 기반으로 chat.me 복구 시도');
+    dispatch({ type: 'SET_ME', payload: user });
+  }
+}, [user, chatMe, dispatch]);
 
   // ✅ socket connect 시 내 채팅방들 join
   useEffect(() => {

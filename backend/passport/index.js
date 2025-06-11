@@ -6,7 +6,7 @@
 const passport = require('passport');
 const local = require('./local'); // local strategy 정의
 const google = require('./google'); //윤기추가
-const { User } = require('../models');
+const { User, Membership } = require('../models'); //dbsrlcnrk
 const kakao = require('./kakao'); //윤기추가
 
 module.exports = () => {
@@ -21,6 +21,7 @@ module.exports = () => {
       const user = await User.findOne({
         where: { id },
         attributes: { exclude: ['password'] }, // 비번은 제거
+        include: [{ model: Membership }],
       });
       done(null, user); // req.user에 담김
     } catch (err) {
