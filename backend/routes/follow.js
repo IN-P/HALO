@@ -183,6 +183,50 @@ router.get('/followers', async (req, res, next) => {
   }
 });
 
+// 닉네임으로 팔로워 목록 조회
+router.get('/followers/nickname/:nickname', async (req, res, next) => {
+  try {
+    const user = await User.findOne({ where: { nickname: req.params.nickname } });
+    if (!user) return res.status(404).json({ message: '사용자 없음' });
+
+    const followers = await Follow.findAll({
+      where: { to_user_id: user.id },
+      include: [{
+        model: User,
+        as: 'Followings', // from_user_id = 나를 팔로우한 사람
+        attributes: ['id', 'nickname', 'profile_img'],
+      }],
+    });
+
+    res.status(200).json(followers.map(f => f.Followings));
+  } catch (err) {
+    console.error(err);
+    next(err);
+  }
+});
+
+// 닉네임으로 팔로잉 목록 조회
+router.get('/followings/nickname/:nickname', async (req, res, next) => {
+  try {
+    const user = await User.findOne({ where: { nickname: req.params.nickname } });
+    if (!user) return res.status(404).json({ message: '사용자 없음' });
+
+    const followings = await Follow.findAll({
+      where: { from_user_id: user.id },
+      include: [{
+        model: User,
+        as: 'Followers', // to_user_id = 내가 팔로우한 대상
+        attributes: ['id', 'nickname', 'profile_img'],
+      }],
+    });
+
+    res.status(200).json(followings.map(f => f.Followers));
+  } catch (err) {
+    console.error(err);
+    next(err);
+  }
+});
+
 
 // 팔로우 체크
 router.get('/check/:toUserId', async (req, res, next) => {
