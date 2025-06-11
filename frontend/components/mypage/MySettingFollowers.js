@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import Searchbar from './Searchbar';
 
-const MySettingFollowers = ({ userId }) => {
+const MySettingFollowers = ({ data }) => {
 
-  
   const followers = data?.Followers || [];
 
     const userList = followers
