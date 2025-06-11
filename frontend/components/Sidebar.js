@@ -95,7 +95,6 @@ const Sidebar = ({ showNotification, onToggleNotification, notificationCount }) 
           <Link href="/" passHref>
             <SidebarButton icon={<HomeOutlined />}>홈</SidebarButton>
           </Link>
-          <SidebarButton icon={<AppstoreOutlined />}>메뉴</SidebarButton>
           <Link href="/new_post" passHref>
             <SidebarButton icon={<EditOutlined />}>게시물 작성</SidebarButton>
           </Link>
@@ -113,6 +112,9 @@ const Sidebar = ({ showNotification, onToggleNotification, notificationCount }) 
           </Link>
           <Link href="/inquiry/inquiry" passHref>
           <SidebarButton icon={<ShopOutlined />}>문의</SidebarButton>
+          </Link>
+          <Link href="/membership" passHref>
+            <SidebarButton icon={<AppstoreOutlined />}>멤버십</SidebarButton>
           </Link>
           <Link href="/charge" passHref>
             <SidebarButton icon={<GiftOutlined />}>캐시 충전</SidebarButton>
