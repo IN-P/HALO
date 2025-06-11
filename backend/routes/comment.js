@@ -3,7 +3,6 @@ const express = require('express');
 const router = express.Router();
 const { Comment, CommentPath, User, Post, ActiveLog, Notification } = require('../models'); // ActiveLog 준혁 추가
 const { isLoggedIn } = require('./middlewares');
-
 const { sendNotification } = require('../notificationSocket'); // 준혁추가 실시간 알림   
 
 // 1. 기본 댓글 등록: POST /comment/post/:postId
@@ -20,7 +19,7 @@ router.post('/post/:postId', isLoggedIn, async (req, res, next) => {
 
     const fullComment = await Comment.findOne({
       where: { id: comment.id },
-      include: [{ model: User, attributes: ['id', 'nickname'] }],
+      include: [{ model: User, attributes: ['id', 'nickname', 'profile_img'] }],
     });
 
     // 댓글 등록 후 최신 댓글 카운트도 같이 응답!
@@ -119,7 +118,7 @@ router.post('/:commentId/reply', isLoggedIn, async (req, res, next) => {
       where: { id: parent.id },
       attributes: [ "content", "user_id" ],
     })
-        // 해당 포스트 정보 가져오기 (포스트 주인 알림용)
+    // 해당 포스트 정보 가져오기 (포스트 주인 알림용)
     const post = await Post.findOne({
       where: { id: parent.post_id },
       attributes: ["user_id", 'content'],
@@ -188,7 +187,7 @@ router.get('/post/:postId/tree', async (req, res, next) => {
       );
     }
 
-    /////
+    //////
     const comments = await Comment.findAll({
       where: {
         post_id: req.params.postId,
@@ -197,8 +196,8 @@ router.get('/post/:postId/tree', async (req, res, next) => {
         },
       },
       include: [
-        { model: User, attributes: ['id', 'nickname'] },
-        { model: Comment, as: 'Parent', include: [{ model: User, attributes: ['id', 'nickname'] }] }
+        { model: User, attributes: ['id', 'nickname', 'profile_img'] },
+        { model: Comment, as: 'Parent', include: [{ model: User, attributes: ['id', 'nickname', 'profile_img'] }] }
       ],
       order: [['id', 'ASC']],
     });
@@ -251,6 +250,7 @@ router.patch('/:commentId', isLoggedIn, async (req, res, next) => {
       target_type_id: 2,
     } );
 
+
     res.status(200).json({ CommentId: comment.id, content: req.body.content });
   } catch (error) {
     console.error(error);
@@ -277,12 +277,11 @@ router.delete('/:commentId', isLoggedIn, async (req, res, next) => {
       users_id: req.user.id,
       target_type_id: 2,
     } );
-    // 준혁 추가
 
     res.status(200).json({
       CommentId: comment.id,
       postId: comment.post_id,
-      commentCount: totalComments, // ← 추가
+      commentCount: totalComments, 
     });
   } catch (error) {
     console.error(error);
