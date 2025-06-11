@@ -15,7 +15,9 @@ import MySettingBalance from "./MySettingBalance";
 
 const MySettingMain = ({ data, onClose, reload, reloadLogInUser }) => {
 
+  // user 정보 추출 및 id 저장
   const { user } = useSelector((state) => state.user_YG);
+  const userId = user?.id;
 
   const [selectedTab, setSelectedTab] = useState("profile");
 
@@ -69,7 +71,7 @@ const MySettingMain = ({ data, onClose, reload, reloadLogInUser }) => {
           {selectedTab === "block" && <MySettingBlock data={data} />}
           {selectedTab === "achievement" && <MySettingAchievement data={data} />}
           {selectedTab === "badge" && <MySettingBadges data={data} />}
-          {selectedTab === "activeLog" && <MySettingActiveLog data={data} />}
+          {selectedTab === "activeLog" && <MySettingActiveLog userId={userId} />}
           {selectedTab === "followers" && <MySettingFollowers data={data} />}
           {selectedTab === "followings" && <MySettingFollowings data={data} />}
         </Col>

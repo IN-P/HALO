@@ -1,4 +1,3 @@
-import { TruckFilled } from "@ant-design/icons";
 import produce from "immer";
 
 export const initialState = {
