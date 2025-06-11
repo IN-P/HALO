@@ -5,22 +5,20 @@ const { User, Block, Achievement, Badge, UserInfo, Follow, Myteam, Post, UserPoi
 const { assignTeamBadge } = require('../services/badge/trigger');
 
 // nickname으로 userId 값 불러온 후 정보 가져오기
-router.get("/:nickname", async (req, res, next) => {
-  const { nickname } = req.params;
+router.get("/:nickname/:userId", async (req, res, next) => {
   try {
-    const user = await User.findOne({
-      where: { nickname },
-      attributes: ['id'],
-    });
-    if (!user) { return res.status(404).json({ message: '유저를 찾을 수 없습니다.' }); }
-    const userId = user.id;
+    const { userId } = req.params;
+
+    if (isNaN(userId)) { return res.status(400).json({ message: "유효하지 않은 사용자 ID입니다." }); }
+
+    const userIdNum = parseInt(userId, 10);
 
     const fullUser = await User.findOne({
-      where: { id: userId },
+      where: { id: userIdNum },
       attributes: ["id", "nickname", "profile_img", "theme_mode", "is_private", "myteam_id", "role", "email"],
       include: [
         { model: UserInfo },
-        { model: Post, include: [Image], separate: true, order: [['id', 'DESC']], },
+        { model: Post, include: [ Image, { model: Post, as: 'Regram', include: [Image], }, ], separate: true, order: [['id', 'DESC']], },
         { model: Post, as: 'BookmarkedPosts', include: [Image],  through: { attributes: [] }, },
         { model: Post, as: 'Liked', include: [Image], through: { attributes: [] } },
         { model: Follow, as: 'Followings', include: [
@@ -41,9 +39,7 @@ router.get("/:nickname", async (req, res, next) => {
     })
 
     // 계정 비공개 상태일 시 정보 접근 제한
-    if (fullUser.is_private == 1) {
-      res.status(403).json("접근이 제한된 계정입니다");
-    }
+    if (fullUser.is_private == 1) { return res.status(403).json("접근이 제한된 계정입니다"); }
 
     if (fullUser) {
       const data = fullUser.toJSON();
@@ -126,6 +122,35 @@ router.get("/:nickname", async (req, res, next) => {
     } else {
       res.status(404).json("존재하지 않는 계정입니다");
     }
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+
+// 닉네임 URL : 0명이면 404, 1명이면 위 라우터 get, 2명이면 리스트 출력
+router.get("/:nickname", async (req, res, next) => {
+  try {
+    const { nickname } = req.params;
+
+    const users = await User.findAll({
+      where: { nickname },
+      attributes: ["id", "nickname", "profile_img"],
+    });
+
+    if (users.length === 0) {
+      return res.status(404).json({ message: "유저를 찾을 수 없습니다." });
+    }
+
+    // 유저가 1명이든 n명이든 nickname_userId 형태로 요청 유도
+    const usersForRedirect = users.map(user => ({
+      id: user.id,
+      nickname: user.nickname,
+      profile_img: user.profile_img,
+      profile_url: `/${user.nickname}/${user.id}`, // 프론트가 이걸로 요청
+    }));
+
+    return res.status(200).json({ unique: users.length === 1, users: usersForRedirect });
   } catch (error) {
     console.error(error);
     next(error);

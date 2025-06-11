@@ -67,23 +67,32 @@ const MyBookmark = ({ data }) => {
     return <NoDataMessage>북마크한 게시물이 없습니다</NoDataMessage>;
   }
 
+  // 비공개 게시글 필터링
+  const visiblePosts = data.BookmarkedPosts.filter(post => {
+    const basePost = post.Regram || post;
+    return !basePost.private_post;
+  });
+
+  if (visiblePosts.length === 0) {
+    return <NoDataMessage>표시할 수 있는 게시물이 없습니다</NoDataMessage>;
+  }
+
   return (
     <GridWrapper>
-      {data.BookmarkedPosts.map((bookmark, idx) => {
-        const post = getPostById(bookmark.id);
-
-        if (!post) return null;
+      {visiblePosts.map((post, idx) => {
+        const imageSrc = post.Regram?.Images?.[0]?.src || post.Images?.[0]?.src;
+        const content = post.Regram?.content || post.content;
 
         return (
           <PostCard key={post.id || idx}>
             <StyledImage
               src={
-                post.Images?.[0]?.src
-                  ? `http://localhost:3065/uploads/post/${post.Images[0].src}`
+                imageSrc
+                  ? `http://localhost:3065/uploads/post/${imageSrc}`
                   : "https://placehold.co/300x250"
               }
               preview={false}
-              alt={post.content || "bookmarked post image"}
+              alt={content || "bookmarked post image"}
             />
             <TagIcon />
           </PostCard>
@@ -92,5 +101,6 @@ const MyBookmark = ({ data }) => {
     </GridWrapper>
   );
 };
+
 
 export default MyBookmark;
