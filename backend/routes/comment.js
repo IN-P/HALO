@@ -111,7 +111,7 @@ router.post('/:commentId/reply', isLoggedIn, async (req, res, next) => {
       action: "CREATE",
       target_id: reply.id,
       users_id: req.user.id,
-      target_type_id: 2,
+      target_type_id: 4,
     } );
     // 알림 생성
     // 원본 내용과 작성자 id 추출

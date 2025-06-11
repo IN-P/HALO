@@ -51,7 +51,7 @@ const FollowList = ({ userId, type, onUpdate }) => {
               <img
                 src={`http://localhost:3065${user.profile_img}` || '/default-profile.png'}
                 alt="프로필"
-                style={{ width: 40, height: 40, borderRadius: '50%', marginRight: 10 }}
+                style={{ width: 40, height: 40, borderRadius: '50%', marginRight: 10, objectFit: 'cover'}}
               />
               <a
                 href={`/profile/${user.nickname}`}
