@@ -103,7 +103,7 @@ const RightSidebar = () => {
             flexDirection: 'column'
         }}>
             {/*미니 프로필 영역*/}
-            <div onClick={() => window.location.href = `http://localhost:3000/profile/${user?.nickname}`} 
+            <div onClick={() => window.location.href = `http://localhost:3000/profile/${user?.id}`} 
                 style={{
                 marginBottom: 24,
                 padding: 16,

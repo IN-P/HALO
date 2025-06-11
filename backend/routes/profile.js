@@ -4,8 +4,8 @@ const { isLoggedIn } = require("./middlewares");
 const { User, Block, Achievement, Badge, UserInfo, Follow, Myteam, Post, UserPoint, UserPayment, ActiveLog, Image } = require("../models");
 const { assignTeamBadge } = require('../services/badge/trigger');
 
-// nickname으로 userId 값 불러온 후 정보 가져오기
-router.get("/:nickname/:userId", async (req, res, next) => {
+// userId 로 사용자 프로필 불러오기
+router.get("/:userId", async (req, res, next) => {
   try {
     const { userId } = req.params;
 
@@ -122,35 +122,6 @@ router.get("/:nickname/:userId", async (req, res, next) => {
     } else {
       res.status(404).json("존재하지 않는 계정입니다");
     }
-  } catch (error) {
-    console.error(error);
-    next(error);
-  }
-});
-
-// 닉네임 URL : 0명이면 404, 1명이면 위 라우터 get, 2명이면 리스트 출력
-router.get("/:nickname", async (req, res, next) => {
-  try {
-    const { nickname } = req.params;
-
-    const users = await User.findAll({
-      where: { nickname },
-      attributes: ["id", "nickname", "profile_img"],
-    });
-
-    if (users.length === 0) {
-      return res.status(404).json({ message: "유저를 찾을 수 없습니다." });
-    }
-
-    // 유저가 1명이든 n명이든 nickname_userId 형태로 요청 유도
-    const usersForRedirect = users.map(user => ({
-      id: user.id,
-      nickname: user.nickname,
-      profile_img: user.profile_img,
-      profile_url: `/${user.nickname}/${user.id}`, // 프론트가 이걸로 요청
-    }));
-
-    return res.status(200).json({ unique: users.length === 1, users: usersForRedirect });
   } catch (error) {
     console.error(error);
     next(error);
