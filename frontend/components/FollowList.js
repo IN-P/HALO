@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const FollowList = ({ userId, type, onUpdate }) => {
+const FollowList = ({ nickname, type, onUpdate }) => {
   const [users, setUsers] = useState([]);
 
   const load = async () => {
     try {
-      const endpoint = `http://localhost:3065/follow/${type}`;
+      const endpoint = `http://localhost:3065/follow/${type}/nickname/${nickname}`;
       const res = await axios.get(endpoint, { withCredentials: true });
       setUsers(res.data);
     } catch (err) {
@@ -15,10 +15,9 @@ const FollowList = ({ userId, type, onUpdate }) => {
   };
 
   useEffect(() => {
-    load();
-  }, [userId, type]);
+    if (nickname) load();
+  }, [nickname, type]);
 
-  // ✅ 여기! 삭제 후 onUpdate 실행
   const handleRemove = async (targetUserId) => {
     try {
       let url = '';
@@ -29,10 +28,8 @@ const FollowList = ({ userId, type, onUpdate }) => {
       }
 
       await axios.delete(url, { withCredentials: true });
-
       setUsers(prev => prev.filter(user => user.id !== targetUserId));
 
-      // ✅ 마이페이지 갱신 호출
       if (onUpdate) onUpdate();
     } catch (err) {
       console.error("삭제 실패", err);
@@ -51,7 +48,7 @@ const FollowList = ({ userId, type, onUpdate }) => {
               <img
                 src={`http://localhost:3065${user.profile_img}` || '/default-profile.png'}
                 alt="프로필"
-                style={{ width: 40, height: 40, borderRadius: '50%', marginRight: 10, objectFit: 'cover'}}
+                style={{ width: 40, height: 40, borderRadius: '50%', marginRight: 10, objectFit: 'cover' }}
               />
               <a
                 href={`/profile/${user.nickname}`}
