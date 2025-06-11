@@ -10,9 +10,10 @@ import axios from 'axios';
 
 const AppLayout = ({ children }) => {
   const dispatch = useDispatch();
-
+  const [themeMode, setThemeMode] = useState('light');
   // ✅ 유저 정보
   const { user } = useSelector((state) => state.user_YG);
+
   const userId = user?.id;
 
   // ✅ 채팅용 me 정보
@@ -39,6 +40,22 @@ const AppLayout = ({ children }) => {
       }
       return next;
     });
+  };
+
+    // 테마 모드 설정
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme_mode') || 'light';
+    setThemeMode(savedTheme);
+    document.body.className = savedTheme === 'dark' ? 'dark-mode' : 'light-mode';
+  }, []);
+
+  const handleToggleTheme = () => {
+    const newTheme = themeMode === 'light' ? 'dark' : 'light';
+    setThemeMode(newTheme);
+    localStorage.setItem('theme_mode', newTheme);
+    document.body.className = newTheme === 'dark' ? 'dark-mode' : 'light-mode';
+    console.log('Current theme:', newTheme);  // 확인용 로그 추가
+  console.log('Current body class:', document.body.className);  // 확인용 로그 추가
   };
   
   // 해당하는 유저 아이디의 알림 가져오기
@@ -161,8 +178,10 @@ useEffect(() => {
       {/* 좌측 고정 사이드바 */}
       <Sidebar
         showNotification={showNotification}
-        onToggleNotification={onToggleNotification}
-        notificationCount={notificationCount}
+  onToggleNotification={onToggleNotification}
+  notificationCount={notificationCount}
+  themeMode={themeMode}
+  onToggleTheme={handleToggleTheme}
       />
 
       {/* 알림창 팝업 */}

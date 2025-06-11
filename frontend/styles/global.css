@@ -1,0 +1,11 @@
+/* light-mode 스타일 */
+body.light-mode {
+  background-color: #ffffff;  /* 밝은 배경 */
+  color: #000000;  /* 어두운 텍스트 */
+}
+
+/* dark-mode 스타일 */
+body.dark-mode {
+  background-color: #121212;  /* 어두운 배경 */
+  color: #ffffff;  /* 밝은 텍스트 */
+}
