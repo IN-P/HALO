@@ -112,5 +112,4 @@ const InquiryDetailPage = () => {
   );
 };
 
-// ✅ 이 줄이 꼭 있어야 한다!!
 export default InquiryDetailPage;

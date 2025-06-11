@@ -82,7 +82,7 @@ const RightSidebar = () => {
     // 링크 본인이 직접 연결해야함!!!!
     const adminViews = {
         2: { label: '광고 관리', path: '/admin/ads' },
-        3: { label: '신고 관리', path: '/admin/reports' },
+        3: { label: '신고 관리', path: '/admin/report/report'},
         4: { label: '문의 관리', path: '/admin/inquiry/inquiry' },
         5: { label: '유저 관리', path: '/admin/users' },
         6: { label: '보안 로그', path: '/admin/security' },
