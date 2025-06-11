@@ -1,8 +1,25 @@
 const express = require('express');
 const router = express.Router();
-const { User, UserInfo, Social, DeleteUser } = require('../models');
-const isAdminUserManager = require('../middlewares/isAdminUserManager');
+const {
+  User,
+  UserInfo,
+  Social,
+  DeleteUser,
+  DeletedUsersBackup,
+  ActiveLog,
+  Notification,
+  Block,
+  Follow,
+  Inquiry,
+  Report,
+  Comment,
+  Post,
+  UserPayment,
+} = require('../models');
 
+const isAdminUserManager = require('../middlewares/isAdminUserManager');
+const { sequelize } = require('../models');
+const { Op } = require('sequelize');
 
 // [1] 유저 목록 조회
 router.get('/users', isAdminUserManager, async (req, res) => {
@@ -37,7 +54,7 @@ router.get('/users/:id', isAdminUserManager, async (req, res) => {
         {
           model: Social,
           attributes: [['social_id', 'code']],
-          required: false, // 소셜이 없어도 OK
+          required: false,
         },
       ],
     });
@@ -68,12 +85,10 @@ router.patch('/users/:id', isAdminUserManager, async (req, res) => {
       return res.status(404).json({ message: '유저를 찾을 수 없습니다.' });
     }
 
-    // 닉네임 수정
     if (nickname !== undefined) {
       user.nickname = nickname;
     }
 
-    // 연락처 / 소개글 수정
     if (phone !== undefined || introduce !== undefined) {
       if (user.UserInfo) {
         if (phone !== undefined) user.UserInfo.phone = phone;
@@ -88,7 +103,6 @@ router.patch('/users/:id', isAdminUserManager, async (req, res) => {
       }
     }
 
-    // 역할 수정 (오직 마스터 관리자만)
     if (role !== undefined) {
       if (loginUser.role === 1) {
         user.role = role;
@@ -98,7 +112,6 @@ router.patch('/users/:id', isAdminUserManager, async (req, res) => {
     }
 
     await user.save();
-
     return res.status(200).json({ message: '수정 완료' });
   } catch (err) {
     console.error('유저 수정 실패:', err);
@@ -123,13 +136,11 @@ router.delete('/users/:id', isAdminUserManager, async (req, res) => {
       return res.status(400).json({ message: '이미 탈퇴 처리된 유저입니다.' });
     }
 
-    // 1. 유저 상태를 탈퇴로 변경
     await User.update(
       { user_status_id: 2 },
       { where: { id: userId } }
     );
 
-    // 2. 삭제 로그 테이블에 기록
     await DeleteUser.create({ users_id: userId });
 
     return res.status(200).json({ message: '유저 탈퇴 처리 완료 (소프트 딜리트)' });
@@ -138,6 +149,56 @@ router.delete('/users/:id', isAdminUserManager, async (req, res) => {
     return res.status(500).json({ message: '서버 오류로 유저 삭제에 실패했습니다.' });
   }
 });
+
+// [5] 유저 하드딜리트 (DB 완전 삭제 + 백업 저장)
+router.delete('/users/force/:id', isAdminUserManager, async (req, res) => {
+  const userId = parseInt(req.params.id, 10);
+  if (isNaN(userId)) {
+    return res.status(400).json({ message: '잘못된 유저 ID입니다.' });
+  }
+
+  const t = await sequelize.transaction();
+  try {
+    const user = await User.findByPk(userId, { transaction: t });
+    if (!user) {
+      return res.status(404).json({ message: '유저를 찾을 수 없습니다.' });
+    }
+
+    // 1. 백업 저장
+    await DeletedUsersBackup.upsert({
+      id: user.id,
+      email: user.email,
+      nickname: user.nickname,
+      password: user.password,
+      role: user.role,
+      profile_img: user.profile_img,
+      theme_mode: user.theme_mode,
+      is_private: user.is_private,
+      balance: user.balance,
+      email_chk: user.email_chk,
+      ip: user.ip,
+      user_status_id: user.user_status_id,
+      membership_id: user.membership_id,
+      myteam_id: user.myteam_id,
+      last_active: user.last_active,
+      created_at: user.createdAt,
+      deleted_at: new Date(),
+    }, { transaction: t });
+
+    // 2. 유저 삭제 (CASCADE 자동 적용)
+    await User.destroy({ where: { id: userId }, transaction: t });
+
+    await t.commit();
+    return res.status(200).json({ message: '유저 완전 삭제 완료 (하드딜리트 + 백업)' });
+  } catch (error) {
+    await t.rollback();
+    console.error('[관리자] 유저 하드딜리트 실패:', error);
+    return res.status(500).json({ message: '서버 오류로 유저 완전 삭제 실패' });
+  }
+});
+
+
+
 
 
 module.exports = router;

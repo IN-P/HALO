@@ -1,4 +1,3 @@
-// frontend/pages/admin/users/index.js
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
@@ -13,6 +12,7 @@ import {
   Typography,
   Card,
   message,
+  Modal,
 } from 'antd';
 import {
   SearchOutlined,
@@ -25,6 +25,7 @@ import { getRoleName } from '../../../utils/roleNames';
 import { useSpring, animated } from '@react-spring/web';
 
 const { Title } = Typography;
+const { confirm } = Modal;
 
 const getUserStatusLabel = (statusId) => {
   switch (statusId) {
@@ -85,16 +86,32 @@ const AdminUserPage = () => {
     setUsers(filtered);
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm('정말로 이 유저를 탈퇴 처리하시겠습니까?')) return;
-    try {
-      await axios.delete(`/api/admin/users/${id}`, { withCredentials: true });
-      message.success('유저가 소프트 딜리트 처리되었습니다.');
-      fetchUsers();
-    } catch (err) {
-      console.error('유저 삭제 실패:', err.response?.data || err);
-      message.error('유저 삭제 중 오류가 발생했습니다.');
-    }
+  const confirmDelete = (id) => {
+    confirm({
+      title: '유저 삭제 방식 선택',
+      icon: <ExclamationCircleOutlined />,
+      content: '소프트 딜리트(탈퇴 처리) 또는 하드 딜리트(DB 완전 삭제)를 선택하세요.',
+      okText: '소프트 딜리트',
+      cancelText: '하드 딜리트',
+      onOk: async () => {
+        try {
+          await axios.delete(`/api/admin/users/${id}`, { withCredentials: true });
+          message.success('유저 소프트 딜리트 완료');
+          fetchUsers();
+        } catch (err) {
+          message.error('소프트 딜리트 실패');
+        }
+      },
+      onCancel: async () => {
+        try {
+          await axios.delete(`/api/admin/users/force/${id}`, { withCredentials: true });
+          message.success('유저 하드 딜리트 완료');
+          fetchUsers();
+        } catch (err) {
+          message.error('하드 딜리트 실패');
+        }
+      },
+    });
   };
 
   const columns = [
@@ -154,14 +171,14 @@ const AdminUserPage = () => {
               danger
               size="small"
               icon={<DeleteOutlined />}
-              onClick={() => handleDelete(record.id)}
+              onClick={() => confirmDelete(record.id)}
             >
               삭제
             </Button>
           </Space>
         );
       },
-      width: 160,
+      width: 200,
     },
   ];
 

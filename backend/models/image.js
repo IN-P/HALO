@@ -20,7 +20,7 @@ module.exports = (sequelize,DataTypes)=>{
   }); 
 
   Image.associate = (db)=>{
-    db.Image.belongsTo(db.Post, { foreignKey: 'post_id' });
+    db.Image.belongsTo(db.Post, { foreignKey: 'post_id',  onDelete: 'CASCADE',onUpdate: 'CASCADE', });
   };
   return Image;
 };

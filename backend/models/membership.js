@@ -20,7 +20,8 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Membership.associate = (db) => {
-    db.Membership.hasMany(db.User, {foreignKey: 'membership_id'});
+    db.Membership.hasMany(db.User, {foreignKey: 'membership_id' , onDelete: 'SET NULL', // 또는 CASCADE 대신 이게 더 적절할 수도 있음
+  onUpdate: 'CASCADE',});
   };
 
   return Membership;
