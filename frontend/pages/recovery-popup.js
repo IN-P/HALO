@@ -12,67 +12,58 @@ import {
 import {
   MailOutlined,
   SafetyCertificateOutlined,
-  ReloadOutlined,
-  LockOutlined,
+  RollbackOutlined,
 } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
-const ResetPasswordPopup = () => {
+const RecoverAccountPopup = () => {
   const [email, setEmail] = useState('');
-  const [codeSent, setCodeSent] = useState(false);
   const [inputCode, setInputCode] = useState('');
+  const [codeSent, setCodeSent] = useState(false);
   const [verified, setVerified] = useState(false);
   const [msg, setMsg] = useState('');
 
   const handleSendCode = async () => {
-    if (!email) return message.warning('이메일을 입력하세요.');
+    if (!email) return message.warning('이메일을 입력해주세요.');
     try {
-      await axios.post('/user/reset-password/code', { email });
+      await axios.post('/recovery/code', { email });
       setCodeSent(true);
       setMsg('📩 인증번호가 이메일로 전송되었습니다.');
       message.success('📩 인증번호가 이메일로 전송되었습니다.');
     } catch (err) {
-      console.error(err);
+      console.error('[코드 전송 오류]', err);
       message.error('인증번호 전송에 실패했습니다.');
     }
   };
 
   const handleVerifyCode = async () => {
     try {
-      const res = await axios.post('/user/reset-password/verify', {
+      const res = await axios.post('/recovery/verify', {
         email,
         code: inputCode,
       });
 
       if (res.data.success) {
         setVerified(true);
-        setMsg('✅ 이메일 인증이 완료되었습니다.');
-        message.success('✅ 이메일 인증이 완료되었습니다.');
+        setMsg(`✅ ${res.data.message || '계정 복구가 완료되었습니다.'}`);
+        message.success('✅ 계정 복구가 완료되었습니다.');
+        setTimeout(() => {
+          window.close();
+        }, 2000);
       } else {
-        message.error('인증번호가 틀렸습니다.');
+        message.warning('인증번호가 틀렸습니다.');
       }
     } catch (err) {
-      console.error(err);
-      message.error('인증 검증에 실패했습니다.');
-    }
-  };
-
-  const handleResetPassword = async () => {
-    try {
-      const res = await axios.post('/user/reset-password/reset', { email });
-      message.success(res.data.message || '임시 비밀번호가 이메일로 전송되었습니다.');
-      setTimeout(() => window.close(), 1000);
-    } catch (err) {
-      console.error(err);
-      message.error('비밀번호 재발급에 실패했습니다.');
+      console.error('[코드 검증 오류]', err);
+      message.error(err.response?.data?.message || '인증에 실패했습니다.');
     }
   };
 
   return (
-    <div style={popupWrapperStyle}>
+    <div style={wrapperStyle}>
       <Card
-        title={<Title level={3} style={{ marginBottom: 0 }}>🔐 비밀번호 재발급</Title>}
+        title={<Title level={3} style={{ marginBottom: 0 }}>🔐 계정 복구</Title>}
         style={{ maxWidth: 480, width: '100%', borderRadius: 12 }}
       >
         <Form layout="vertical">
@@ -86,7 +77,7 @@ const ResetPasswordPopup = () => {
               type="email"
               value={email}
               disabled={verified}
-              placeholder="example@email.com"
+              placeholder="your@email.com"
               onChange={(e) => setEmail(e.target.value)}
             />
           </Form.Item>
@@ -134,14 +125,14 @@ const ResetPasswordPopup = () => {
           )}
 
           {verified && (
-            <Form.Item style={{ marginTop: 20 }}>
+            <Form.Item>
               <Button
                 type="dashed"
                 block
-                icon={<ReloadOutlined />}
-                onClick={handleResetPassword}
+                icon={<RollbackOutlined />}
+                onClick={() => window.close()}
               >
-                임시 비밀번호 발급받기
+                로그인 화면으로 돌아가기
               </Button>
             </Form.Item>
           )}
@@ -151,8 +142,8 @@ const ResetPasswordPopup = () => {
   );
 };
 
-// 공통 배경 스타일
-const popupWrapperStyle = {
+// 바깥 배경 스타일
+const wrapperStyle = {
   minHeight: '100vh',
   background: 'rgba(0,0,0,0.3)',
   backdropFilter: 'blur(4px)',
@@ -162,4 +153,4 @@ const popupWrapperStyle = {
   padding: 24,
 };
 
-export default ResetPasswordPopup;
+export default RecoverAccountPopup;
