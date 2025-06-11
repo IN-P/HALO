@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { LIKE_POST_REQUEST, UNLIKE_POST_REQUEST } from '../reducers/post_IN';
 import { BOOKMARK_POST_REQUEST, UNBOOKMARK_POST_REQUEST } from '../reducers/bookmark_IN';
-import { REGRAM_REQUEST } from '../reducers/regram_IN';
 import { FaHeart, FaRegHeart, FaRegComment, FaBookmark, FaRegBookmark, FaRetweet } from 'react-icons/fa';
 import PostMenu from './PostMenu';
 import PostDetailModal from './PostDetailModal';
@@ -35,45 +34,34 @@ const PostCard = ({ post }) => {
   const [showReportModal, setShowReportModal] = useState(false);
   const menuRef = useRef(null);
 
-  // 원본글 기준 데이터(리그램이면 원본, 아니면 자기자신)
   const isRegram = !!post.regram_id;
   const origin = post.Regram;
   const basePost = isRegram && origin ? origin : post;
 
-  // 내 글인지
   const isMine = post.User?.id === user?.id;
 
-  // 내가 이미 리그램했는지(원본 기준, 내 리그램이 메인피드에 뜬 경우 + 내가 쓴 글을 내가 또 리그램X)
-  const myRegram = (
-    // 1. 원본글: 내 리그램이 있는지(내가 이미 리그램)
-    !isRegram && post.Regrams?.some(rg => rg.User?.id === user?.id)
-  ) || (
-    // 2. 리그램글: 내가 쓴 리그램
-    isRegram && post.User?.id === user?.id
-  );
+  let myRegramPost = null;
+  if (!isRegram && post.Regrams) {
+    myRegramPost = post.Regrams.find(rg => rg.User?.id === user?.id);
+  }
+  if (isRegram && post.User?.id === user?.id) {
+    myRegramPost = post;
+  }
+  const myRegram = !!myRegramPost;
 
-  // 리그램 버튼 상태/색상/툴팁
   let regramIconColor = '#000';
   let regramDisabled = false;
   let regramTooltip = '리그램하기';
-
-  if (myRegram) {
-    regramIconColor = '#32e732'; // 연두색
+  if (isRegram && origin && origin.private_post && origin.user_id !== user?.id) {
     regramDisabled = true;
+    regramTooltip = '비공개(나만보기) 원본글입니다.';
+  } else if (myRegram) {
+    regramIconColor = '#32e732';
     regramTooltip = '이미 리그램한 글입니다.';
   }
 
-  // 원본글이 비공개 && 내가 주인이 아닐 때(=나만보기) 버튼 자체를 안 보일 수도 있음 (숨김처리)
-  if (isRegram && origin && origin.private_post && origin.user_id !== user?.id) {
-    // basePost가 비공개/나만보기 + 내가 주인 아니면 리그램버튼 비활성+숨김
-    regramDisabled = true;
-    regramTooltip = '비공개(나만보기) 원본글입니다.';
-  }
-
-  // 원본글 삭제됨(post.Regram 없음) = 이미 서버에서 안 내려오지만 혹시 몰라 프론트에서도 처리
   if (isRegram && !origin) return null;
 
-  // 좋아요/북마크 상태
   const liked = basePost.Likers?.some((u) => u.id === user?.id);
   const bookmarked = basePost.Bookmarkers?.some((u) => u.id === user?.id);
   const likeCount = basePost.Likers?.length || 0;
@@ -98,8 +86,14 @@ const PostCard = ({ post }) => {
 
   const onRegram = () => {
     if (regramDisabled) return;
-    if (window.confirm('리그램하시겠습니까?')) {
-      dispatch({ type: REGRAM_REQUEST, data: { postId: basePost.id, content: basePost.content, isPublic: true } });
+    if (myRegramPost) {
+      if (window.confirm('리그램을 취소하시겠습니까?')) {
+        dispatch({ type: 'REGRAM_IN/UNREGRAM_REQUEST', data: { regramPostId: myRegramPost.id } });
+      }
+    } else {
+      if (window.confirm('리그램하시겠습니까?')) {
+        dispatch({ type: 'REGRAM_IN/REGRAM_REQUEST', data: { postId: basePost.id, content: basePost.content, isPublic: true } });
+      }
     }
   };
 
