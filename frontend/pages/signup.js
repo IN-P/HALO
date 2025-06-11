@@ -15,7 +15,8 @@ import {
   Space,
   Divider,
   Tooltip,
-  Checkbox
+  Checkbox,
+  Select,
 } from 'antd';
 import {
   UserOutlined,
@@ -28,8 +29,10 @@ import {
   UserAddOutlined
 } from '@ant-design/icons';
 import { useSpring, animated } from '@react-spring/web';
+import axios from 'axios';
 
 const { Title, Text, Paragraph } = Typography;
+const { Option } = Select;
 
 const SignupPage = () => {
   const router = useRouter();
@@ -37,6 +40,8 @@ const SignupPage = () => {
   const { signUpLoading, signUpDone, signUpError } = useSelector((state) => state.user_YG);
 
   const [form] = Form.useForm();
+  const [teamId, setTeamId] = useState(null);
+  const [nicknameOptions, setNicknameOptions] = useState([]);
 
   useEffect(() => {
     dispatch({ type: SIGN_UP_RESET });
@@ -63,8 +68,36 @@ const SignupPage = () => {
 
     dispatch({
       type: SIGN_UP_REQUEST,
-      data: { email, nickname, password },
+      data: { email, nickname, password, myteam_id: teamId },
     });
+  };
+
+  const handleTeamChange = async (value) => {
+    setTeamId(value);
+    try {
+      const res = await axios.post('http://localhost:3065/nickname/recommend', { teamname: teamList[value] });
+      if (res.data?.nicknames?.length) {
+        const cleaned = res.data.nicknames.map((name) => name.replace(/^\"|\"$/g, '').replace(/^'+|'+$/g, ''));
+        setNicknameOptions(cleaned);
+        form.setFieldsValue({ nickname: cleaned[0] });
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const teamList = {
+    1: '응원팀 없음',
+    2: '기아 타이거즈',
+    3: '삼성 라이온즈',
+    4: 'LG 트윈스',
+    5: '두산 베어스',
+    6: 'KT 위즈',
+    7: 'SSG 랜더스',
+    8: '롯데 자이언츠',
+    9: '한화 이글스',
+    10: 'NC 다이노스',
+    11: '키움 히어로즈',
   };
 
   const fadeIn = useSpring({
@@ -114,20 +147,44 @@ const SignupPage = () => {
               style={{ marginTop: 24 }}
             >
               <Form.Item
-                name="nickname"
-                label="닉네임"
-                rules={[{ required: true, message: '닉네임을 입력해주세요.' }]}
-              >
-                <Input prefix={<UserOutlined />} placeholder="닉네임" allowClear />
-              </Form.Item>
-
-              <Form.Item
                 name="email"
                 label="이메일"
                 tooltip="올바른 이메일 형식을 입력해주세요."
                 rules={[{ required: true, type: 'email', message: '이메일을 입력해주세요.' }]}
               >
                 <Input prefix={<MailOutlined />} placeholder="Enter your email" allowClear />
+              </Form.Item>
+
+              <Form.Item
+                name="myteam"
+                label="응원팀 선택"
+                rules={[{ required: true, message: '응원팀을 선택해주세요.' }]}
+              >
+                <Select placeholder="응원팀을 선택하세요" onChange={handleTeamChange}>
+                  {Object.entries(teamList).map(([key, name]) => (
+                    <Option key={key} value={Number(key)}>{name}</Option>
+                  ))}
+                </Select>
+              </Form.Item>
+
+              {nicknameOptions.length > 0 && (
+                <Form.Item label="추천 닉네임 선택" colon={false}>
+                  <Space wrap>
+                    {nicknameOptions.map((name, idx) => (
+                      <Button key={idx} size="small" onClick={() => form.setFieldsValue({ nickname: name })}>
+                        {name}
+                      </Button>
+                    ))}
+                  </Space>
+                </Form.Item>
+              )}
+
+              <Form.Item
+                name="nickname"
+                label="닉네임"
+                rules={[{ required: true, message: '닉네임을 입력해주세요.' }]}
+              >
+                <Input prefix={<UserOutlined />} placeholder="닉네임" allowClear />
               </Form.Item>
 
               <Form.Item

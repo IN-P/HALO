@@ -45,6 +45,7 @@ const isProduction = process.env.NODE_ENV === 'production'; // 재원
 const reportResultRouter = require('./routes/report_result');//율비
 const recoveryRouter = require('./routes/recovery'); //윤기추가
 const membershipRouter = require('./routes/membership'); // 윤기추가
+const nicknameRouter = require('./routes/nickname'); //윤기추가
 
 // .env 적용
 dotenv.config();
@@ -87,6 +88,8 @@ db.sequelize.sync()
     await initMembership();    //## 윤기 추가
     await initMyTeam();     //## 윤기 추가
     await initSocials();     //## 윤기 추가
+    
+    app.set('models', db); //윤기추가
     console.log('기본 데이터 초기화 완료'); //## 윤기 추가
   })
   .catch(console.error); //## 윤기 추가
@@ -123,7 +126,7 @@ app.use('/advertisement', advertisementRouter); // 재원 광고 라우터
 app.use('/report-result', reportResultRouter);//율비
 app.use('/recovery', recoveryRouter); //윤기추가
 app.use('/membership', membershipRouter); // 윤기추가
-
+app.use('/nickname', nicknameRouter); //윤기추가 닉네임 추천
 
 module.exports = app;
 
