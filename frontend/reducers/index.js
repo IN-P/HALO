@@ -17,6 +17,7 @@ import adminPlayer from './adminPlayer_GM';
 import playerDraw from './playerDraw_GM'; 
 import activeLog_JH from './activeLog_JH';
 import reportResult_YB from './reportResult_YB';
+import badge_JH from './badge_JH'; //준혁
 
 const rootReducer = combineReducers({
   index: (state = {}, action) => {
@@ -45,6 +46,8 @@ const rootReducer = combineReducers({
   playerDraw,
   activeLog_JH, //준혁
   reportResult_YB,
+  badge_JH, //준혁
+
 });
 
 export default rootReducer;

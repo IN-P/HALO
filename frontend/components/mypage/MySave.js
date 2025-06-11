@@ -1,7 +1,7 @@
 import React from "react";
 import { Image } from "antd";
 import styled from "styled-components";
-import { SaveOutlined } from "@ant-design/icons";
+import { SaveFilled } from "@ant-design/icons";
 
 const GridWrapper = styled.div`
   display: grid;
@@ -39,7 +39,7 @@ const StyledImage = styled(Image)`
   border-radius: 10px;
 `;
 
-const TagIcon = styled(SaveOutlined)`
+const TagIcon = styled(SaveFilled)`
   position: absolute;
   top: 10px;
   right: 10px;

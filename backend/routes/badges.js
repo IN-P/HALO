@@ -1,12 +1,29 @@
 const express = require("express");
 const router = express.Router();
-const { User, Badge } = require("../models");
+const { User, Badge, sequelize } = require("../models");
+const multer = require('multer');
+const path = require('path');
+
+// multer 셋팅 (uploads/badges 폴더에 저장)
+const storage = multer.diskStorage({
+  destination(req, file, cb) {
+    cb(null, 'uploads/badges/');
+  },
+  filename(req, file, cb) {
+    // 예: badge-1234567890.png
+    const ext = path.extname(file.originalname);
+    cb(null, 'badge-' + Date.now() + ext);
+  },
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB 제한
+});
 
 // 뱃지 모두 불러오기
 router.get("/", async (req, res, next) => {
     try {
         const badges = await Badge.findAll({
-        attributes: ['id', 'name', 'img', 'description'],
         order: [['id', 'ASC']],
         });
         res.status(200).json(badges);
@@ -23,16 +40,20 @@ router.get("/", async (req, res, next) => {
 // "name" : "새 뱃지"
 // "description" : "설명"
 // "img" : "이미지 주소"
-router.post("/", async (req, res, next) => {
-    try {
-        const { name, description, img } = req.body;
-        if (!name) { return res.status(400).json({ message: "뱃지 이름은 필수입니다." }); }
-        const newBadge = await Badge.create({ name, description, img });
-        res.status(201).json(newBadge);
-    } catch (error) {
-        console.error(error);
-        next(error);
-    }
+router.post("/", upload.single('img'), async (req, res, next) => {
+  try {
+    const { name, description } = req.body;
+    if (!name) return res.status(400).json({ message: "뱃지 이름은 필수입니다." });
+
+    // 이미지가 업로드되면 req.file에 파일 정보가 있음
+    const img = req.file ? `/img/badges/${req.file.filename}` : null;
+
+    const newBadge = await Badge.create({ name, description, img });
+    res.status(201).json(newBadge);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
 });
 
 // 유저에게 뱃지
@@ -62,28 +83,57 @@ router.post("/:userId", async (req, res, next) => {
 // 뱃지 수정
 // patch
 // localhost:3065/badges/:id
-router.patch('/:id', async (req, res, next) => {
-    const { id } = req.params;
-    const { name, description, img } = req.body;
+router.patch('/:id', upload.single('img'), async (req, res, next) => {
+  const { id } = req.params;
+  const { name, description } = req.body;
 
-    try {
-        const badge = await Badge.findByPk(id);
+  try {
+    const badge = await Badge.findByPk(id);
+    if (!badge) return res.status(404).json({ message: '뱃지를 찾을 수 없습니다.' });
 
-        if (!badge) { return res.status(404).json({ message: '뱃지를 찾을 수 없습니다.' }); }
+    const img = req.file ? `/img/${req.file.filename}` : badge.img;
 
-        await badge.update({
-        name: name ?? badge.name,
-        description: description ?? badge.description,
-        img: img ?? badge.img,
-        });
+    await badge.update({
+      name: name ?? badge.name,
+      description: description ?? badge.description,
+      img,
+    });
 
-        res.status(200).json({ message: '뱃지 정보가 수정되었습니다.', badge });
-    } catch (error) {
-        console.error(error);
-        next(error);
-    }
+    res.status(200).json({ message: '뱃지 정보가 수정되었습니다.', badge });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
 });
 
+// 뱃지 삭제
+router.delete('/:id', async (req, res, next) => {
+  const { id } = req.params;
+
+  const transaction = await sequelize.transaction();
+
+  try {
+    const badge = await Badge.findByPk(id, { transaction });
+
+    if (!badge) {
+      await transaction.rollback();
+      return res.status(404).json({ message: '뱃지를 찾을 수 없습니다.' });
+    }
+
+    // 조인 테이블에서 삭제 (sequelize는 자동 삭제 안될 수 있음)
+    await badge.removeUsers(await badge.getUsers({ transaction }), { transaction });
+
+    // 뱃지 삭제
+    await badge.destroy({ transaction });
+
+    await transaction.commit();
+
+    return res.status(200).json({ message: '뱃지가 삭제되었습니다.' });
+  } catch (error) {
+    await transaction.rollback();
+    next(error);
+  }
+});
 
 
 module.exports = router;

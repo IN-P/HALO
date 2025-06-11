@@ -1,7 +1,7 @@
 import React from "react";
 import { Image } from "antd";
 import styled from "styled-components";
-import { HeartOutlined } from "@ant-design/icons";
+import { HeartFilled } from "@ant-design/icons";
 
 const GridWrapper = styled.div`
   display: grid;
@@ -39,7 +39,7 @@ const StyledImage = styled(Image)`
   border-radius: 10px;
 `;
 
-const HeartIcon = styled(HeartOutlined)`
+const HeartIcon = styled(HeartFilled)`
   position: absolute;
   top: 10px;
   right: 10px;
@@ -56,23 +56,32 @@ const MyLiked = ({ data }) => {
     return <NoDataMessage>좋아요한 게시물이 없습니다</NoDataMessage>;
   }
 
+  const visiblePosts = data.Liked.filter(post => {
+    const basePost = post.Regram || post;
+    return !basePost.private_post;
+  });
+
+  if (visiblePosts.length === 0) {
+    return <NoDataMessage>표시할 수 있는 게시물이 없습니다</NoDataMessage>;
+  }
+
   return (
     <GridWrapper>
-      {data.Liked.map((like, idx) => {
-        const post = getPostById(like.id);
-
-        if (!post) return null;
+      {visiblePosts.map((post, idx) => {
+        const basePost = post.Regram || post;
+        const imageSrc = basePost.Images?.[0]?.src;
+        const content = basePost.content;
 
         return (
           <PostCard key={post.id || idx}>
             <StyledImage
               src={
-                post.Images?.[0]?.src
-                  ? `http://localhost:3065/uploads/post/${post.Images[0].src}`
+                imageSrc
+                  ? `http://localhost:3065/uploads/post/${imageSrc}`
                   : "https://placehold.co/300x250"
               }
               preview={false}
-              alt={post.content || "liked post image"}
+              alt={content || "liked post image"}
             />
             <HeartIcon />
           </PostCard>
@@ -81,5 +90,6 @@ const MyLiked = ({ data }) => {
     </GridWrapper>
   );
 };
+
 
 export default MyLiked;

@@ -5,7 +5,6 @@ export const initialState = {
   loadUserInfoLoading: false,
   loadUserInfoDone: false,
   loadUserInfoError: null,
-
 };
 
 export const LOAD_USER_INFO_REQUEST = "LOAD_USER_INFO_REQUEST";
@@ -27,7 +26,7 @@ const profile_jh = (state = initialState, action) =>
         break;
       case LOAD_USER_INFO_FAILURE:
         draft.loadUserInfoLoading = false;
-        draft.loadUserInfoError = action.data;
+        draft.loadUserInfoError = action.error;
         break;
       default:
         break;
