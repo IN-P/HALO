@@ -49,7 +49,7 @@ const MySettingBadges = ({ data }) => {
         style={{
           width: '180px',
           height: '180px',
-          objectFit: 'fit',
+          objectFit: 'fill',
           borderRadius: '20px',
           marginBottom: '20px',
           border: owned ? '2px solid #bbb' : '2px dashed #bbb',

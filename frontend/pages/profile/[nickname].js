@@ -4,7 +4,7 @@ import AppLayout from "../../components/AppLayout";
 import MyHeader from "../../components/mypage/MyHeader";
 import MyAvatar from "../../components/mypage/MyAvatar";
 import MyMain from "../../components/mypage/MyMain";
-import MySettingMain from "../../components/mypage/MySettingMain"; // main 브랜치 쪽
+import MySettingMain from "../../components/mypage/MySettingMain";
 import ProfilePost from "../../components/mypage/ProfilePost";
 import { useDispatch, useSelector } from "react-redux";
 import { LOAD_USER_INFO_REQUEST } from "../../reducers/profile_jh";
@@ -41,17 +41,23 @@ const ProfilePage = () => {
     }
   }, []);
 
-  const reloadLogInUser = useCallback(() => { dispatch({ type: LOAD_MY_INFO_REQUEST }); }, [dispatch]);
+  const reloadLogInUser = useCallback(() => {
+    dispatch({ type: LOAD_MY_INFO_REQUEST });
+  }, [dispatch]);
 
-  // 데이터 갱신용
-  const fetchUserInfo = () => { dispatch({ type: LOAD_USER_INFO_REQUEST, data: nickname }); };
+  const fetchUserInfo = () => {
+    dispatch({ type: LOAD_USER_INFO_REQUEST, data: nickname });
+  };
 
   return (
     <AppLayout>
       {showSetting && isMyProfile ? (
-        <>
-          <MySettingMain onClose={() => setShowSetting(false)} data={data} reload={fetchUserInfo} reloadLogInUser={reloadLogInUser} />
-        </>
+        <MySettingMain
+          onClose={() => setShowSetting(false)}
+          data={data}
+          reload={fetchUserInfo}
+          reloadLogInUser={reloadLogInUser}
+        />
       ) : (
         <div>
           <div style={{ display: "flex", justifyContent: "end", padding: "1% 1% 0 0" }}>
@@ -84,10 +90,27 @@ export const getServerSideProps = wrapper.getServerSideProps(async (context) => 
     axios.defaults.headers.Cookie = cookie;
   }
 
-  context.store.dispatch({ type: LOAD_USER_INFO_REQUEST, data: context.params.nickname });
-  context.store.dispatch(END);
+  const nickname = context.params.nickname;
 
-  await context.store.sagaTask.toPromise();
+  try {
+    // 먼저 API 요청으로 사용자 존재 여부 확인
+    const res = await axios.get(`http://localhost:3065/profile/${nickname}`);
+
+    // 존재하면 Redux 요청 실행
+    context.store.dispatch({ type: LOAD_USER_INFO_REQUEST, data: nickname });
+    context.store.dispatch(END);
+    await context.store.sagaTask.toPromise();
+
+    return { props: {} };
+  } catch (error) {
+    // 404인 경우 Next.js가 자동으로 404 페이지로 이동
+    if (error.response?.status === 404) {
+      return { notFound: true };
+    }
+
+    // 그 외 오류는 기본 props 반환
+    return { props: {} };
+  }
 });
 ///////////////////////////////////////////////////////////
 

@@ -12,9 +12,7 @@ router.get("/:nickname", async (req, res, next) => {
       where: { nickname },
       attributes: ['id'],
     });
-    if (!user) {
-      return res.status(404).json({ message: '유저를 찾을 수 없습니다.' });
-    }
+    if (!user) { return res.status(404).json({ message: '유저를 찾을 수 없습니다.' }); }
     const userId = user.id;
 
     const fullUser = await User.findOne({
