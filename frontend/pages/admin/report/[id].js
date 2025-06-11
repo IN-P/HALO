@@ -1,23 +1,25 @@
-// /pages/admin/report/[id].js
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import axios from 'axios';
 import { Descriptions, Button, Tag, message, Popconfirm } from 'antd';
 import dayjs from 'dayjs';
+import { useDispatch } from 'react-redux';
+import { SUSPEND_USER_REQUEST } from '../../../reducers/reportResult_YB';
 
 const ReportDetailPage = () => {
   const router = useRouter();
   const { id } = router.query;
+  const dispatch = useDispatch();
 
   const [report, setReport] = useState(null);
+  const [selectedDuration, setSelectedDuration] = useState(null); // 클릭한 버튼 표시용
 
   const loadReport = async () => {
     try {
-      const res = await axios.get('http://localhost:3065/report', {
+      const res = await axios.get(`http://localhost:3065/report/${id}`, {
         withCredentials: true,
       });
-      const found = res.data.find((r) => r.id === parseInt(id, 10));
-      setReport(found);
+      setReport(res.data);
     } catch (err) {
       console.error('신고 상세 조회 실패:', err);
     }
@@ -27,21 +29,38 @@ const ReportDetailPage = () => {
     if (id) loadReport();
   }, [id]);
 
-  const handleStatusChange = async () => {
+  // ✅ 정지 처리
+  const handleSuspend = async (days) => {
     try {
-      await axios.patch(
-        `http://localhost:3065/report/${id}`,
-        { status: '처리됨' },
+      const res = await axios.get(
+        `http://localhost:3065/log/reported-user/${report.target_type_id}/${report.target_id}`,
         { withCredentials: true }
       );
-      message.success('상태가 "처리됨"으로 변경되었습니다.');
-      loadReport();
+      const user_id = res.data.reportedUserId;
+
+      if (!user_id) return message.error('신고 대상 유저 ID를 찾을 수 없습니다.');
+
+      dispatch({
+        type: SUSPEND_USER_REQUEST,
+        data: {
+          reportId: report.id,
+          user_id,
+          duration: days,
+        },
+      });
+
+      setSelectedDuration(days);
+      message.success(`${days}일 정지 요청이 전송되었습니다.`);
+
+      // 🔄 정지 후 정보 다시 불러오기
+      setTimeout(loadReport, 500); // 살짝 지연 후 로드
     } catch (err) {
-      console.error('상태 변경 실패:', err);
-      message.error('상태 변경 실패');
+      console.error('정지 요청 실패:', err);
+      message.error('정지 요청 실패');
     }
   };
 
+  // 신고 삭제
   const handleDelete = async () => {
     try {
       await axios.delete(`http://localhost:3065/report/${id}`, {
@@ -67,9 +86,7 @@ const ReportDetailPage = () => {
         <Descriptions.Item label="신고 대상">
           {report.TargetType?.code} / ID {report.target_id}
         </Descriptions.Item>
-        <Descriptions.Item label="사유">
-          {report.reason}
-        </Descriptions.Item>
+        <Descriptions.Item label="사유">{report.reason}</Descriptions.Item>
         <Descriptions.Item label="상태">
           <Tag color={report.status === '처리됨' ? 'green' : 'orange'}>
             {report.status}
@@ -78,20 +95,36 @@ const ReportDetailPage = () => {
         <Descriptions.Item label="작성일">
           {dayjs(report.createdAt).format('YYYY-MM-DD HH:mm')}
         </Descriptions.Item>
+
+        {/* ✅ 실제 DB에서 가져온 정지 기간 */}
+        {report.ReportResult && (
+          <Descriptions.Item label="정지 기간">
+            {dayjs(report.ReportResult.createdAt).format('YYYY-MM-DD HH:mm:ss')} ~{' '}
+            {dayjs(report.ReportResult.updatedAt).format('YYYY-MM-DD HH:mm:ss')}
+          </Descriptions.Item>
+        )}
       </Descriptions>
 
       <div style={{ marginTop: 20 }}>
-        {report.status !== '처리됨' && (
-          <Button type="primary" onClick={handleStatusChange} style={{ marginRight: 10 }}>
-            상태를 '처리됨'으로 변경
-          </Button>
-        )}
         <Popconfirm title="정말 삭제하시겠습니까?" onConfirm={handleDelete}>
           <Button danger>신고 삭제</Button>
         </Popconfirm>
         <Button onClick={() => router.back()} style={{ marginLeft: 10 }}>
           뒤로가기
         </Button>
+      </div>
+
+      <div style={{ marginTop: 30, display: 'flex', gap: '10px' }}>
+        {[1, 7, 30].map((day) => (
+          <Button
+            key={day}
+            danger
+            type={selectedDuration === day ? 'primary' : 'default'}
+            onClick={() => handleSuspend(day)}
+          >
+            {day}일 정지
+          </Button>
+        ))}
       </div>
     </div>
   );

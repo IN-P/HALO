@@ -113,4 +113,48 @@ router.get("/:target_type_id/:target_id", isLoggedIn, async (req, res, next) => 
   }
 });
 
+// 신고 대상 리소스에서 작성자 ID만 추출하는 전용 라우트
+// 경로: /active-log/reported-user/:target_type_id/:target_id
+router.get("/reported-user/:target_type_id/:target_id", isLoggedIn, async (req, res, next) => {
+  const { target_type_id, target_id } = req.params;
+  try {
+    const targetType = await TargetType.findOne({ where: { id: target_type_id } });
+    if (!targetType) {
+      return res.status(404).json({ message: 'Target type not found' });
+    }
+
+    let userId = null;
+
+    switch (targetType.code.toLowerCase()) {
+      case 'user':
+        const user = await User.findOne({ where: { id: target_id } });
+        userId = user?.id;
+        break;
+
+      case 'post':
+        const post = await Post.findOne({ where: { id: target_id } });
+        userId = post?.user_id;
+        break;
+
+      case 'comment':
+        const comment = await Comment.findOne({ where: { id: target_id } });
+        userId = comment?.user_id;
+        break;
+
+      default:
+        return res.status(400).json({ message: 'Unknown target type code' });
+    }
+
+    if (!userId) {
+      return res.status(404).json({ message: '작성자 유저 ID를 찾을 수 없습니다.' });
+    }
+
+    return res.json({ reportedUserId: userId });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+
+
 module.exports = router;

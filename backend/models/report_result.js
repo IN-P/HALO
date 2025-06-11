@@ -4,7 +4,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BIGINT,
       primaryKey: true,
       references: {
-        model: 'report', // 'report' 테이블의 id를 참조
+        model: 'report',
         key: 'id',
       },
     },
@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BIGINT,
       allowNull: false,
       references: {
-        model: 'users', // 정지 대상 유저
+        model: 'users',
         key: 'id',
       },
     },
@@ -20,21 +20,28 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW, // 기본값으로 현재 시간 가능 (선택)
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
   }, {
     tableName: 'report_result',
     charset: 'utf8mb4',
     collate: 'utf8mb4_general_ci',
-    timestamps: true, // createdAt, updatedAt 자동 생성
+    timestamps: false, // ✅ 자동 생성 비활성화
   });
 
   ReportResult.associate = (db) => {
-    // 신고 결과는 하나의 신고(report)와 연결됨
     ReportResult.belongsTo(db.Report, {
       foreignKey: 'id',
       as: 'RelatedReport',
     });
 
-    // 신고 대상이 된 사용자
     ReportResult.belongsTo(db.User, {
       foreignKey: 'user_id',
       as: 'BannedUser',

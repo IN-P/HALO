@@ -42,6 +42,8 @@ const kakaopayRouter = require('./routes/kakaopay'); //윤기
 const adminRouter = require('./routes/useradmin');
 const advertisementRouter = require('./routes/advertisement'); // 재원
 const isProduction = process.env.NODE_ENV === 'production'; // 재원
+const reportResultRouter = require('./routes/report_result');//율비
+
 // .env 적용
 dotenv.config();
 
@@ -116,6 +118,7 @@ app.use('/auth', authRouter); //윤기추가 /auth/google, /auth/google/callback
 app.use('/pay', kakaopayRouter); //윤기추가
 app.use('/api/admin', adminRouter);
 app.use('/advertisement', advertisementRouter); // 재원 광고 라우터
+app.use('/report-result', reportResultRouter);//율비
 
 module.exports = app;
 

@@ -21,6 +21,12 @@ async function getReportedUserId(target_type_id, target_id) {
     case 'USER':
       return target_id;
 
+    case 'CHAT': { 
+      const chat = await Chat.findByPk(target_id);
+      if (!chat) throw new Error('Chat not found');
+      return chat.user_id; // 또는 sender_id 등 정확한 필드로
+    }
+
     default:
       throw new Error('Unknown target type');
   }
