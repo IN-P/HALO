@@ -1,8 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { Post, User, Image, Comment } = require('../models');
+const { Post, User, Image, Comment, Block } = require('../models');
 const { Op } = require('sequelize');
-const { Block } = require('../models'); //윫 추가
 
 // GET /posts?lastId=10
 router.get('/', async (req, res, next) => {
@@ -14,24 +13,34 @@ router.get('/', async (req, res, next) => {
 
     // 윫 차단된 사용자 필터링
     let blockedUserIds = [];
+    let myId = null;
     if (req.user) {
+      myId = req.user.id;
       const blocks = await Block.findAll({
         where: {
           [Op.or]: [
-            { from_user_id: req.user.id },
-            { to_user_id: req.user.id },
+            { from_user_id: myId },
+            { to_user_id: myId },
           ],
         },
       });
 
       blockedUserIds = blocks.map(b =>
-        b.from_user_id === req.user.id ? b.to_user_id : b.from_user_id
+        b.from_user_id === myId ? b.to_user_id : b.from_user_id
       );
 
       // 윫 게시글 작성자가 차단 목록에 포함되어 있으면 제외
       where.user_id = { [Op.notIn]: blockedUserIds };
-    }
 
+      // 공개범위 필터: 내 글 or 전체공개글만 조회
+      where[Op.or] = [
+        { private_post: false },
+        { user_id: myId },
+      ];
+    } else {
+      // 로그인 안 한 경우 전체공개글만 조회
+      where.private_post = false;
+    }
 
     let posts = await Post.findAll({
       where,
@@ -56,7 +65,7 @@ router.get('/', async (req, res, next) => {
         {
           model: Post,
           as: 'Regrams',
-          include: [{ model: User, attributes: ['id', 'nickname', 'profile_img'] }], // ★ 이거!
+          include: [{ model: User, attributes: ['id', 'nickname', 'profile_img'] }],
         },
         {
           model: Post,
@@ -75,10 +84,9 @@ router.get('/', async (req, res, next) => {
         },
       ],
     });
-    // 윫추가 차단된 유저의 댓글 숨기기 로직 추가
-    if (req.user) {
-      const myId = req.user.id;
 
+    // 윫추가 차단된 유저의 댓글 숨기기 로직 추가
+    if (myId) {
       // 윫추가 나와 관련된 차단 관계 조회
       const blockedRelations = await Block.findAll({
         where: {
@@ -105,7 +113,7 @@ router.get('/', async (req, res, next) => {
     }
     posts = posts.filter(post => {
       const regramUserId = post?.Regram?.User?.id;
-      return !(regramUserId && blockedUserIds.includes(regramUserId) && post.user_id !== req.user.id);
+      return !(regramUserId && blockedUserIds.includes(regramUserId) && post.user_id !== myId);
     });
 
     // 무한스크롤을 위해 10개 채웠으면 hasMorePosts true, 아니면 false

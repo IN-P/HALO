@@ -299,7 +299,7 @@ const postINReducer = (state = initialState, action) =>
         if (post) {
           post.content = action.data.content;
           post.Images = action.data.Images;
-          post.visibility = action.data.visibility;
+          post.private_post = action.data.private_post;
         }
         break;
       }

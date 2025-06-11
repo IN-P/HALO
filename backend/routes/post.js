@@ -3,18 +3,16 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { Post, User, Image, Comment, Hashtag, ActiveLog, Notification } = require('../models'); // ActiveLog Notification 준혁추가
+const { Post, User, Image, Comment, Hashtag, ActiveLog, Notification, Block } = require('../models');
 const { isLoggedIn } = require('./middlewares');
-const { Block } = require('../models');//윫
-const { Op } = require('sequelize'); // 윫
-
-const { sendNotification } = require('../notificationSocket'); // 준혁추가 실시간 알림
+const { Op } = require('sequelize');
+const { sendNotification } = require('../notificationSocket');
 
 // uploads 폴더 생성
 try {
   fs.accessSync('uploads/post');
 } catch (error) {
-  console.log('📁 uploads/post 폴더가 없어서 생성합니다.');
+  console.log('uploads/post 폴더가 없어서 생성합니다.');
   fs.mkdirSync('uploads/post', { recursive: true });
 }
 
@@ -40,7 +38,7 @@ router.post('/', isLoggedIn, async (req, res, next) => {
     const post = await Post.create({
       content: req.body.content,
       user_id: req.user.id,
-      visibility: req.body.isPublic ? 'public' : 'private',
+      private_post: req.body.private_post ?? false,
     });
 
     // 해시태그 등록/연결
@@ -169,7 +167,7 @@ router.patch('/:postId', isLoggedIn, async (req, res, next) => {
   const hashtags = req.body.content.match(/#[^\s#]+/g);
   try {
     await Post.update(
-      { content: req.body.content, visibility: req.body.isPublic ? 'public' : 'private' },
+      { content: req.body.content, private_post: req.body.private_post ?? false },
       { where: { id: req.params.postId, user_id: req.user.id } }
     );
 
@@ -374,7 +372,7 @@ router.post('/:postId/regram', isLoggedIn, async (req, res, next) => {
       user_id: req.user.id,
       regram_id: targetPost.id,
       content: req.body.content || '',
-      visibility: req.body.isPublic ? 'public' : 'private',
+      private_post: req.body.private_post ?? false,
     });
 
     // 원본글 최신 데이터 포함 응답 (여기도 마찬가지!)
