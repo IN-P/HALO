@@ -30,14 +30,13 @@ const MainFeed = ({ search }) => {
 
   // ====== [검색 필터] ======
   const filteredPosts = mainPosts.filter(post => {
-    // 작성자명
+    // basePost로 통일
+    const basePost = post.regram_id && post.Regram ? post.Regram : post;
     const nickname = post.User?.nickname || '';
-    // 해시태그 (#검색어)
     let hashtagMatch = false;
     if (search.startsWith('#')) {
-      const tag = search.slice(1).trim();
-      const regex = new RegExp(`#${tag}(\\b|_)`, 'i');
-      hashtagMatch = regex.test(post.content || '');
+      const tag = search.slice(1).trim().toLowerCase();
+      hashtagMatch = basePost.Hashtags?.some(h => h.name.toLowerCase() === tag);
     }
     if (!search.trim()) return true;
     return (
@@ -45,6 +44,7 @@ const MainFeed = ({ search }) => {
       hashtagMatch
     );
   });
+
 
   return (
     <>

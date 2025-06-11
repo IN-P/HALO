@@ -1,3 +1,4 @@
+// frontend/pages/admin/users/[id]/edit.js
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSelector } from 'react-redux';
@@ -11,8 +12,13 @@ import {
   Typography,
   message,
 } from 'antd';
-import { UserOutlined } from '@ant-design/icons';
+import {
+  UserOutlined,
+  RollbackOutlined,
+  CheckOutlined,
+} from '@ant-design/icons';
 import { getRoleName, UserRoleNames } from '../../../../utils/roleNames';
+import { useSpring, animated } from '@react-spring/web';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -23,6 +29,13 @@ const EditUserPage = () => {
   const { user } = useSelector((state) => state.user_YG);
   const [formInstance] = Form.useForm();
   const [initialData, setInitialData] = useState(null);
+
+  const fadeIn = useSpring({
+    from: { opacity: 0, transform: 'translateY(20px)' },
+    to: { opacity: 1, transform: 'translateY(0)' },
+    config: { tension: 200, friction: 20 },
+    delay: 150,
+  });
 
   useEffect(() => {
     if (!user || (user.role !== 1 && user.role !== 5)) {
@@ -65,61 +78,62 @@ const EditUserPage = () => {
 
   return (
     <div style={{ padding: '40px' }}>
-      <Title level={3}>
-        <UserOutlined style={{ marginRight: 10 }} />
-        유저 정보 수정
-      </Title>
-
-      <Card style={{ maxWidth: 700 }}>
-        <Form
-          form={formInstance}
-          layout="vertical"
-          onFinish={handleSubmit}
+      <animated.div style={fadeIn}>
+        <Card
+          bordered
+          style={{ maxWidth: 700, margin: '0 auto', borderRadius: 16, boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}
+          title={<Title level={3} style={{ margin: 0 }}><UserOutlined /> 유저 정보 수정</Title>}
         >
-          <Form.Item label="이메일 (변경 불가)">
-            <Input value={initialData.email} disabled />
-          </Form.Item>
-
-          <Form.Item
-            label="닉네임"
-            name="nickname"
-            rules={[{ required: true, message: '닉네임을 입력해주세요.' }]}
+          <Form
+            form={formInstance}
+            layout="vertical"
+            onFinish={handleSubmit}
           >
-            <Input />
-          </Form.Item>
+            <Form.Item label="이메일 (변경 불가)">
+              <Input value={initialData.email} disabled />
+            </Form.Item>
 
-          <Form.Item label="연락처" name="phone">
-            <Input />
-          </Form.Item>
+            <Form.Item
+              label="닉네임"
+              name="nickname"
+              rules={[{ required: true, message: '닉네임을 입력해주세요.' }]}
+            >
+              <Input placeholder="닉네임 입력" allowClear />
+            </Form.Item>
 
-          <Form.Item label="소개글" name="introduce">
-            <Input.TextArea rows={3} />
-          </Form.Item>
+            <Form.Item label="연락처" name="phone">
+              <Input placeholder="연락처 입력" allowClear />
+            </Form.Item>
 
-          <Form.Item label="권한" name="role">
-            {user.role === 1 ? (
-              <Select>
-                {Object.entries(UserRoleNames).map(([key, label]) => (
-                  <Option key={key} value={parseInt(key, 10)}>
-                    {label}
-                  </Option>
-                ))}
-              </Select>
-            ) : (
-              <Input value={getRoleName(initialData.role)} disabled />
-            )}
-          </Form.Item>
+            <Form.Item label="소개글" name="introduce">
+              <Input.TextArea rows={3} placeholder="소개글 입력" allowClear />
+            </Form.Item>
 
-          <Form.Item style={{ textAlign: 'right' }}>
-            <Button onClick={() => router.back()} style={{ marginRight: 10 }}>
-              취소
-            </Button>
-            <Button type="primary" htmlType="submit">
-              수정 완료
-            </Button>
-          </Form.Item>
-        </Form>
-      </Card>
+            <Form.Item label="권한" name="role">
+              {user.role === 1 ? (
+                <Select>
+                  {Object.entries(UserRoleNames).map(([key, label]) => (
+                    <Option key={key} value={parseInt(key, 10)}>
+                      {label}
+                    </Option>
+                  ))}
+                </Select>
+              ) : (
+                <Input value={getRoleName(initialData.role)} disabled />
+              )}
+            </Form.Item>
+
+            <Form.Item style={{ textAlign: 'right' }}>
+              <Button icon={<RollbackOutlined />} onClick={() => router.back()} style={{ marginRight: 10 }}>
+                취소
+              </Button>
+              <Button type="primary" htmlType="submit" icon={<CheckOutlined />}>
+                수정 완료
+              </Button>
+            </Form.Item>
+          </Form>
+        </Card>
+      </animated.div>
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import React from "react";
-import { Image } from "antd";
+import { Image, Modal, Tooltip  } from "antd";
 import styled from "styled-components";
-import { TagOutlined } from "@ant-design/icons";
+import { TagFilled } from "@ant-design/icons";
 
 const GridWrapper = styled.div`
   display: grid;
@@ -39,7 +39,7 @@ const StyledImage = styled(Image)`
   border-radius: 10px;
 `;
 
-const TagIcon = styled(TagOutlined)`
+const TagIcon = styled(TagFilled)`
   position: absolute;
   top: 10px;
   right: 10px;
@@ -61,37 +61,46 @@ const PostContent = styled.div`
 `;
 
 const MyBookmark = ({ data }) => {
-  const getPostById = (id) => data?.Posts?.find(post => post.id === id);
+  const getPostById = (id) => data?.BookmarkedPosts?.find(post => post.id === id);
 
   if (!data?.BookmarkedPosts || data.BookmarkedPosts.length === 0) {
     return <NoDataMessage>북마크한 게시물이 없습니다</NoDataMessage>;
   }
 
+  // 비공개 게시글 필터링
+  const visiblePosts = data.BookmarkedPosts.filter(post => {
+    const basePost = post.Regram || post;
+    return !basePost.private_post;
+  });
+
+  if (visiblePosts.length === 0) {
+    return <NoDataMessage>표시할 수 있는 게시물이 없습니다</NoDataMessage>;
+  }
+
   return (
     <GridWrapper>
-      {data.BookmarkedPosts.map((bookmark, idx) => {
-        const post = getPostById(bookmark.id);
-
-        if (!post) return null;
+      {visiblePosts.map((post, idx) => {
+        const imageSrc = post.Regram?.Images?.[0]?.src || post.Images?.[0]?.src;
+        const content = post.Regram?.content || post.content;
 
         return (
           <PostCard key={post.id || idx}>
             <StyledImage
               src={
-                post.Images?.[0]?.src
-                  ? `http://localhost:3065/uploads/post/${post.Images[0].src}`
-                  : "https://image.utoimage.com/preview/cp872722/2022/12/202212008462_500.jpg"
+                imageSrc
+                  ? `http://localhost:3065/uploads/post/${imageSrc}`
+                  : "https://placehold.co/300x250"
               }
               preview={false}
-              alt={post.content || "bookmarked post image"}
+              alt={content || "bookmarked post image"}
             />
             <TagIcon />
-            <PostContent>{post.content}</PostContent>
           </PostCard>
         );
       })}
     </GridWrapper>
   );
 };
+
 
 export default MyBookmark;

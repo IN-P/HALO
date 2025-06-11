@@ -1,7 +1,7 @@
 import React from "react";
 import { Image } from "antd";
 import styled from "styled-components";
-import { TagOutlined } from "@ant-design/icons";
+import { SaveFilled } from "@ant-design/icons";
 
 const GridWrapper = styled.div`
   display: grid;
@@ -39,59 +39,43 @@ const StyledImage = styled(Image)`
   border-radius: 10px;
 `;
 
-const TagIcon = styled(TagOutlined)`
+const TagIcon = styled(SaveFilled)`
   position: absolute;
   top: 10px;
   right: 10px;
   font-size: 24px;
-  color: #52c41a;
+  color: #1890ff;
   text-shadow: 0 0 6px rgba(0,0,0,0.3);
   pointer-events: none;
 `;
 
-const PostContent = styled.div`
-  padding: 8px 12px;
-  background-color: #fff;
-  font-weight: 600;
-  font-size: 14px;
-  color: #333;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
-
 const MySave = ({ data }) => {
-  const getPostById = (id) => data?.Posts?.find(post => post.id === id);
+  // private_post: true인 게시물만 필터링
+  const savedPosts = data?.Posts?.filter(post => post.private_post) || [];
 
-  if (!data?.BookmarkedPosts || data.BookmarkedPosts.length === 0) {
+  if (savedPosts.length === 0) {
     return <NoDataMessage>보관한 게시물이 없습니다</NoDataMessage>;
   }
 
   return (
     <GridWrapper>
-      {data.BookmarkedPosts.map((bookmark, idx) => {
-        const post = getPostById(bookmark.id);
-
-        if (!post) return null;
-
-        return (
-          <PostCard key={post.id || idx}>
-            <StyledImage
-              src={
-                post.Images?.[0]?.src
-                  ? `http://localhost:3065/uploads/post/${post.Images[0].src}`
-                  : "https://image.utoimage.com/preview/cp872722/2022/12/202212008462_500.jpg"
-              }
-              preview={false}
-              alt={post.content || "bookmarked post image"}
-            />
-            <TagIcon />
-            <PostContent>{post.content}</PostContent>
-          </PostCard>
-        );
-      })}
+      {savedPosts.map((post, idx) => (
+        <PostCard key={post.id || idx}>
+          <StyledImage
+            src={
+              post.Images?.[0]?.src
+                ? `http://localhost:3065/uploads/post/${post.Images[0].src}`
+                : "https://placehold.co/300x250"
+            }
+            preview={false}
+            alt={post.content || "saved post image"}
+          />
+          <TagIcon />
+        </PostCard>
+      ))}
     </GridWrapper>
   );
 };
+
 
 export default MySave;

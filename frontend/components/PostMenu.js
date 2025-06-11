@@ -1,4 +1,7 @@
 import React from 'react';
+import { useRouter } from 'next/router';
+import { useDispatch } from 'react-redux';
+import { REMOVE_POST_REQUEST } from '../reducers/post_IN';
 import ReportButton from './ReportButton';
 
 const menuBtnStyle = {
@@ -10,6 +13,7 @@ const menuBtnStyle = {
   padding: 0,
   outline: 'none',
 };
+
 const menuDropdownStyle = {
   position: 'absolute',
   right: 0,
@@ -20,6 +24,7 @@ const menuDropdownStyle = {
   zIndex: 10,
   minWidth: 130,
 };
+
 const menuItemStyle = {
   display: 'block',
   width: '100%',
@@ -32,26 +37,39 @@ const menuItemStyle = {
   color: '#444',
 };
 
-function PostMenu({ showMenu, setShowMenu, menuRef, isMine, isRegram, onEdit, onDelete, setShowReportModal }) {
+function PostMenu({ showMenu, setShowMenu, menuRef, isMine, isRegram, postId, setShowReportModal }) {
+  const router = useRouter();
+  const dispatch = useDispatch();
+
+  const handleEdit = () => {
+    setShowMenu(false);
+    router.push(`/edit/${postId}`);
+  };
+
+  const handleDelete = () => {
+    if (window.confirm('정말 삭제하시겠습니까?')) {
+      dispatch({ type: REMOVE_POST_REQUEST, data: postId });
+      setShowMenu(false);
+    }
+  };
+
   return (
     <div style={{ position: 'relative' }} ref={menuRef}>
-      <button style={menuBtnStyle} onClick={() => setShowMenu((v) => !v)}>
-        ⋮
-      </button>
+      <button style={menuBtnStyle} onClick={() => setShowMenu((v) => !v)}>⋮</button>
       {showMenu && (
         <div style={menuDropdownStyle}>
           {isMine ? (
             isRegram ? (
               <button
                 style={{ ...menuItemStyle, color: 'red' }}
-                onClick={() => { onDelete(); setShowMenu(false); }}
+                onClick={handleDelete}
               >삭제</button>
             ) : (
               <>
-                <button style={menuItemStyle} onClick={onEdit}>수정</button>
+                <button style={menuItemStyle} onClick={handleEdit}>수정</button>
                 <button
                   style={{ ...menuItemStyle, color: 'red' }}
-                  onClick={() => { onDelete(); setShowMenu(false); }}
+                  onClick={handleDelete}
                 >삭제</button>
               </>
             )

@@ -45,6 +45,33 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+// 신고 단건 조회 (R) - GET /report/:id
+router.get('/:id', async (req, res, next) => {
+  try {
+    const report = await Report.findOne({
+      where: { id: req.params.id },
+      include: [
+        { model: User, attributes: ['id', 'nickname'] },
+        { model: TargetType, attributes: ['id', 'code'] },
+        {
+          model: require('../models').ReportResult,
+          as: 'ReportResult', // models/report.js에서 설정한 alias와 일치해야 함
+        },
+      ],
+    });
+
+    if (!report) {
+      return res.status(404).json({ message: '해당 신고를 찾을 수 없습니다.' });
+    }
+
+    res.status(200).json(report);
+  } catch (error) {
+    console.error('신고 단건 조회 실패:', error);
+    next(error);
+  }
+});
+
+
 // 신고 상태 변경 (U)
 router.patch('/:id', async (req, res, next) => {
   try {

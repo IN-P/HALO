@@ -1,7 +1,7 @@
 import React from "react";
 import { Image } from "antd";
 import styled from "styled-components";
-import { HeartOutlined } from "@ant-design/icons";  // 변경: HeartOutlined 아이콘 import
+import { HeartFilled } from "@ant-design/icons";
 
 const GridWrapper = styled.div`
   display: grid;
@@ -24,6 +24,14 @@ const PostCard = styled.div`
   }
 `;
 
+const NoDataMessage = styled.div`
+width: 100%;
+text-align: center;
+margin-top: 40px;
+font-size: 16px;
+color: #888;
+`;
+
 const StyledImage = styled(Image)`
   width: 100% !important;
   height: 300px !important;
@@ -31,7 +39,7 @@ const StyledImage = styled(Image)`
   border-radius: 10px;
 `;
 
-const HeartIcon = styled(HeartOutlined)`
+const HeartIcon = styled(HeartFilled)`
   position: absolute;
   top: 10px;
   right: 10px;
@@ -41,57 +49,47 @@ const HeartIcon = styled(HeartOutlined)`
   pointer-events: none;
 `;
 
-const PostContent = styled.div`
-  padding: 8px 12px;
-  background-color: #fff;
-  font-weight: 600;
-  font-size: 14px;
-  color: #333;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
-
-const NoDataMessage = styled.div`
-  width: 100%;
-  text-align: center;
-  margin-top: 40px;
-  font-size: 16px;
-  color: #888;
-`;
-
 const MyLiked = ({ data }) => {
-  const getPostById = (id) => data?.Posts?.find(post => post.id === id);
+  const getPostById = (id) => data?.Liked?.find(post => post.id === id);
 
   if (!data || !data.Liked || data.Liked.length === 0) {
     return <NoDataMessage>좋아요한 게시물이 없습니다</NoDataMessage>;
   }
 
+  const visiblePosts = data.Liked.filter(post => {
+    const basePost = post.Regram || post;
+    return !basePost.private_post;
+  });
+
+  if (visiblePosts.length === 0) {
+    return <NoDataMessage>표시할 수 있는 게시물이 없습니다</NoDataMessage>;
+  }
+
   return (
     <GridWrapper>
-      {data?.Liked?.map((likedPost, idx) => {
-        const post = getPostById(likedPost.id);
-
-        if (!post) return null;
+      {visiblePosts.map((post, idx) => {
+        const basePost = post.Regram || post;
+        const imageSrc = basePost.Images?.[0]?.src;
+        const content = basePost.content;
 
         return (
           <PostCard key={post.id || idx}>
             <StyledImage
               src={
-                post.Images?.[0]?.src
-                  ? `http://localhost:3065/uploads/post/${post.Images[0].src}`
-                  : "https://image.utoimage.com/preview/cp872722/2022/12/202212008462_500.jpg"
+                imageSrc
+                  ? `http://localhost:3065/uploads/post/${imageSrc}`
+                  : "https://placehold.co/300x250"
               }
               preview={false}
-              alt={post.content || "liked post image"}
+              alt={content || "liked post image"}
             />
             <HeartIcon />
-            <PostContent>{post.content}</PostContent>
           </PostCard>
         );
       })}
     </GridWrapper>
   );
 };
+
 
 export default MyLiked;

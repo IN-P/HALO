@@ -66,13 +66,13 @@ const MySettingMain = ({ data, onClose, reload, reloadLogInUser }) => {
           </div>
 
           {selectedTab === "profile" && <MySettingProfile data={data} reload={reload} reloadLogInUser={reloadLogInUser} />}
-          {selectedTab === "balance" && <MySettingBalance user={user} />}
+          {selectedTab === "balance" && <MySettingBalance user={user} data={data} />}
           {selectedTab === "password" && <MySettingPassword data={data} />}
           {selectedTab === "block" && <MySettingBlock data={data} />}
           {selectedTab === "achievement" && <MySettingAchievement data={data} />}
           {selectedTab === "badge" && <MySettingBadges data={data} />}
           {selectedTab === "activeLog" && <MySettingActiveLog userId={userId} />}
-          {selectedTab === "followers" && <MySettingFollowers data={data} />}
+          {selectedTab === "followers" && <MySettingFollowers userId={userId} />}
           {selectedTab === "followings" && <MySettingFollowings data={data} />}
         </Col>
       </Row>

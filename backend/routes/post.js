@@ -3,18 +3,16 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { Post, User, Image, Comment, Hashtag, ActiveLog, Notification } = require('../models'); // ActiveLog Notification 준혁추가
+const { Post, User, Image, Comment, Hashtag, ActiveLog, Notification, Block } = require('../models');
 const { isLoggedIn } = require('./middlewares');
-const { Block } = require('../models');//윫
-const { Op } = require('sequelize'); // 윫
-
-const { sendNotification } = require('../notificationSocket'); // 준혁추가 실시간 알림
+const { Op } = require('sequelize');
+const { sendNotification } = require('../notificationSocket');
 
 // uploads 폴더 생성
 try {
   fs.accessSync('uploads/post');
 } catch (error) {
-  console.log('📁 uploads/post 폴더가 없어서 생성합니다.');
+  console.log('uploads/post 폴더가 없어서 생성합니다.');
   fs.mkdirSync('uploads/post', { recursive: true });
 }
 
@@ -40,7 +38,7 @@ router.post('/', isLoggedIn, async (req, res, next) => {
     const post = await Post.create({
       content: req.body.content,
       user_id: req.user.id,
-      visibility: req.body.isPublic ? 'public' : 'private',
+      private_post: req.body.private_post ?? false,
     });
 
     // 해시태그 등록/연결
@@ -117,6 +115,21 @@ router.delete('/:postId', isLoggedIn, async (req, res, next) => {
   try {
     const post = await Post.findByPk(req.params.postId);
 
+    let deletedRegramIds = [];
+    if (post && !post.regram_id) {
+      // 1. 리그램글 목록 조회
+      const regrams = await Post.findAll({ where: { regram_id: req.params.postId } });
+      // 2. 각 리그램글의 댓글/이미지 먼저 삭제
+      for (const rg of regrams) {
+        await Comment.destroy({ where: { post_id: rg.id } });
+        await Image.destroy({ where: { post_id: rg.id } });
+      }
+      // 3. 그 후 리그램글 삭제
+      await Post.destroy({ where: { regram_id: req.params.postId } });
+      // 4. 삭제된 리그램글 id 저장
+      deletedRegramIds = regrams.map(rg => rg.id);
+    }
+
     await Image.destroy({ where: { post_id: req.params.postId } });
     await Comment.destroy({ where: { post_id: req.params.postId } });
     await Post.destroy({
@@ -145,17 +158,16 @@ router.delete('/:postId', isLoggedIn, async (req, res, next) => {
       });
     }
 
-    // 활동 내역 추가 - 준혁 추가
     await ActiveLog.create({
       action: "DELETE",
       target_id: req.params.postId,
       users_id: req.user.id,
       target_type_id: 1,
     });
-    // 준혁 추가
 
     res.status(200).json({
       PostId: parseInt(req.params.postId, 10),
+      deletedRegramIds, // <<== 추가!
       ...(basePost && { basePost }),
     });
   } catch (error) {
@@ -169,7 +181,7 @@ router.patch('/:postId', isLoggedIn, async (req, res, next) => {
   const hashtags = req.body.content.match(/#[^\s#]+/g);
   try {
     await Post.update(
-      { content: req.body.content, visibility: req.body.isPublic ? 'public' : 'private' },
+      { content: req.body.content, private_post: req.body.private_post ?? false },
       { where: { id: req.params.postId, user_id: req.user.id } }
     );
 
@@ -205,19 +217,14 @@ router.patch('/:postId', isLoggedIn, async (req, res, next) => {
       }
     }
 
-    // 활동 내역 변경 - 준혁 추가
-    const log = await ActiveLog.findOne({
-      where: {
-        target_id: post.id,
-        users_id: req.user.id,
-        target_type_id: 1,
-      }
+    // 준혁 : 활동 생성
+    await ActiveLog.create({
+      action: "UPDATE",
+      target_id: req.params.postId,
+      users_id: req.user.id,
+      target_type_id: 1,
     });
-    if (!log) { return res.status(403).send("해당되는 기록이 없습니다"); }
-    if (log.action !== "UPDATE") { await log.update({ action: "UPDATE" });
-    // 강제 업데이트
-    } else { log.changed('updatedAt', true); await log.save(); }
-    // 준혁 추가
+    //
 
     res.status(200).json({ PostId: post.id, content: req.body.content });
   } catch (error) {
@@ -277,10 +284,10 @@ router.patch('/:postId/like', isLoggedIn, async (req, res, next) => {
 
     // 준혁 추가 : 활동 내역 생성
     await ActiveLog.create({
-      action: "LIKE",
+      action: "CREATE",
       target_id: post.id,
       users_id: req.user.id,
-      target_type_id: 1,
+      target_type_id: 5,
     });
     // 알림 생성
     // 좋아요를 받은 게시글의 내용 및 유저 추출
@@ -300,7 +307,6 @@ router.patch('/:postId/like', isLoggedIn, async (req, res, next) => {
         type: 'LIKE',
         message: '좋아요를 받았습니다',
       });
-      //
     }
     //
 
@@ -337,16 +343,13 @@ router.delete('/:postId/like', isLoggedIn, async (req, res, next) => {
       ]
     });
 
-    // 활동 내역 변경 - 준혁 추가
-    const log = await ActiveLog.findOne({
-    where: {
-      action: "LIKE",
+    // 활동 내역 추가 - 준혁 추가
+    await ActiveLog.create({
+      action: "DELETE",
       target_id: originPost.id,
       users_id: req.user.id,
-      target_type_id: 1,
-    } });
-    if (!log) { return res.status(403).send("해당되는 기록이 없습니다");}
-    await log.update({ action: "UNLIKE" });
+      target_type_id: 5,
+    });
     // 준혁 추가
 
     res.status(200).json({ basePost: fullOrigin });
@@ -361,9 +364,6 @@ router.post('/:postId/regram', isLoggedIn, async (req, res, next) => {
   try {
     const targetPost = await Post.findOne({ where: { id: req.params.postId } });
     if (!targetPost) return res.status(403).send('원본 게시글이 존재하지 않습니다.');
-    if (req.user.id === targetPost.user_id) {
-      return res.status(403).send('자기 글은 리그램할 수 없습니다.');
-    }
     const existingRegram = await Post.findOne({
       where: { user_id: req.user.id, regram_id: targetPost.id }
     });
@@ -374,7 +374,7 @@ router.post('/:postId/regram', isLoggedIn, async (req, res, next) => {
       user_id: req.user.id,
       regram_id: targetPost.id,
       content: req.body.content || '',
-      visibility: req.body.isPublic ? 'public' : 'private',
+      private_post: req.body.private_post ?? false,
     });
 
     // 원본글 최신 데이터 포함 응답 (여기도 마찬가지!)
