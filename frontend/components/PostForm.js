@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
   ADD_POST_REQUEST, ADD_POST_RESET,
   EDIT_POST_REQUEST, EDIT_POST_RESET,
-  UPLOAD_IMAGES_REQUEST,
+  UPLOAD_POST_IMAGES_REQUEST,
   REMOVE_IMAGE, RESET_IMAGE_PATHS
 } from '../reducers/post_IN';
 import { useRouter } from 'next/router';
@@ -66,7 +66,7 @@ const PostForm = ({ editMode = false, originPost }) => {
     const files = Array.from(e.target.files);
     const formData = new FormData();
     files.forEach(f => formData.append('image', f));
-    dispatch({ type: UPLOAD_IMAGES_REQUEST, data: formData });
+    dispatch({ type: UPLOAD_POST_IMAGES_REQUEST, data: formData });
     e.target.value = '';
   }, [dispatch]);
   const onRemoveImage = useCallback(index => dispatch({ type: REMOVE_IMAGE, index }), [dispatch]);

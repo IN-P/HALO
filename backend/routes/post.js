@@ -23,10 +23,11 @@ const upload = multer({
       done(null, 'uploads/post');
     },
     filename(req, file, done) {
-      const ext = path.extname(file.originalname);
-      const basename = path.basename(file.originalname, ext);
-      done(null, basename + '_' + new Date().getTime() + ext);
-    },
+      const originalname = Buffer.from(file.originalname, 'latin1').toString('utf8');
+      const ext = path.extname(originalname);
+      const basename = path.basename(originalname, ext);
+      done(null, basename + '_' + Date.now() + ext);
+    }
   }),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
 });
