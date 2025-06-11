@@ -74,6 +74,8 @@ const ChatRoom = ({
     if (roomId) {
       socket.emit('join_room', roomId);
       console.log(`🔗 join_room emit: ${roomId}`);
+      socket.emit('mark_as_read', roomId);
+    console.log('✅ mark_as_read emit:', roomId);
     }
     return () => {
       if (roomId) {
@@ -82,6 +84,24 @@ const ChatRoom = ({
       }
     };
   }, [roomId]);
+
+  useEffect(() => {
+  const handleReceiveMessage = (message) => {
+    console.log('📩 receive_message 수신:', message);
+
+    // 현재 ChatRoom의 메시지라면 → mark_as_read emit 다시 보내기
+    if (message.roomId === roomId) {
+      console.log('✅ 현재 ChatRoom에서 새 메시지 수신 → mark_as_read emit:', roomId);
+      socket.emit('mark_as_read', roomId);
+    }
+  };
+
+  socket.on('receive_message', handleReceiveMessage);
+
+  return () => {
+    socket.off('receive_message', handleReceiveMessage);
+  };
+}, [roomId]);
 
 
   const handleExitConfirm = () => {

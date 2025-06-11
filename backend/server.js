@@ -124,62 +124,62 @@ socket.on('leave_room', async (data) => {
     }
     console.log(`🔗 ${socket.id} joined room ${roomId}`);
 
-    try {
-      const parts = roomId.split('-');
-      const user1Id = parseInt(parts[1]);
-      const user2Id = parseInt(parts[2]);
-      const sortedUser1Id = Math.min(user1Id, user2Id);
-      const sortedUser2Id = Math.max(user1Id, user2Id);
+    // try {
+    //   const parts = roomId.split('-');
+    //   const user1Id = parseInt(parts[1]);
+    //   const user2Id = parseInt(parts[2]);
+    //   const sortedUser1Id = Math.min(user1Id, user2Id);
+    //   const sortedUser2Id = Math.max(user1Id, user2Id);
 
-      const chatRoom = await ChatRoom.findOne({
-        where: {
-          user1_id: sortedUser1Id,
-          user2_id: sortedUser2Id,
-        },
-      });
+    //   const chatRoom = await ChatRoom.findOne({
+    //     where: {
+    //       user1_id: sortedUser1Id,
+    //       user2_id: sortedUser2Id,
+    //     },
+    //   });
 
-      if (!chatRoom) {
-        console.log(`🚫 채팅방 없음: ${roomId}`);
-        return;
-      }
+    //   if (!chatRoom) {
+    //     console.log(`🚫 채팅방 없음: ${roomId}`);
+    //     return;
+    //   }
 
-      await ChatMessage.update(
-        { is_read: true },
-        {
-          where: {
-            rooms_id: chatRoom.id,
-            sender_id: { [Sequelize.Op.ne]: userId },
-            is_read: false,
-          },
-        }
-      );
+    //   await ChatMessage.update(
+    //     { is_read: true },
+    //     {
+    //       where: {
+    //         rooms_id: chatRoom.id,
+    //         sender_id: { [Sequelize.Op.ne]: userId },
+    //         is_read: false,
+    //       },
+    //     }
+    //   );
 
-      const updatedMessages = await ChatMessage.findAll({
-        where: {
-          rooms_id: chatRoom.id,
-          sender_id: { [Sequelize.Op.ne]: userId },
-          is_read: true,
-        },
-        attributes: ['id'],
-      });
+    //   const updatedMessages = await ChatMessage.findAll({
+    //     where: {
+    //       rooms_id: chatRoom.id,
+    //       sender_id: { [Sequelize.Op.ne]: userId },
+    //       is_read: true,
+    //     },
+    //     attributes: ['id'],
+    //   });
 
-      const readMessageIds = updatedMessages.map((msg) => msg.id);
-      const senderUserId = userId === sortedUser1Id ? sortedUser2Id : sortedUser1Id;
+    //   const readMessageIds = updatedMessages.map((msg) => msg.id);
+    //   const senderUserId = userId === sortedUser1Id ? sortedUser2Id : sortedUser1Id;
 
-      if (socketMap[senderUserId]) {
-        const senderSocketId = socketMap[senderUserId].socketId;
-        io.to(senderSocketId).emit('read_update', {
-          roomId,
-          readerId: userId,
-          readMessageIds,
-        });
-        console.log(
-          `[SERVER] read_update emit → senderUserId=${senderUserId}, readMessageIds=${readMessageIds}`
-        );
-      }
-    } catch (err) {
-      console.error('❌ join_room 중 에러 발생:', err);
-    }
+    //   if (socketMap[senderUserId]) {
+    //     const senderSocketId = socketMap[senderUserId].socketId;
+    //     io.to(senderSocketId).emit('read_update', {
+    //       roomId,
+    //       readerId: userId,
+    //       readMessageIds,
+    //     });
+    //     console.log(
+    //       `[SERVER] read_update emit → senderUserId=${senderUserId}, readMessageIds=${readMessageIds}`
+    //     );
+    //   }
+    // } catch (err) {
+    //   console.error('❌ join_room 중 에러 발생:', err);
+    // }
   });
 
   socket.on('send_message', async (data) => {
@@ -219,6 +219,69 @@ socket.on('leave_room', async (data) => {
       const chatRoomExit = await ChatRoomExit.findOne({
   where: { chat_rooms_id: chatRoomInstance.id }
 });
+
+socket.on('mark_as_read', async (roomId) => {
+  if (!socket.userId) return;
+  console.log(`[SOCKET] mark_as_read 수신: roomId=${roomId}, userId=${socket.userId}`);
+
+  try {
+    const parts = roomId.split('-');
+    const user1Id = parseInt(parts[1]);
+    const user2Id = parseInt(parts[2]);
+    const sortedUser1Id = Math.min(user1Id, user2Id);
+    const sortedUser2Id = Math.max(user1Id, user2Id);
+
+    const chatRoom = await ChatRoom.findOne({
+      where: {
+        user1_id: sortedUser1Id,
+        user2_id: sortedUser2Id,
+      },
+    });
+
+    if (!chatRoom) {
+      console.log(`🚫 채팅방 없음: ${roomId}`);
+      return;
+    }
+
+    await ChatMessage.update(
+      { is_read: true },
+      {
+        where: {
+          rooms_id: chatRoom.id,
+          sender_id: { [Sequelize.Op.ne]: socket.userId },
+          is_read: false,
+        },
+      }
+    );
+
+    const updatedMessages = await ChatMessage.findAll({
+      where: {
+        rooms_id: chatRoom.id,
+        sender_id: { [Sequelize.Op.ne]: socket.userId },
+        is_read: true,
+      },
+      attributes: ['id'],
+    });
+
+    const readMessageIds = updatedMessages.map((msg) => msg.id);
+    const senderUserId = socket.userId === sortedUser1Id ? sortedUser2Id : sortedUser1Id;
+
+    if (socketMap[senderUserId]) {
+      const senderSocketId = socketMap[senderUserId].socketId;
+      io.to(senderSocketId).emit('read_update', {
+        roomId,
+        readerId: socket.userId,
+        readMessageIds,
+      });
+      console.log(
+        `[SERVER] read_update emit → senderUserId=${senderUserId}, readMessageIds=${readMessageIds}`
+      );
+    }
+  } catch (err) {
+    console.error('❌ mark_as_read 처리 중 에러:', err);
+  }
+});
+
 
 const isSenderUser1 = chatRoomInstance.user1_id === senderId;
 const isOpponentActive = isSenderUser1 ? chatRoomExit.user2_id_active : chatRoomExit.user1_id_active;
@@ -263,50 +326,59 @@ if (!isOpponentActive) {
         const receiverSocketId = socketMap[receiverUserId].socketId;
         const receiverCurrentRoomId = socketMap[receiverUserId].currentRoomId;
 
-        if (receiverCurrentRoomId === roomId) {
-          const unreadMessagesBeforeUpdate = await ChatMessage.findAll({
-            where: {
-              rooms_id: chatRoomInstance.id,
-              sender_id: { [Sequelize.Op.ne]: receiverUserId },
-              is_read: false,
-            },
-            attributes: ['id'],
-          });
+          if (receiverCurrentRoomId === roomId) {
+  // 읽음 처리 X → receive_message만 전송
+  io.to(receiverSocketId).emit('receive_message', messageToSend);
+  console.log(
+    `📩 유저 ${receiverUserId}는 현재 방 열어놔서 receive_message만 전송 (읽음 처리는 mark_as_read에서만 처리)`
+  );
+} else {
+  io.to(receiverSocketId).emit('receive_message', messageToSend);
+  console.log(`📩 유저 ${receiverUserId}에게 receive_message만 전송 (방 안 열려 있음)`);
+}
+        //   const unreadMessagesBeforeUpdate = await ChatMessage.findAll({
+        //     where: {
+        //       rooms_id: chatRoomInstance.id,
+        //       sender_id: { [Sequelize.Op.ne]: receiverUserId },
+        //       is_read: false,
+        //     },
+        //     attributes: ['id'],
+        //   });
 
-          const readMessageIds = unreadMessagesBeforeUpdate.map((msg) => msg.id);
+        //   const readMessageIds = unreadMessagesBeforeUpdate.map((msg) => msg.id);
 
-          await ChatMessage.update(
-            { is_read: true },
-            {
-              where: {
-                rooms_id: chatRoomInstance.id,
-                sender_id: { [Sequelize.Op.ne]: receiverUserId },
-                is_read: false,
-              },
-            }
-          );
+        //   await ChatMessage.update(
+        //     { is_read: true },
+        //     {
+        //       where: {
+        //         rooms_id: chatRoomInstance.id,
+        //         sender_id: { [Sequelize.Op.ne]: receiverUserId },
+        //         is_read: false,
+        //       },
+        //     }
+        //   );
 
-          io.to(receiverSocketId).emit('read_update', {
-            roomId,
-            readerId: receiverUserId,
-            readMessageIds,
-          });
+        //   io.to(receiverSocketId).emit('read_update', {
+        //     roomId,
+        //     readerId: receiverUserId,
+        //     readMessageIds,
+        //   });
 
-          io.to(socket.id).emit('read_update', {
-            roomId,
-            readerId: receiverUserId,
-            readMessageIds,
-          });
+        //   io.to(socket.id).emit('read_update', {
+        //     roomId,
+        //     readerId: receiverUserId,
+        //     readMessageIds,
+        //   });
 
-          io.to(receiverSocketId).emit('receive_message', messageToSend);
+        //   io.to(receiverSocketId).emit('receive_message', messageToSend);
 
-          console.log(
-            `📩 유저 ${receiverUserId}는 현재 방 열어놔서 receive_message + read_update`
-          );
-        } else {
-          io.to(receiverSocketId).emit('receive_message', messageToSend);
-          console.log(`📩 유저 ${receiverUserId}에게 receive_message만 전송 (방 안 열려 있음)`);
-        }
+        //   console.log(
+        //     `📩 유저 ${receiverUserId}는 현재 방 열어놔서 receive_message + read_update`
+        //   );
+        // } else {
+        //   io.to(receiverSocketId).emit('receive_message', messageToSend);
+        //   console.log(`📩 유저 ${receiverUserId}에게 receive_message만 전송 (방 안 열려 있음)`);
+        // }
 
         // ✅ 여기서 new_chat_room_created emit
         io.to(receiverSocketId).emit('new_chat_room_created', {
