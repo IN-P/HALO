@@ -103,8 +103,11 @@ if (!receiverIsActive) {
 }
 
 return res.status(200).json(chatRoom);
-
-    }
+}
+if (!chatRoom && !req.body.allowCreate) {
+  console.log(`[POST /] allowCreate 없이 방 없음 → 404 반환`);
+  return res.status(404).send('채팅방이 존재하지 않아.');
+}
     chatRoom = await ChatRoom.create({
     user1_id: sortedIds[0],
     user2_id: sortedIds[1],
@@ -249,9 +252,11 @@ router.patch('/:chatRoomId/exit', isLoggedIn, async (req, res, next) => {
     if (user1Active || user2Active) {
   const opponentId = (chatRoom.user1_id === userId) ? chatRoom.user2_id : chatRoom.user1_id;
 
-  if (socketMap[opponentId]) {
-    const sortedIds = [chatRoom.user1_id, chatRoom.user2_id].sort((a, b) => a - b);
-    const opponentSocketId = socketMap[opponentId].socketId;
+
+
+if (typeof opponentId !== 'undefined' && socketMap[opponentId] && socketMap[opponentId].socketId) {
+  const sortedIds = [chatRoom.user1_id, chatRoom.user2_id].sort((a, b) => a - b);
+  const opponentSocketId = socketMap[opponentId].socketId;
 
   io.to(opponentSocketId).emit('chat_room_closed', {
     roomId: `chat-${sortedIds[0]}-${sortedIds[1]}`,
@@ -259,7 +264,7 @@ router.patch('/:chatRoomId/exit', isLoggedIn, async (req, res, next) => {
   });
   console.log(`[PATCH /:chatRoomId/exit] 남아있는 유저에게 알림 emit → opponentId=${opponentId}`);
 } else {
-  console.log(`[PATCH /:chatRoomId/exit] socketMap[opponentId=${opponentId}] 없음 → chat_room_closed emit 생략`);
+  console.log(`[PATCH /:chatRoomId/exit] socketMap[opponentId=${opponentId}] 없음 또는 socketId 없음 → chat_room_closed emit 생략`);
 }
 }
 
@@ -766,6 +771,7 @@ console.log(`[GET /my-rooms] 필터링 후 ${filteredRooms.length}개의 채팅�
 
       return {
         roomId: `chat-${[room.user1_id, room.user2_id].sort().join('-')}`,
+        chatRoomId: room.id,
         otherUser: {
           id: partner.id,
           nickname: partner.nickname,

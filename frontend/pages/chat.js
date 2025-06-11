@@ -212,6 +212,7 @@ const ChatPage = () => {
     try {
       const res = await axios.post('http://localhost:3065/api/chat', {
         targetUserId: user.id,
+        allowCreate: true,
       }, { withCredentials: true });
 
       setSelectedChatRoomId(res.data.id);
@@ -231,12 +232,39 @@ const ChatPage = () => {
     }
   }, [dispatch, me]);
 
-  useEffect(() => {
-    if (roomId && me && selectedUser) {
-      dispatch(clearLog());
+useEffect(() => {
+  if (roomId && me && selectedUser && chatRooms.length > 0) {
+    console.log('💬 [useEffect] roomId:', roomId, 'selectedUser:', selectedUser);
 
-      axios.post('http://localhost:3065/api/chat', { targetUserId: selectedUser.id }, { withCredentials: true })
+    dispatch(clearLog());
+
+    const sortedIds = [me.id, selectedUser.id].sort((a, b) => a - b);
+
+    const existingRoom = chatRooms.find(room =>
+      (room.user1_id === sortedIds[0] && room.user2_id === sortedIds[1])
+    );
+
+    if (existingRoom) {
+      console.log('✅ 기존 채팅방 존재함 → message만 불러오기');
+      axios.get(`http://localhost:3065/api/chat/message/${roomId}`, { withCredentials: true })
+        .then(getResponse => {
+          getResponse.data.reverse().forEach(msg => dispatch(addLog(msg)));
+          requestAnimationFrame(() => {
+            if (chatBoxRef.current) {
+              chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+            }
+          });
+          socket.emit('join_room', roomId, me.id);
+        })
+        .catch(error => {
+          console.error('❌ 메시지 로드 실패:', error);
+        });
+
+    } else {
+      console.log('✅ 기존 채팅방 존재 여부 확인 → allowCreate: false 요청');
+      axios.post('http://localhost:3065/api/chat', { targetUserId: selectedUser.id, allowCreate: false }, { withCredentials: true })
         .then(postResponse => {
+          console.log('✅ 기존 채팅방 존재함 → message만 불러오기');
           return axios.get(`http://localhost:3065/api/chat/message/${roomId}`, { withCredentials: true });
         })
         .then(getResponse => {
@@ -249,17 +277,25 @@ const ChatPage = () => {
           socket.emit('join_room', roomId, me.id);
         })
         .catch(error => {
-          console.error('❌ 채팅방 또는 메시지 로드 실패:', error);
-          if (error.response) {
-            alert(error.response.data || '채팅방 로드 중 오류가 발생했습니다.');
-            dispatch(setSelectedUser(null));
-            dispatch(clearLog());
+          if (error.response && error.response.status === 404) {
+            console.log('✅ 기존 채팅방 없음 → 유저 클릭 시에만 생성해야 함. 여기선 생성 안함.');
+            // 여기서 새로 만들지 않음!! 그냥 selectedUser 유지
           } else {
-            alert('알 수 없는 오류가 발생했습니다.');
+            console.error('❌ 채팅방 존재 확인 또는 메시지 로드 실패:', error);
+            if (error.response) {
+              alert(error.response.data || '채팅방 로드 중 오류가 발생했습니다.');
+              dispatch(setSelectedUser(null));
+              dispatch(clearLog());
+            } else {
+              alert('알 수 없는 오류가 발생했습니다.');
+            }
           }
         });
     }
-  }, [roomId, me, selectedUser, dispatch]);
+  }
+}, [roomId, me, selectedUser, chatRooms.length, dispatch]);
+
+
 
   const isAtBottom = () => {
     const box = chatBoxRef.current;
@@ -347,14 +383,58 @@ const ChatPage = () => {
                 setMessage={(value) => dispatch(setMessage(value))}
                 showNewMsgAlert={showNewMsgAlert}
                 handleScroll={handleScroll}
-                onExit={async () => {
-                  try {
-                    dispatch(exitRoom({ roomId, userId: me.id }));
-                    await axios.patch(`http://localhost:3065/api/chat/${selectedChatRoomId}/exit`, {}, { withCredentials: true });
-                  } catch (error) {
-                    console.error('❌ PATCH /exit 요청 에러:', error);
-                  }
-                }}
+onExit={async () => {
+  console.log('👉 onExit 버튼 클릭됨');
+  console.log('👉 onExit 시 selectedChatRoomId:', selectedChatRoomId, 'roomId:', roomId);
+
+  let chatRoomIdToUse = selectedChatRoomId;
+
+  if (!chatRoomIdToUse) {
+    console.warn('⚠️ selectedChatRoomId 없음 → fallback 시도 중');
+
+    try {
+      const chatRoomRes = await axios.get(`http://localhost:3065/api/chat/my-rooms`, { withCredentials: true });
+      const chatRooms = chatRoomRes.data;
+
+      const parts = roomId.split('-');
+      if (parts.length === 3) {
+        const user1Id = parseInt(parts[1], 10);
+        const user2Id = parseInt(parts[2], 10);
+
+        const sortedUser1Id = Math.min(user1Id, user2Id);
+        const sortedUser2Id = Math.max(user1Id, user2Id);
+
+        const matchedRoom = chatRooms.find(room => {
+          if (!room?.roomId) return false;
+          const roomParts = room.roomId.split('-');
+          const rUser1Id = parseInt(roomParts[1], 10);
+          const rUser2Id = parseInt(roomParts[2], 10);
+
+          return (rUser1Id === sortedUser1Id && rUser2Id === sortedUser2Id);
+        });
+
+        if (matchedRoom) {
+          chatRoomIdToUse = matchedRoom.chatRoomId;
+          console.log('✅ fallback 성공 → chatRoomIdToUse:', chatRoomIdToUse);
+        } else {
+          console.error('❌ fallback에서도 chatRoomId 못 찾음 → 나가기 요청 중단');
+          return;
+        }
+      }
+    } catch (err) {
+      console.error('❌ fallback chatRoomId 가져오기 실패:', err);
+      return;
+    }
+  }
+
+  try {
+    console.log('👉 PATCH /chat/' + chatRoomIdToUse + '/exit 요청 준비됨');
+    await axios.patch(`http://localhost:3065/api/chat/${chatRoomIdToUse}/exit`, {}, { withCredentials: true });
+    dispatch(exitRoom({ roomId, userId: me.id }));
+  } catch (error) {
+    console.error('❌ PATCH /exit 요청 에러:', error);
+  }
+}}
                 onSendMessage={handleSend}
                 userMap={userMap}
                 onClose={() => {
