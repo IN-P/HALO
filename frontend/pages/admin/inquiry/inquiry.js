@@ -13,7 +13,7 @@ const AdminInquiryPage = () => {
       const res = await axios.get('http://localhost:3065/inquiry', {
         withCredentials: true,
       });
-       console.log('📦 문의 목록 응답:', res.data); 
+      console.log('📦 문의 목록 응답:', res.data);
       setInquiries(res.data);
     } catch (err) {
       console.error('문의 목록 불러오기 실패:', err);
@@ -60,7 +60,11 @@ const AdminInquiryPage = () => {
               >
                 <strong>{inq.title}</strong><br />
                 <span>{inq.User?.nickname}</span><br />
-                <span>{new Date(inq.createdAt).toLocaleString()}</span>
+                <span>{new Date(inq.createdAt).toLocaleString()}</span><br />
+                <span style={{ color: inq.answer?.trim() ? 'green' : 'red', fontSize: '0.9em' }}>
+                  {inq.answer?.trim() ? '답변 완료' : '미답변'}
+                </span>
+
               </li>
             ))}
           </ul>
