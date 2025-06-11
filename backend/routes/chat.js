@@ -249,27 +249,25 @@ router.patch('/:chatRoomId/exit', isLoggedIn, async (req, res, next) => {
     const user1Active = updatedChatRoomExit.user1_id_active;
     const user2Active = updatedChatRoomExit.user2_id_active;
 
-    if (user1Active || user2Active) {
+if (user1Active || user2Active) {
   const opponentId = (chatRoom.user1_id === userId) ? chatRoom.user2_id : chatRoom.user1_id;
 
+  if (typeof opponentId !== 'undefined' && socketMap[opponentId] && socketMap[opponentId].socketId) {
+    const sortedIds = [chatRoom.user1_id, chatRoom.user2_id].sort((a, b) => a - b);
+    const opponentSocketId = socketMap[opponentId].socketId;
 
-
-if (typeof opponentId !== 'undefined' && socketMap[opponentId] && socketMap[opponentId].socketId) {
-  const sortedIds = [chatRoom.user1_id, chatRoom.user2_id].sort((a, b) => a - b);
-  const opponentSocketId = socketMap[opponentId].socketId;
-
-  io.to(opponentSocketId).emit('chat_room_closed', {
-    roomId: `chat-${sortedIds[0]}-${sortedIds[1]}`,
-    message: '상대방이 채팅방을 나갔습니다. 채팅을 새로 시작해야 합니다.'
-  });
-  console.log(`[PATCH /:chatRoomId/exit] 남아있는 유저에게 알림 emit → opponentId=${opponentId}`);
-} else {
-  console.log(`[PATCH /:chatRoomId/exit] socketMap[opponentId=${opponentId}] 없음 또는 socketId 없음 → chat_room_closed emit 생략`);
-}
+    io.to(opponentSocketId).emit('chat_room_closed', {
+      roomId: `chat-${sortedIds[0]}-${sortedIds[1]}`,
+      message: '상대방이 채팅방을 나갔습니다. 채팅을 새로 시작해야 합니다.'
+    });
+    console.log(`[PATCH /:chatRoomId/exit] 남아있는 유저에게 알림 emit → opponentId=${opponentId}`);
+  } else {
+    console.log(`[PATCH /:chatRoomId/exit] socketMap[opponentId=${opponentId}] 없음 또는 socketId 없음 → chat_room_closed emit 생략`);
+  }
 }
 
-    // 두 사용자 모두 나갔는지 확인
-    if (!updatedChatRoomExit.user1_id_active && !updatedChatRoomExit.user2_id_active) {
+// → 여기까지 끝내고 그 다음에만 삭제 로직 실행
+if (!updatedChatRoomExit.user1_id_active && !updatedChatRoomExit.user2_id_active) {
   console.log(`[PATCH /:chatRoomId/exit] 유저 2명 모두 나감 → 채팅방 및 메시지 삭제 시작.`);
 
   await ChatMessage.destroy({ where: { rooms_id: chatRoomId } });
@@ -281,6 +279,7 @@ if (typeof opponentId !== 'undefined' && socketMap[opponentId] && socketMap[oppo
   await ChatRoom.destroy({ where: { id: chatRoomId } });
   console.log(`[PATCH /:chatRoomId/exit] ChatRoom 삭제 완료.`);
 }
+
 
     res.status(200).json({ message: '채팅방을 나갔어.', chatRoomExit: updatedChatRoomExit });
   } catch (error) {
