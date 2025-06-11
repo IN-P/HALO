@@ -50,20 +50,22 @@ const MyPost = ({ data, isBlocked, isBlockedByTarget }) => {
     return <MessageWrapper><p>차단한 사용자의 게시글은 표시되지 않습니다.</p></MessageWrapper>;
   }
 
-  if (!data?.Posts || data.Posts.length === 0) {
+  if (!data?.Posts.private_post == true && data?.Posts.length === 0) {
     return <NoDataMessage><p>작성한 게시물이 없습니다</p></NoDataMessage>;
   }
 
   return (
     <GridWrapper>
-      {data.Posts.map((post, idx) => (
-        <StyledImage
-          key={post.id || idx}
-          src={`http://localhost:3065/uploads/post/${post.Images[0]?.src}`}
-          preview={false}
-          alt={post.content || "post image"}
-        />
-      ))}
+      {data?.Posts
+        .filter(post => !post.private_post)
+        .map((post, idx) => (
+          <StyledImage
+            key={post.id || idx}
+            src={`http://localhost:3065/uploads/post/${post.Images[0]?.src}`}
+            preview={false}
+            alt={post.content || "post image"}
+          />
+        ))}
     </GridWrapper>
   );
 };

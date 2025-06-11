@@ -15,6 +15,7 @@ import quizSaga from './quiz_GM';
 import adminQuizSaga from './adminQuiz_GM';
 import playerDrawSaga from './playerDraw_GM';
 import adminPlayer from './adminPlayer_GM'
+import activeLog_JH from './activeLog_JH';
 
 export default function* rootSaga() {
   yield all([
@@ -35,5 +36,6 @@ export default function* rootSaga() {
     fork(adminQuizSaga),
     fork(playerDrawSaga),
     fork(adminPlayer),
+    fork(activeLog_JH), //준혁
   ]);
 }

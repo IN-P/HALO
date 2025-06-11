@@ -167,7 +167,7 @@ const MySettingProfile = ({ data, reload, reloadLogInUser }) => {
         />
       </ProfileAvatar>
       <div>
-        <MySettingEditForm data={data} reload={reload} />
+        <MySettingEditForm data={data} reload={reload} reloadLogInUser={reloadLogInUser} />
       </div>
     </>
   );

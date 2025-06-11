@@ -29,7 +29,7 @@ router.post('/post/:postId', isLoggedIn, async (req, res, next) => {
     // 준혁 추가
     // 활동 내역 생성
     await ActiveLog.create({
-      action: "COMMENT",
+      action: "CREATE",
       target_id: comment.id,
       users_id: req.user.id,
       target_type_id: 2,
@@ -108,10 +108,10 @@ router.post('/:commentId/reply', isLoggedIn, async (req, res, next) => {
     // 준혁 추가
     // 활동 내역 생성
     await ActiveLog.create({
-      action: "REPLY",
+      action: "CREATE",
       target_id: reply.id,
       users_id: req.user.id,
-      target_type_id: 2,
+      target_type_id: 4,
     } );
     // 알림 생성
     // 원본 내용과 작성자 id 추출
@@ -243,18 +243,13 @@ router.patch('/:commentId', isLoggedIn, async (req, res, next) => {
     await comment.update({ content: req.body.content });
 
     // 준혁 추가
-    // 활동 내역 변경
-    const log = await ActiveLog.findOne({
-      where: {
-        target_id: comment.id,
-        users_id: req.user.id,
-        target_type_id: 2, 
-    } });
-    if (!log) { return res.status(403).send("해당되는 기록이 없습니다"); }
-    if (log.action !== "UPDATE") { await log.update({ action: "UPDATE" });
-    // 강제 업데이트
-    } else { log.changed('updatedAt', true); await log.save(); }
-    //
+    // 활동 내역 생성
+    await ActiveLog.create({
+      action: "UPDATE",
+      target_id: reply.id,
+      users_id: req.user.id,
+      target_type_id: 2,
+    } );
 
     res.status(200).json({ CommentId: comment.id, content: req.body.content });
   } catch (error) {
