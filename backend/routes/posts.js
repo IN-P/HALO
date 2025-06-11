@@ -113,8 +113,18 @@ router.get('/', async (req, res, next) => {
       }
     }
     posts = posts.filter(post => {
+      // 차단된 유저의 리그램글 제외 (기존 로직)
       const regramUserId = post?.Regram?.User?.id;
-      return !(regramUserId && blockedUserIds.includes(regramUserId) && post.user_id !== myId);
+      if (regramUserId && blockedUserIds.includes(regramUserId) && post.user_id !== myId) {
+        return false;
+      }
+
+      // [추가] 리그램글인데, 원본글이 나만보기(비공개)고 내가 원본 주인이 아니면 숨김
+      if (post.regram_id && post.Regram && post.Regram.private_post && post.Regram.user_id !== myId) {
+        return false;
+      }
+
+      return true;
     });
 
     // 무한스크롤을 위해 10개 채웠으면 hasMorePosts true, 아니면 false

@@ -268,7 +268,11 @@ const postINReducer = (state = initialState, action) =>
       case REMOVE_POST_SUCCESS: {
         draft.removePostLoading = false;
         draft.removePostDone = true;
-        draft.mainPosts = draft.mainPosts.filter((v) => v.id !== action.data.PostId);
+        draft.mainPosts = draft.mainPosts.filter(
+          (v) =>
+            v.id !== action.data.PostId && // 원본글 제거
+            !(action.data.deletedRegramIds && action.data.deletedRegramIds.includes(v.id)) // 리그램글들도 제거
+        );
         if (action.data.basePost) {
           const updated = action.data.basePost;
           const baseId = updated.id;
