@@ -41,12 +41,13 @@ const badges = require('./routes/badges'); // 준혁
 const kakaopayRouter = require('./routes/kakaopay'); //윤기
 const adminRouter = require('./routes/useradmin');
 const advertisementRouter = require('./routes/advertisement'); // 재원
-
+const isProduction = process.env.NODE_ENV === 'production'; // 재원
 // .env 적용
 dotenv.config();
 
 app.use('/img', express.static(path.join(__dirname, 'uploads'))); //##윤기 추가
-app.use('/advertisement_uploads', express.static('advertisement_uploads')); // 재원 광고 이미지
+app.use('/advertisement_uploads', express.static(path.join(__dirname, 'advertisement_uploads'))); // 재원 광고 이미지
+
 
 
 // 미들웨어

@@ -17,11 +17,13 @@ import {
   loadMessagesRequest, // SAGA 액션을 직접 사용하도록 추가
   updateChatRoomLastMessage,
 } from '../reducers/chatReducer_JW';
+import useRequireLogin from '../hooks/useRequireLogin';
 
 import socket from '../socket';
 
 
 const ChatPage = () => {
+  useRequireLogin();
   const dispatch = useDispatch();
   const {
     me, // 현재 로그인한 사용자 정보 (ID가 필요)

@@ -1,4 +1,3 @@
-// components/Advertisement.js
 import React from 'react';
 
 const Advertisement = ({ ad }) => {

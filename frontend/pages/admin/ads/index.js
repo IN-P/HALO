@@ -75,19 +75,36 @@ const AdminAdsPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!form.image) {
+    alert('이미지를 선택해주세요.');
+    return;
+  }
     try {
       let imageFilename = null;
 
       if (form.image) {
-        const imageFormData = new FormData();
-        imageFormData.append('image', form.image);
+  const imageFormData = new FormData();
+  imageFormData.append('image', form.image);
 
-        const imageRes = await axios.post('http://localhost:3065/advertisement/image', imageFormData, {
-          withCredentials: true,
-        });
+  try {
+    const imageRes = await axios.post('http://localhost:3065/advertisement/image', imageFormData, {
+      withCredentials: true,
+    });
+    console.log('imageRes.data:', imageRes.data);
 
-        imageFilename = imageRes.data;
-      }
+    if (imageRes.data) {
+      imageFilename = imageRes.data;
+    } else {
+      alert('이미지 업로드에 실패했습니다.');
+      return; // 등록 중단
+    }
+  } catch (err) {
+    alert('이미지 업로드 중 오류 발생');
+    console.error(err);
+    return; // 등록 중단
+  }
+}
 
       const payload = {
         title: form.title,
@@ -97,15 +114,21 @@ const AdminAdsPage = () => {
         is_active: form.is_active,
         ...(imageFilename && { image_url: imageFilename }),
       };
-
+console.log('payload to send:', payload);
       if (editingAdId) {
-        await axios.patch(`http://localhost:3065/advertisement/${editingAdId}`, payload, {
-          withCredentials: true,
-        });
-        setEditingAdId(null);
-      } else {
-        await axios.post('http://localhost:3065/advertisement', payload, { withCredentials: true });
-      }
+  const isConfirmed = window.confirm('광고를 수정하시겠습니까?');
+
+  if (!isConfirmed) {
+    return; // 수정 취소
+  }
+
+  await axios.patch(`http://localhost:3065/advertisement/${editingAdId}`, payload, {
+    withCredentials: true,
+  });
+  setEditingAdId(null);
+} else {
+  await axios.post('http://localhost:3065/advertisement', payload, { withCredentials: true });
+}
 
       setForm({
         title: '',
@@ -134,31 +157,117 @@ const AdminAdsPage = () => {
     });
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`http://localhost:3065/advertisement/${id}`, { withCredentials: true });
-      fetchAds();
-    } catch (err) {
-      console.error(err);
-    }
-  };
+const handleDelete = async (id) => {
+  const isConfirmed = window.confirm('광고를 삭제하시겠습니까?');
+
+  if (!isConfirmed) {
+    return;
+  }
+
+  try {
+    await axios.delete(`http://localhost:3065/advertisement/${id}`, { withCredentials: true });
+    fetchAds();
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   return (
     <div style={{ padding: '30px' }}>
-      <h1>📢 광고 관리</h1>
+  <h1>📢 광고 관리</h1>
 
-      <form onSubmit={handleSubmit} style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '30px' }}>
-        <h2>{editingAdId ? '광고 수정' : '광고 등록'}</h2>
-        <input type="text" name="title" placeholder="광고명" value={form.title} onChange={handleChange} required /><br />
-        <input type="text" name="target_url" placeholder="타겟 URL" value={form.target_url} onChange={handleChange} required /><br />
-        <input type="date" name="start_date" value={form.start_date} onChange={handleChange} required /><br />
-        <input type="date" name="end_date" value={form.end_date} onChange={handleChange} required /><br />
-        <label>
-          노출 여부:
-          <input type="checkbox" name="is_active" checked={form.is_active} onChange={handleChange} />
-        </label><br />
-        <input type="file" name="image" accept="image/*" onChange={handleChange} /><br />
-        <button type="submit" style={{ marginTop: '10px' }}>
+  <form
+    onSubmit={handleSubmit}
+    style={{
+      border: '1px solid #ccc',
+      padding: '24px',
+      marginBottom: '30px',
+      borderRadius: '8px',
+      backgroundColor: '#fafafa',
+      maxWidth: '500px',
+    }}
+  >
+    <h2 style={{ marginBottom: '20px' }}>{editingAdId ? '광고 수정' : '광고 등록'}</h2>
+
+    <div style={{ marginBottom: '12px' }}>
+      <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>광고명</label>
+      <input
+        type="text"
+        name="title"
+        placeholder="광고명"
+        value={form.title}
+        onChange={handleChange}
+        required
+        style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+      />
+    </div>
+
+    <div style={{ marginBottom: '12px' }}>
+      <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>타겟 URL</label>
+      <input
+        type="text"
+        name="target_url"
+        placeholder="타겟 URL"
+        value={form.target_url}
+        onChange={handleChange}
+        required
+        style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+      />
+    </div>
+
+    <div style={{ marginBottom: '12px' }}>
+      <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>시작일</label>
+      <input
+        type="date"
+        name="start_date"
+        value={form.start_date}
+        onChange={handleChange}
+        required
+        style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+      />
+    </div>
+
+    <div style={{ marginBottom: '12px' }}>
+      <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>종료일</label>
+      <input
+        type="date"
+        name="end_date"
+        value={form.end_date}
+        onChange={handleChange}
+        required
+        style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+      />
+    </div>
+
+    <div style={{ marginBottom: '12px' }}>
+      <label style={{ display: 'inline-block', marginRight: '8px', fontWeight: 'bold' }}>노출 여부:</label>
+      <input
+        type="checkbox"
+        name="is_active"
+        checked={form.is_active}
+        onChange={handleChange}
+        style={{ transform: 'scale(1.3)', verticalAlign: 'middle' }}
+      />
+    </div>
+
+    <div style={{ marginBottom: '16px' }}>
+      <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>광고 이미지</label>
+      <input type="file" name="image" accept="image/*" onChange={handleChange} />
+    </div>
+
+    <button
+      type="submit"
+      style={{
+        marginTop: '10px',
+        padding: '10px 20px',
+        backgroundColor: editingAdId ? '#52c41a' : '#1890ff',
+        color: '#fff',
+        border: 'none',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontSize: '16px',
+      }}
+    >
           {editingAdId ? '수정 완료' : '광고 등록'}
         </button>
       </form>

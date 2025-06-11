@@ -5,9 +5,9 @@ const multer = require('multer');
 const path = require('path');
 const { Advertisement } = require('../models');
 
-const isAdmin = require('../middlewares/isAdmin'); // ✅ 이건 정상
+const isAdmin = require('../middlewares/isAdmin');
 
-// ⭐ isLoggedIn 뺌 → 광고 테스트만 먼저 할 수 있음 ⭐
+
 
 // 광고 이미지 업로드 폴더 체크
 try {
@@ -32,22 +32,17 @@ const uploadAdvertisementImage = multer({
 });
 
 // 광고 등록
-router.post('/', isAdmin, uploadAdvertisementImage.single('image'), async (req, res, next) => {
+router.post('/', isAdmin, async (req, res, next) => {
   try {
-    const { title, target_url, start_date, end_date, is_active } = req.body;
-    let image_url = null;
-
-    if (req.file) {
-      image_url = req.file.filename;
-    }
+    const { title, target_url, start_date, end_date, is_active, image_url } = req.body;
 
     const advertisement = await Advertisement.create({
       title,
-      image_url,
+      image_url, // ⭐ 프론트에서 넘어온 image_url 사용!
       target_url,
       start_date,
       end_date,
-      is_active: is_active === 'true',
+      is_active: Boolean(is_active),
     });
 
     res.status(201).json(advertisement);
@@ -79,5 +74,61 @@ router.get('/', isAdmin, async (req, res, next) => {
     next(error);
   }
 });
+
+// 광고 수정
+router.patch('/:id', isAdmin, async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const { title, target_url, start_date, end_date, is_active, image_url } = req.body;
+
+    const [updated] = await Advertisement.update(
+      {
+        title,
+        target_url,
+        start_date,
+        end_date,
+        is_active: Boolean(is_active),
+        image_url,
+      },
+      {
+        where: { id },
+      }
+    );
+
+    if (updated) {
+      res.status(200).json({ message: '광고가 수정되었습니다.' });
+    } else {
+      res.status(404).json({ message: '광고를 찾을 수 없습니다.' });
+    }
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+
+
+
+
+// 광고 삭제
+router.delete('/:id', isAdmin, async (req, res, next) => {
+  try {
+    const id = req.params.id;
+
+    const deleted = await Advertisement.destroy({
+      where: { id },
+    });
+
+    if (deleted) {
+      res.status(200).json({ message: '광고가 삭제되었습니다.' });
+    } else {
+      res.status(404).json({ message: '광고를 찾을 수 없습니다.' });
+    }
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+
+
 
 module.exports = router;
