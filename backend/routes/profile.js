@@ -2,26 +2,23 @@ const express = require("express");
 const router = express.Router();
 const { isLoggedIn } = require("./middlewares");
 const { User, Block, Achievement, Badge, UserInfo, Follow, Myteam, Post, UserPoint, UserPayment, ActiveLog, Image } = require("../models");
+const { assignTeamBadge } = require('../services/badge/trigger');
 
-// nickname으로 userId 값 불러온 후 정보 가져오기
-router.get("/:nickname", async (req, res, next) => {
-  const { nickname } = req.params;
+// userId 로 사용자 프로필 불러오기
+router.get("/:userId", async (req, res, next) => {
   try {
-    const user = await User.findOne({
-      where: { nickname },
-      attributes: ['id'],
-    });
-    if (!user) {
-      return res.status(404).json({ message: '유저를 찾을 수 없습니다.' });
-    }
-    const userId = user.id;
+    const { userId } = req.params;
+
+    if (isNaN(userId)) { return res.status(400).json({ message: "유효하지 않은 사용자 ID입니다." }); }
+
+    const userIdNum = parseInt(userId, 10);
 
     const fullUser = await User.findOne({
-      where: { id: userId },
+      where: { id: userIdNum },
       attributes: ["id", "nickname", "profile_img", "theme_mode", "is_private", "myteam_id", "role", "email"],
       include: [
         { model: UserInfo },
-        { model: Post, include: [Image], separate: true, order: [['id', 'DESC']], },
+        { model: Post, include: [ Image, { model: Post, as: 'Regram', include: [Image], }, ], separate: true, order: [['id', 'DESC']], },
         { model: Post, as: 'BookmarkedPosts', include: [Image],  through: { attributes: [] }, },
         { model: Post, as: 'Liked', include: [Image], through: { attributes: [] } },
         { model: Follow, as: 'Followings', include: [
@@ -42,9 +39,7 @@ router.get("/:nickname", async (req, res, next) => {
     })
 
     // 계정 비공개 상태일 시 정보 접근 제한
-    if (fullUser.is_private == 1) {
-      res.status(403).json("접근이 제한된 계정입니다");
-    }
+    if (fullUser.is_private == 1) { return res.status(403).json("접근이 제한된 계정입니다"); }
 
     if (fullUser) {
       const data = fullUser.toJSON();
@@ -159,6 +154,9 @@ router.patch("/update", isLoggedIn, async (req, res, next) => {
     if (Object.keys(userInfoFields).length > 0) {
       await UserInfo.update(userInfoFields, { where: { users_id: userId } });
     }
+
+    // 응원팀 변경 시 뱃지 재부여
+    if (myteam_id !== undefined) { await assignTeamBadge(userId); }
 
     res.status(200).json({ message: "사용자 정보가 성공적으로 변경되었습니다." });
   } catch (error) {
