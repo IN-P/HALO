@@ -491,4 +491,76 @@ router.delete('/:postId/bookmark', isLoggedIn, async (req, res, next) => {
   }
 });
 
+// GET /post/:postId 단일 상세 조회
+router.get('/:postId', async (req, res, next) => {
+  try {
+    const post = await Post.findOne({
+      where: { id: req.params.postId },
+      include: [
+        { model: User, attributes: ['id', 'nickname', 'profile_img', 'last_active', 'is_private'] },
+        { model: Image },
+        { model: Comment, include: [{ model: User, attributes: ['id', 'nickname', 'profile_img', 'last_active'] }] },
+        { model: User, as: 'Likers', attributes: ['id'] },
+        { model: User, as: 'Bookmarkers', attributes: ['id'] },
+        { model: Hashtag, attributes: ['id', 'name'] },
+        {
+          model: Post,
+          as: 'Regram',
+          include: [
+            { model: User, attributes: ['id', 'nickname', 'profile_img', 'last_active', 'is_private'] },
+            { model: Image },
+          ],
+        },
+      ],
+    });
+    if (!post) return res.status(404).send('존재하지 않는 게시글입니다.');
+
+    const me = req.user; // 로그인 안했으면 undefined
+
+    // [1] 리그램글: 원본글이 나만보기/비공개/팔로워만 필터
+    if (post.regram_id && post.Regram) {
+      const origin = post.Regram;
+      // 1. 원본이 나만보기
+      if (origin.private_post && (!me || me.id !== origin.user_id)) {
+        return res.status(403).send('비공개 글입니다.');
+      }
+      // 2. 원본작성자 계정이 비공개, 로그인 안했거나 팔로워가 아니면 차단
+      if (origin.User && origin.User.is_private === 1) {
+        // 본인이 아니고, 팔로워 아니면
+        if (!me || (me.id !== origin.User.id && !(await isFollower(me.id, origin.User.id)))) {
+          return res.status(403).send('비공개 계정의 글입니다.');
+        }
+      }
+    }
+    // [2] 일반글: 글 자체가 나만보기/비공개/팔로워만 필터
+    else {
+      // 글이 나만보기
+      if (post.private_post && (!me || me.id !== post.user_id)) {
+        return res.status(403).send('비공개 글입니다.');
+      }
+      // 글쓴이 계정이 비공개
+      if (post.User && post.User.is_private === 1) {
+        // 본인이 아니고, 팔로워 아니면
+        if (!me || (me.id !== post.User.id && !(await isFollower(me.id, post.User.id)))) {
+          return res.status(403).send('비공개 계정의 글입니다.');
+        }
+      }
+    }
+    res.status(200).json(post);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+
+// 👉 팔로워 여부 확인 유틸 함수 예시
+async function isFollower(meId, userId) {
+  if (!meId || !userId) return false;
+  const { Follow } = require('../models');
+  const follow = await Follow.findOne({
+    where: { follower_id: meId, following_id: userId }
+  });
+  return !!follow;
+}
+
 module.exports = router;
