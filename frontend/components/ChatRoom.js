@@ -1,7 +1,6 @@
 import React, { useEffect,useCallback  } from 'react';
 import socket from '../socket';
 
-
 const ChatRoom = ({
   me,
   selectedUser,
@@ -18,7 +17,7 @@ const ChatRoom = ({
   onClose,
   onReadUpdate,
 }) => {
-const [shouldEmitLeave, setShouldEmitLeave] = React.useState(true);
+
   
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -73,8 +72,8 @@ useEffect(() => {
   }
   return () => {
     if (roomId) {
-      socket.emit('leave_room', { userId: me.id, type: 'close' });  // ✅ 이게 지금 우리가 원하는 방식
-      console.log(`🚪 leave_room emit (close): ${roomId}`);
+      socket.emit('leave_room', me.id);
+      console.log(`🚪 leave_room emit: ${roomId}`);
     }
   };
 }, [roomId]);
@@ -83,7 +82,6 @@ useEffect(() => {
   const handleExitConfirm = () => {
     const confirmExit = window.confirm('채팅방을 나가시면 현재 사용자에게만 메시지 기록이 모두 모두 삭제됩니다. 정말 나가시겠습니까?');
     if (confirmExit) {
-      socket.emit('leave_room', { userId: me.id, type: 'exit' });
       onExit(); 
     }
 
@@ -108,9 +106,9 @@ useEffect(() => {
       <h2 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span>💬 {selectedUser.nickname}와의 채팅 (내 ID: {me.id})</span>
         <button
-          onClick={() => { 
-            setShouldEmitLeave(false);
-            onClose();   // 기존 onClose 로직 (화면 닫기)
+          onClick={() => {
+    socket.emit('leave_room', me.id);   // ✅ 서버에 leave_room 보내서 currentRoomId null 처리
+    onClose();   // 기존 onClose 로직 (화면 닫기)
   }}
           style={{
             padding: '4px 10px',
