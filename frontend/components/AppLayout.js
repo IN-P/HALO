@@ -10,6 +10,8 @@ import axios from 'axios';
 
 const AppLayout = ({ children }) => {
   const dispatch = useDispatch();
+  const chatRooms = useSelector((state) => state.chat.chatRooms);
+
   const [themeMode, setThemeMode] = useState('light');
   // ✅ 유저 정보
   const { user } = useSelector((state) => state.user_YG);
@@ -156,6 +158,9 @@ useEffect(() => {
   useEffect(() => {
     const handleNewChatRoom = (data) => {
       console.log('🌍 [AppLayout] new_chat_room_created 수신:', data);
+
+      
+      if (!chatRooms.some(room => room.roomId === data.roomId)) {
       axios.get('http://localhost:3065/api/chat/my-rooms', { withCredentials: true })
         .then((res) => {
           dispatch(setChatRooms(res.data));
@@ -163,14 +168,15 @@ useEffect(() => {
         .catch((err) => {
           console.error('❌ AppLayout my-rooms 갱신 실패:', err);
         });
-    };
+    }
+  };
 
     socket.on('new_chat_room_created', handleNewChatRoom);
 
     return () => {
       socket.off('new_chat_room_created', handleNewChatRoom);
     };
-  }, [dispatch]);
+  }, [dispatch, chatRooms]);
 
   // ✅ 화면 렌더링
   return (
