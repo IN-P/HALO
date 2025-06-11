@@ -16,6 +16,7 @@ import adminQuizSaga from './adminQuiz_GM';
 import playerDrawSaga from './playerDraw_GM';
 import adminPlayer from './adminPlayer_GM'
 import activeLog_JH from './activeLog_JH';
+import reportResultSaga from './reportResult_YB';
 import badge_JH from './badge_JH';
 
 export default function* rootSaga() {
@@ -38,7 +39,7 @@ export default function* rootSaga() {
     fork(playerDrawSaga),
     fork(adminPlayer),
     fork(activeLog_JH), //준혁
-    fork(badge_JH), //준혁
-    
+    fork(reportResultSaga),
+    fork(badge_JH), //준혁  
   ]);
 }

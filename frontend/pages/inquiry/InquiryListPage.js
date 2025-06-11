@@ -38,9 +38,15 @@ const InquiryListPage = () => {
               <div style={{ flex: 1 }}>
                 <Typography.Text strong>{item.title}</Typography.Text>
               </div>
-              <div>{new Date(item.createdAt).toLocaleDateString()}</div>
+              <div style={{ textAlign: 'right' }}>
+                <div>{new Date(item.createdAt).toLocaleDateString()}</div>
+                <div style={{ color: item.answer?.trim() ? 'green' : 'red', fontSize: '0.9em' }}>
+                  {item.answer?.trim() ? '답변 완료' : '미답변'}
+                </div>
+              </div>
             </List.Item>
           )}
+
         />
       </div>
     </AppLayout>

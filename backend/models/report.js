@@ -33,6 +33,12 @@ module.exports = (sequelize, DataTypes) => {
   Report.associate = (db) => {
     db.Report.belongsTo(db.User, { foreignKey: 'users_id' });
     db.Report.belongsTo(db.TargetType, { foreignKey: 'target_type_id' });
+
+    // ✅ 정지 결과 연결 (여기 안에 있어야 함!)
+    db.Report.hasOne(db.ReportResult, {
+      foreignKey: 'id', // ReportResult.id는 Report.id 참조
+      as: 'ReportResult',
+    });
   };
 
   return Report;

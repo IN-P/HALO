@@ -33,6 +33,12 @@ const InquiryDetailPage = () => {
   }, [router.isReady, id]);
 
   const handleSave = async () => {
+    if (inquiry.answer) {
+      message.warning('답변이 등록된 문의는 수정할 수 없습니다.');
+      setEditMode(false);
+      return;
+    }
+
     try {
       const res = await axios.patch(
         `http://localhost:3065/inquiry/${id}`,
@@ -48,6 +54,7 @@ const InquiryDetailPage = () => {
     }
   };
 
+
   if (!inquiry) return null;
 
   return (
@@ -62,17 +69,22 @@ const InquiryDetailPage = () => {
             )
           }
           extra={
-            !editMode ? (
+            !editMode && !inquiry.answer ? ( // 답변 없을 때만 수정 버튼 표시
               <Button type="link" onClick={() => setEditMode(true)}>
                 수정
               </Button>
-            ) : (
-              <Button type="primary" onClick={handleSave}>
+            ) : editMode ? (
+              <Button
+                type="primary"
+                onClick={handleSave}
+                disabled={!!inquiry.answer} // 답변이 있으면 저장 버튼 비활성화
+              >
                 저장
               </Button>
-            )
+            ) : null
           }
         >
+
           <p>
             <strong>작성일:</strong> {new Date(inquiry.createdAt).toLocaleString()}
           </p>
@@ -100,5 +112,4 @@ const InquiryDetailPage = () => {
   );
 };
 
-// ✅ 이 줄이 꼭 있어야 한다!!
 export default InquiryDetailPage;

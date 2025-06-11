@@ -30,14 +30,14 @@ const MainFeed = ({ search }) => {
 
   // ====== [검색 필터] ======
   const filteredPosts = mainPosts.filter(post => {
+    // basePost로 통일
+    const basePost = post.regram_id && post.Regram ? post.Regram : post;
     const nickname = post.User?.nickname || '';
     let hashtagMatch = false;
-
     if (search.startsWith('#')) {
       const tag = search.slice(1).trim().toLowerCase();
-      hashtagMatch = post.Hashtags?.some(h => h.name.toLowerCase() === tag);
+      hashtagMatch = basePost.Hashtags?.some(h => h.name.toLowerCase() === tag);
     }
-
     if (!search.trim()) return true;
     return (
       nickname.toLowerCase().includes(search.toLowerCase()) ||

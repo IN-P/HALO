@@ -21,8 +21,8 @@ import adminQuiz from '../reducers/adminPlayer_GM';
 import adminPlayer from '../reducers/adminPlayer_GM';
 import playerDraw from '../reducers/playerDraw_GM'; 
 import activeLog_JH from '../reducers/activeLog_JH';
+import reportResult_YB  from '../reducers/reportResult_YB';
 import badge_JH from '../reducers/badge_JH';
-
 
 const rootReducer = combineReducers({
   post_IN,
@@ -31,10 +31,8 @@ const rootReducer = combineReducers({
   regram_IN,
   bookmark_IN,
   follow_YB,
-  report_YB: reportReducer,
   block, // 율비
   report_YB,
-  block,
   user_YG, 
   profile_jh,
   notification_JH,
@@ -44,6 +42,7 @@ const rootReducer = combineReducers({
   adminPlayer,
   playerDraw,
   activeLog_JH, //준혁
+  reportResult_YB,
   badge_JH, //준혁
 
 });
