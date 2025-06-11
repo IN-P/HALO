@@ -1,7 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
+import Searchbar from './Searchbar';
 
 const MySettingFollowings = ({ data }) => {
   const followings = data?.Followings || [];
+
+  // user 리스트만 추출 (Followers or Followings)
+  const userList = followings
+    .map((f) => f?.Followers || f?.Followings)
+    .filter(Boolean);
+
+  const [filteredUsers, setFilteredUsers] = useState(userList);
 
   return (
     <>
@@ -14,62 +22,64 @@ const MySettingFollowings = ({ data }) => {
       <hr style={{ borderTop: '1px solid #ddd', margin: '24px 0' }} />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '0 24px' }}>
-        {followings.length === 0 ? (
+        {/* 검색창 추가 */}
+        <Searchbar data={userList} onResultChange={setFilteredUsers} />
+
+        {filteredUsers.length === 0 ? (
           <p style={{ textAlign: 'center', color: '#888' }}>팔로우 중인 사용자가 없습니다.</p>
         ) : (
-          followings.map((following) => {
-            const user = following?.Followers || following?.Followings;
-            if (!user) return null;
-
-            return (
-              <a
-                key={user.id}
-                href={`http://localhost:3000/profile/${user.nickname}`}
+          filteredUsers.map((user) => (
+            <a
+              key={user.id}
+              href={`http://localhost:3000/profile/${user.nickname}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                padding: '12px 20px',
+                border: '1px solid #eee',
+                borderRadius: '10px',
+                backgroundColor: '#fff',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+                cursor: 'pointer',
+                textDecoration: 'none',
+                color: 'inherit',
+                transition: 'background-color 0.2s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f9f9f9')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#fff')}
+              title={user.nickname}
+            >
+              <img
+                src={
+                  user.profile_img
+                    ? `http://localhost:3065${user.profile_img}`
+                    : `http://localhost:3065/uploads/profile/default.jpg`
+                }
+                alt={user.nickname || 'profile'}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '16px',
-                  padding: '12px 20px',
-                  border: '1px solid #eee',
-                  borderRadius: '10px',
-                  backgroundColor: '#fff',
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
-                  cursor: 'pointer',
-                  textDecoration: 'none',
-                  color: 'inherit',
-                  transition: 'background-color 0.2s ease',
+                  width: 48,
+                  height: 48,
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '2px solid #52c41a',
+                  boxShadow: '0 0 5px rgba(82,196,26,0.3)',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f9f9f9')}
-                onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#fff')}
-                title={user.nickname}
+              />
+              <span
+                style={{
+                  fontSize: '17px',
+                  fontWeight: '600',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  maxWidth: '180px',
+                }}
               >
-                <img
-                  src={user.profile_img || '/default-profile.png'}
-                  alt={user.nickname || 'profile'}
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                    border: '2px solid #52c41a',
-                    boxShadow: '0 0 5px rgba(82,196,26,0.3)',
-                  }}
-                />
-                <span
-                  style={{
-                    fontSize: '17px',
-                    fontWeight: '600',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    maxWidth: '180px',
-                  }}
-                >
-                  {user.nickname}
-                </span>
-              </a>
-            );
-          })
+                {user.nickname}
+              </span>
+            </a>
+          ))
         )}
       </div>
     </>

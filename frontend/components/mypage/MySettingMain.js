@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { Col, Row } from "antd";
 import MySettingSidebar from "./MySettingSidebar";
 import { CloseOutlined } from "@ant-design/icons";
@@ -10,8 +11,14 @@ import MySettingProfile from "./MySettingProfile";
 import MySettingPassword from "./MySettingPassword";
 import MySettingFollowers from "./MySettingFollowers";
 import MySettingFollowings from "./MySettingFollowings";
+import MySettingBalance from "./MySettingBalance";
 
 const MySettingMain = ({ data, onClose, reload, reloadLogInUser }) => {
+
+  // user 정보 추출 및 id 저장
+  const { user } = useSelector((state) => state.user_YG);
+  const userId = user?.id;
+
   const [selectedTab, setSelectedTab] = useState("profile");
 
   useEffect(() => {
@@ -59,12 +66,13 @@ const MySettingMain = ({ data, onClose, reload, reloadLogInUser }) => {
           </div>
 
           {selectedTab === "profile" && <MySettingProfile data={data} reload={reload} reloadLogInUser={reloadLogInUser} />}
+          {selectedTab === "balance" && <MySettingBalance user={user} />}
           {selectedTab === "password" && <MySettingPassword data={data} />}
           {selectedTab === "block" && <MySettingBlock data={data} />}
           {selectedTab === "achievement" && <MySettingAchievement data={data} />}
           {selectedTab === "badge" && <MySettingBadges data={data} />}
-          {selectedTab === "activeLog" && <MySettingActiveLog data={data} />}
-          {selectedTab === "followers" && <MySettingFollowers data={data} />}
+          {selectedTab === "activeLog" && <MySettingActiveLog userId={userId} />}
+          {selectedTab === "followers" && <MySettingFollowers userId={userId} />}
           {selectedTab === "followings" && <MySettingFollowings data={data} />}
         </Col>
       </Row>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Image } from "antd";
+import { Image, Modal, Tooltip  } from "antd";
 import styled from "styled-components";
 import { TagOutlined } from "@ant-design/icons";
 
@@ -61,7 +61,7 @@ const PostContent = styled.div`
 `;
 
 const MyBookmark = ({ data }) => {
-  const getPostById = (id) => data?.Posts?.find(post => post.id === id);
+  const getPostById = (id) => data?.BookmarkedPosts?.find(post => post.id === id);
 
   if (!data?.BookmarkedPosts || data.BookmarkedPosts.length === 0) {
     return <NoDataMessage>북마크한 게시물이 없습니다</NoDataMessage>;
@@ -80,13 +80,12 @@ const MyBookmark = ({ data }) => {
               src={
                 post.Images?.[0]?.src
                   ? `http://localhost:3065/uploads/post/${post.Images[0].src}`
-                  : "https://image.utoimage.com/preview/cp872722/2022/12/202212008462_500.jpg"
+                  : "https://placehold.co/300x250"
               }
               preview={false}
               alt={post.content || "bookmarked post image"}
             />
             <TagIcon />
-            <PostContent>{post.content}</PostContent>
           </PostCard>
         );
       })}

@@ -15,6 +15,7 @@ import quiz from './quiz_GM';
 import adminQuiz from './adminQuiz_GM';
 import adminPlayer from './adminPlayer_GM';
 import playerDraw from './playerDraw_GM'; 
+import activeLog_JH from './activeLog_JH';
 
 
 const rootReducer = combineReducers({
@@ -42,6 +43,7 @@ const rootReducer = combineReducers({
   adminQuiz,
   adminPlayer,
   playerDraw,
+  activeLog_JH, //준혁
 });
 
 export default rootReducer;
