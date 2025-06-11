@@ -203,19 +203,14 @@ router.patch('/:postId', isLoggedIn, async (req, res, next) => {
       }
     }
 
-    // 활동 내역 변경 - 준혁 추가
-    const log = await ActiveLog.findOne({
-      where: {
-        target_id: post.id,
-        users_id: req.user.id,
-        target_type_id: 1,
-      }
+    // 준혁 : 활동 생성
+    await ActiveLog.create({
+      action: "UPDATE",
+      target_id: req.params.postId,
+      users_id: req.user.id,
+      target_type_id: 1,
     });
-    if (!log) { return res.status(403).send("해당되는 기록이 없습니다"); }
-    if (log.action !== "UPDATE") { await log.update({ action: "UPDATE" });
-    // 강제 업데이트
-    } else { log.changed('updatedAt', true); await log.save(); }
-    // 준혁 추가
+    //
 
     res.status(200).json({ PostId: post.id, content: req.body.content });
   } catch (error) {
@@ -275,10 +270,10 @@ router.patch('/:postId/like', isLoggedIn, async (req, res, next) => {
 
     // 준혁 추가 : 활동 내역 생성
     await ActiveLog.create({
-      action: "LIKE",
+      action: "CREATE",
       target_id: post.id,
       users_id: req.user.id,
-      target_type_id: 1,
+      target_type_id: 5,
     });
     // 알림 생성
     // 좋아요를 받은 게시글의 내용 및 유저 추출
@@ -298,7 +293,6 @@ router.patch('/:postId/like', isLoggedIn, async (req, res, next) => {
         type: 'LIKE',
         message: '좋아요를 받았습니다',
       });
-      //
     }
     //
 
@@ -335,16 +329,13 @@ router.delete('/:postId/like', isLoggedIn, async (req, res, next) => {
       ]
     });
 
-    // 활동 내역 변경 - 준혁 추가
-    const log = await ActiveLog.findOne({
-    where: {
-      action: "LIKE",
+    // 활동 내역 추가 - 준혁 추가
+    await ActiveLog.create({
+      action: "DELETE",
       target_id: originPost.id,
       users_id: req.user.id,
-      target_type_id: 1,
-    } });
-    if (!log) { return res.status(403).send("해당되는 기록이 없습니다");}
-    await log.update({ action: "UNLIKE" });
+      target_type_id: 5,
+    });
     // 준혁 추가
 
     res.status(200).json({ basePost: fullOrigin });

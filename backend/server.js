@@ -10,9 +10,18 @@ const sharedSession = require('express-socket.io-session');
 // .env 로드
 dotenv.config();
 
-// 서버 + 소켓 생성
-const server = http.createServer(app);
+const sessionMiddleware = session({
+  resave: false,
+  saveUninitialized: false,
+  secret: process.env.COOKIE_SECRET,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production', // 배포 시 true, 개발 시 false
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 개발 시 'lax', 배포 시 'none'
+  },
+});
 
+const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: 'http://localhost:3000',
@@ -21,22 +30,10 @@ const io = new Server(server, {
   },
 });
 
-// ✅ app.js와 동일한 세션 설정 복제
-const sessionMiddleware = session({
-  resave: false,
-  saveUninitialized: false,
-  secret: process.env.COOKIE_SECRET,
-  cookie: { httpOnly: true, secure: false },
-});
-
-// ✅ 소켓에 세션 공유 적용
-io.use(
-  sharedSession(sessionMiddleware, {
-    autoSave: true,
-  })
-);
+io.use(sharedSession(sessionMiddleware, { autoSave: true }));
 
 const socketMap = {};
+
 
 io.on('connection', (socket) => {
   console.log('🟢 유저 접속:', socket.id);
@@ -61,13 +58,16 @@ io.on('connection', (socket) => {
     });
   });
 
-socket.on('leave_room', async (userId) => {
+socket.on('leave_room', async (data) => {
+  const userId = data.userId;
+  const type = data.type || 'close';
+
   if (socketMap[userId]) {
     const currentRoomId = socketMap[userId].currentRoomId;
     socketMap[userId].currentRoomId = null;
     console.log(`🚪 유저 ${userId} 채팅방 나감 → currentRoomId null 처리`);
 
-    if (currentRoomId) {
+    if (currentRoomId && type === 'exit') {
       try {
         const parts = currentRoomId.split('-');
         const user1Id = parseInt(parts[1]);

@@ -22,8 +22,8 @@ router.get("/:nickname", async (req, res, next) => {
       include: [
       { model: UserInfo },
       { model: Post, include: [Image], separate: true, order: [['id', 'DESC']], },
-      { model: Post, as: 'BookmarkedPosts', attributes: ['id', 'content', 'createdAt'], through: { attributes: [] }, },
-      { model: Post, as: 'Liked', attributes: ['id', 'content', 'createdAt'], through: { attributes: [] } },
+      { model: Post, as: 'BookmarkedPosts', include: [Image],  through: { attributes: [] }, },
+      { model: Post, as: 'Liked', include: [Image], through: { attributes: [] } },
       { model: Follow, as: 'Followings', include: [
         { model: User, as: 'Followers', attributes: ['id', 'nickname', 'profile_img'], }
       ], },

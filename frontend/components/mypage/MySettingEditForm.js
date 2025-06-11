@@ -1,4 +1,5 @@
 import React, { useState  } from "react";
+import { useSelector } from 'react-redux';
 import { useRouter } from "next/router";
 import axios from "axios"
 import styled from "styled-components";
@@ -55,9 +56,11 @@ const ButtonWrapper = styled.div`
   margin-top: auto;
 `;
 
-const MySettingEditForm = ({ data, reload }) => {
+const MySettingEditForm = ({ data, reload, reloadLogInUser }) => {
   // c
   const router = useRouter();
+
+  const { user } = useSelector((state) => state.user_YG);
 
   // 닉네임
   const [editNicknameOpen, setNicknameEditOpen] = useState(false);
@@ -67,7 +70,7 @@ const MySettingEditForm = ({ data, reload }) => {
   // 이메일
   const [editEmailOpen, setEmailEditOpen] = useState(false);
   const toggleEmail = () => { setEmailEditOpen(prev => !prev); };
-  const [newEmail, setNewEmail] = useState(data?.email || "");
+  const [newEmail, setNewEmail] = useState(user?.email || "");
 
   // 휴대폰
   const [editPhoneOpen, setPhoneEditOpen] = useState(false);
@@ -82,7 +85,7 @@ const MySettingEditForm = ({ data, reload }) => {
   // 공개 설정
   const [editPrivacyOpen, setPrivacyEditOpen] = useState(false);
   const togglePrivacy = () => { setPrivacyEditOpen(prev => !prev) };
-  const [newPrivacy, setNewPrivacy] = useState(data?.is_private ?? 0);
+  const [newPrivacy, setNewPrivacy] = useState(user?.is_private ?? 0);
   
 
   // 응원팀
@@ -143,7 +146,7 @@ const MySettingEditForm = ({ data, reload }) => {
       )}
 
       {/* 이메일 */}
-      <StyledBar onClick={toggleEmail}>{data?.email}</StyledBar>
+      <StyledBar onClick={toggleEmail}>{user?.email}</StyledBar>
       {editEmailOpen && (
         <StyledEditBar>
           <Title>이메일 변경</Title>
@@ -173,7 +176,7 @@ const MySettingEditForm = ({ data, reload }) => {
                   );
                   message.success("이메일이 성공적으로 변경되었습니다.");
                   toggleEmail();
-                  reload();
+                  reloadLogInUser();
                 } catch (err) {
                   console.error(err);
                   message.error("이메일 변경에 실패했습니다.");
@@ -187,7 +190,7 @@ const MySettingEditForm = ({ data, reload }) => {
       )}
       
       {/* 휴대전화 */}
-      <StyledBar onClick={togglePhone}>{data?.UserInfo?.phone || "전화번호 없음"}</StyledBar>
+      <StyledBar onClick={togglePhone}>{user?.UserInfo?.phone || "전화번호 없음"}</StyledBar>
       {editPhoneOpen && (
         <StyledEditBar>
           <Title>휴대전화번호 변경</Title>
@@ -298,7 +301,7 @@ const MySettingEditForm = ({ data, reload }) => {
 
                   message.success("공개 설정이 변경되었습니다.");
                   togglePrivacy();
-                  reload();
+                  reloadLogInUser();
                 } catch (err) {
                   console.error(err);
                   message.error("공개 설정 변경에 실패했습니다.");
@@ -352,9 +355,7 @@ const MySettingEditForm = ({ data, reload }) => {
             </Button>
           </ButtonWrapper>
         </StyledEditBar>
-      )}
-      
-      <StyledBar>포인트 혹은 돈</StyledBar>
+      )}        
     </div>
   )
 }
