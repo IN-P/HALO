@@ -1,10 +1,7 @@
-// components/PostCard.js
 import React, { useState, useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  LIKE_POST_REQUEST, UNLIKE_POST_REQUEST, REMOVE_POST_REQUEST,
-} from '../reducers/post_IN';
-import { BOOKMARK_POST_REQUEST, UNBOOKMARK_POST_REQUEST } from '../reducers/bookmark_IN';
+import {LIKE_POST_REQUEST, UNLIKE_POST_REQUEST,} from '../reducers/post_IN';
+import {BOOKMARK_POST_REQUEST, UNBOOKMARK_POST_REQUEST,} from '../reducers/bookmark_IN';
 import { REGRAM_REQUEST } from '../reducers/regram_IN';
 import { FaHeart, FaRegHeart, FaRegComment, FaBookmark, FaRegBookmark, FaRetweet } from 'react-icons/fa';
 import PostMenu from './PostMenu';
@@ -39,6 +36,7 @@ const PostCard = ({ post }) => {
   const images = isPureRegram && origin ? origin.Images : post.Images;
   const [currentImages, setCurrentImages] = useState(images || []);
   useEffect(() => { setCurrentImages(images || []); }, [images]);
+
   const prevImage = () => setImageIndex(i => (i > 0 ? i - 1 : currentImages.length - 1));
   const nextImage = () => setImageIndex(i => (i < currentImages.length - 1 ? i + 1 : 0));
 
@@ -65,14 +63,13 @@ const PostCard = ({ post }) => {
     regramIconColor = '#32e732'; regramDisabled = true; regramTooltip = '이미 리그램된 글입니다.';
   }
 
-  const onEdit = () => { window.location.href = `/edit/${post.id}`; setShowMenu(false); };
-  const onDelete = () => { if (window.confirm('정말 삭제하시겠습니까?')) dispatch({ type: REMOVE_POST_REQUEST, data: post.id }); };
   const onRegram = () => {
     if (regramDisabled) return;
     if (window.confirm('리그램하시겠습니까?')) {
       dispatch({ type: REGRAM_REQUEST, data: { postId: basePost.id, content: '', isPublic: true } });
     }
   };
+
   const onLike = () => dispatch({ type: LIKE_POST_REQUEST, data: basePost.id });
   const onUnlike = () => dispatch({ type: UNLIKE_POST_REQUEST, data: basePost.id });
   const onBookmark = () => dispatch({ type: BOOKMARK_POST_REQUEST, data: basePost.id });
@@ -88,7 +85,6 @@ const PostCard = ({ post }) => {
 
   return (
     <div style={cardStyle}>
-      {/* 이미지/슬라이드 */}
       <div style={{ ...IMAGE_SIZE, position: 'relative', background: '#eee', flexShrink: 0 }}>
         {currentImages.length > 0 ? (
           <img
@@ -108,7 +104,6 @@ const PostCard = ({ post }) => {
         )}
       </div>
 
-      {/* 우측 영역 */}
       <div style={{
         flex: 1, height: IMAGE_SIZE.height, display: 'flex', flexDirection: 'column',
         background: '#fff', minWidth: 390, boxSizing: 'border-box', padding: '20px 24px', overflowX: 'hidden'
@@ -159,57 +154,20 @@ const PostCard = ({ post }) => {
               menuRef={menuRef}
               isMine={isMine}
               isRegram={isRegram}
-              onEdit={onEdit}
-              onDelete={onDelete}
+              postId={post.id}
               setShowReportModal={setShowReportModal}
             />
           </div>
         </div>
-        {isRegram && isPureRegram && origin ? (
-          <div style={{
-            marginBottom: 12, maxHeight: 130, minHeight: 60,
-            overflowY: 'auto', overflowX: 'hidden', wordBreak: 'break-all',
-            fontSize: 17, lineHeight: 1.6,
-          }}>
-            <div style={{ fontWeight: 600, color: '#888', marginBottom: 5 }}>
-              {origin.User?.nickname}님의 게시글
-            </div>
-            <div>{renderContent(origin.content)}</div>
-          </div>
-        ) : isRegram && origin ? (
-          <>
-            <div style={{
-              fontSize: 17, lineHeight: 1.6, marginBottom: 12, minHeight: 60,
-              maxHeight: 130, overflowY: 'auto', overflowX: 'hidden', wordBreak: 'break-all',
-            }}>
-              {renderContent(post.content)}
-            </div>
-            <div style={{
-              border: '1px solid #eee', background: '#f8f8fa', borderRadius: 8,
-              padding: 16, marginBottom: 12, fontSize: 15, color: '#444', overflowX: 'hidden', wordBreak: 'break-all',
-            }}>
-              <div style={{ fontWeight: 600, marginBottom: 8 }}>
-                {origin.User?.nickname}님의 게시글
-              </div>
-              <div>{renderContent(origin.content)}</div>
-              {origin.Images && origin.Images.length > 0 && (
-                <img src={`http://localhost:3065/uploads/post/${origin.Images[0].src}`}
-                  style={{ width: 180, borderRadius: 8, marginTop: 10 }} alt="리그램 원본 이미지" />
-              )}
-            </div>
-          </>
-        ) : (
-          <div style={{
-            fontSize: 17, lineHeight: 1.6, marginBottom: 12,
-            minHeight: 60, maxHeight: 130, overflowY: 'auto', overflowX: 'hidden', wordBreak: 'break-all',
-          }}>
-            {renderContent(post.content)}
-          </div>
-        )}
+        <div style={{
+          fontSize: 17, lineHeight: 1.6, marginBottom: 12,
+          minHeight: 60, maxHeight: 130, overflowY: 'auto', overflowX: 'hidden', wordBreak: 'break-all',
+        }}>
+          {renderContent(post.content)}
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 22, fontSize: 26, margin: '12px 0 0 0', borderTop: '1.5px solid #f2f2f2', paddingTop: 10 }}>
           <button style={iconBtnStyle} onClick={() => setShowDetailModal(true)}>
             <FaRegComment />
-            {/* 댓글 카운트 표시는 getTotalCommentCount로 */}
             <span style={countStyle}>{getTotalCommentCount(post.Comments || [])}</span>
           </button>
           <button style={iconBtnStyle} onClick={liked ? onUnlike : onLike}>
@@ -225,14 +183,13 @@ const PostCard = ({ post }) => {
             <span style={countStyle}>{bookmarkCount}</span>
           </button>
         </div>
-        {/* 댓글 미리보기 */}
         <Comment
           postId={post.id}
           currentUserId={user?.id}
           preview={true}
           initialComments={post.Comments}
-          previewCount={3} // 최신 3개만
-          onShowDetailModal={() => setShowDetailModal(true)} // 박스 전체 클릭시 모달 오픈
+          previewCount={3}
+          onShowDetailModal={() => setShowDetailModal(true)}
         />
         {showReportModal && (
           <ReportModal

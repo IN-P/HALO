@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Post, User, Image, Comment, Block } = require('../models');
+const { Post, User, Image, Comment, Block, Hashtag } = require('../models');
 const { Op } = require('sequelize');
 
 // GET /posts?lastId=10
@@ -62,6 +62,7 @@ router.get('/', async (req, res, next) => {
         },
         { model: User, as: 'Likers', attributes: ['id'] },
         { model: User, as: 'Bookmarkers', attributes: ['id'] },
+        { model: Hashtag, attributes: ['id', 'name'] },
         {
           model: Post,
           as: 'Regrams',
