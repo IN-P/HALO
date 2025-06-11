@@ -35,15 +35,15 @@ const upload = multer({
 // 게시글 등록
 router.post('/', isLoggedIn, async (req, res, next) => {
   try {
-    console.log('req.body.receiver_id:', req.body.receiver_id); // ← 여기에 넣으면 됨 ✅ // ㅈㅇ
+    console.log('req.body.receiver_id:', req.body.receiver_id);
     const hashtags = req.body.content.match(/#[^\s#]+/g);
     const post = await Post.create({
       content: req.body.content,
       user_id: req.user.id,
       private_post: req.body.private_post ?? false,
-      location: req.body.location,
-      latitude: req.body.latitude,
-      longitude: req.body.longitude,
+      location: req.body.location || null,
+      latitude: req.body.latitude || null,
+      longitude: req.body.longitude || null,
     });
 
     // 해시태그 등록/연결
@@ -58,7 +58,7 @@ router.post('/', isLoggedIn, async (req, res, next) => {
 
     // 이미지 등록
     const user = await User.findByPk(req.user.id);
-    const teamId = user.myteam_id || 1; // 팀없음=1
+    const teamId = user.myteam_id || 1;
 
     if (!req.body.images || req.body.images.length === 0) {
       // 첨부 이미지가 하나도 없을 때: 팀로고 더미 연결
@@ -71,31 +71,31 @@ router.post('/', isLoggedIn, async (req, res, next) => {
         await Image.create({ src, post_id: post.id });
       }
     }
-    // ㅈㅇ ㅁㅅ
+ 
     if (req.body.receiver_id) {
-  await Mention.create({
-    senders_id: req.user.id,
-    receiver_id: req.body.receiver_id,
-    target_type: 'POST',
-    target_id: post.id,
-    context: req.body.content,
-    createAt: new Date(),
-  });
-  console.log('✅ Mention 저장 완료');
+      await Mention.create({
+        senders_id: req.user.id,
+        receiver_id: req.body.receiver_id,
+        target_type: 'POST',
+        target_id: post.id,
+        context: req.body.content,
+        createAt: new Date(),
+      });
+      console.log('✅ Mention 저장 완료');
 
-  const fullPost = await Post.findOne({
-  where: { id: post.id },
-  include: [
-    { model: Image },
-    { model: User, attributes: ['id', 'nickname'] },
-    { model: Comment, include: [{ model: User, attributes: ['id', 'nickname'] }] },
-    { model: User, as: 'Likers', attributes: ['id'] },
-    { model: User, as: 'Bookmarkers', attributes: ['id'] },
-    { model: Hashtag, attributes: ['id', 'name'] },
-  ],
-});
-}
-//
+      const fullPost = await Post.findOne({
+        where: { id: post.id },
+        include: [
+          { model: Image },
+          { model: User, attributes: ['id', 'nickname'] },
+          { model: Comment, include: [{ model: User, attributes: ['id', 'nickname'] }] },
+          { model: User, as: 'Likers', attributes: ['id'] },
+          { model: User, as: 'Bookmarkers', attributes: ['id'] },
+          { model: Hashtag, attributes: ['id', 'name'] },
+        ],
+      });
+    }
+
     const fullPost = await Post.findOne({
       where: { id: post.id },
       include: [
@@ -108,32 +108,23 @@ router.post('/', isLoggedIn, async (req, res, next) => {
       ],
     });
 
-    // 활동 내역 생성 - 준혁추가
     await ActiveLog.create({
       action: "CREATE",
       target_id: post.id,
       users_id: req.user.id,
       target_type_id: 1,
     })
-    // 준혁 추가
 
-    // 윫 - 차단된 댓글 필터링
     if (req.user) {
       const myId = req.user.id;
       const blockedRelations = await Block.findAll({
-        where: {
-          [Op.or]: [
-            { from_user_id: myId },
-            { to_user_id: myId },
-          ]
-        }
+        where: {[Op.or]:[{ from_user_id: myId },{ to_user_id: myId },]}
       });
       const blockedUserIds = blockedRelations.map(b =>
         b.from_user_id === myId ? b.to_user_id : b.from_user_id
       );
       fullPost.Comments = fullPost.Comments.filter(c => !blockedUserIds.includes(c.User.id));
     }
-    /////////////
 
     res.status(201).json(fullPost);
   } catch (error) {
@@ -221,9 +212,9 @@ router.patch('/:postId', isLoggedIn, async (req, res, next) => {
       { 
         content: req.body.content, 
         private_post: req.body.private_post ?? false,
-        location: req.body.location,
-        latitude: req.body.latitude,
-        longitude: req.body.longitude,
+        location: req.body.location || null,
+        latitude: req.body.latitude || null,
+        longitude: req.body.longitude || null,
       },
       { where: { id: req.params.postId, user_id: req.user.id } }
     );
@@ -417,7 +408,6 @@ router.post('/:postId/regram', isLoggedIn, async (req, res, next) => {
       user_id: req.user.id,
       regram_id: targetPost.id,
       content: req.body.content || '',
-      private_post: req.body.private_post ?? false,
     });
 
     // 원본글 최신 데이터 포함 응답 (여기도 마찬가지!)
