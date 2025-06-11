@@ -21,6 +21,7 @@ import adminQuiz from '../reducers/adminPlayer_GM';
 import adminPlayer from '../reducers/adminPlayer_GM';
 import playerDraw from '../reducers/playerDraw_GM'; 
 import activeLog_JH from '../reducers/activeLog_JH';
+import badge_JH from '../reducers/badge_JH';
 
 
 const rootReducer = combineReducers({
@@ -43,6 +44,7 @@ const rootReducer = combineReducers({
   adminPlayer,
   playerDraw,
   activeLog_JH, //준혁
+  badge_JH, //준혁
 
 });
 

@@ -1,7 +1,7 @@
 import React from "react";
 import { Image } from "antd";
 import styled from "styled-components";
-import { HeartOutlined } from "@ant-design/icons";
+import { HeartFilled } from "@ant-design/icons";
 
 const GridWrapper = styled.div`
   display: grid;
@@ -39,7 +39,7 @@ const StyledImage = styled(Image)`
   border-radius: 10px;
 `;
 
-const HeartIcon = styled(HeartOutlined)`
+const HeartIcon = styled(HeartFilled)`
   position: absolute;
   top: 10px;
   right: 10px;

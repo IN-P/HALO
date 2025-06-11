@@ -1,7 +1,7 @@
 import React from "react";
 import { Image, Modal, Tooltip  } from "antd";
 import styled from "styled-components";
-import { TagOutlined } from "@ant-design/icons";
+import { TagFilled } from "@ant-design/icons";
 
 const GridWrapper = styled.div`
   display: grid;
@@ -39,7 +39,7 @@ const StyledImage = styled(Image)`
   border-radius: 10px;
 `;
 
-const TagIcon = styled(TagOutlined)`
+const TagIcon = styled(TagFilled)`
   position: absolute;
   top: 10px;
   right: 10px;

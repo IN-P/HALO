@@ -16,6 +16,7 @@ import adminQuiz from './adminQuiz_GM';
 import adminPlayer from './adminPlayer_GM';
 import playerDraw from './playerDraw_GM'; 
 import activeLog_JH from './activeLog_JH';
+import badge_JH from './badge_JH'; //준혁
 
 
 const rootReducer = combineReducers({
@@ -44,6 +45,8 @@ const rootReducer = combineReducers({
   adminPlayer,
   playerDraw,
   activeLog_JH, //준혁
+  badge_JH, //준혁
+  
 });
 
 export default rootReducer;

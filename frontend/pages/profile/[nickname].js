@@ -4,17 +4,14 @@ import AppLayout from "../../components/AppLayout";
 import MyHeader from "../../components/mypage/MyHeader";
 import MyAvatar from "../../components/mypage/MyAvatar";
 import MyMain from "../../components/mypage/MyMain";
-import MyPost from "../../components/mypage/MyPost";
 import MySettingMain from "../../components/mypage/MySettingMain"; // main 브랜치 쪽
 import ProfilePost from "../../components/mypage/ProfilePost";
-import { InboxOutlined, NumberOutlined, TagOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { LOAD_USER_INFO_REQUEST } from "../../reducers/profile_jh";
 import { LOAD_MY_INFO_REQUEST } from '../../reducers/user_YG';
 import wrapper from "../../store/configureStore";
 import { END } from "redux-saga";
 import axios from "axios";
-import MyBookmark from "../../components/mypage/MyBookmark";
 
 const ProfilePage = () => {
   const router = useRouter();

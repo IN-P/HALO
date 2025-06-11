@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { isLoggedIn } = require("./middlewares");
 const { User, Block, Achievement, Badge, UserInfo, Follow, Myteam, Post, UserPoint, UserPayment, ActiveLog, Image } = require("../models");
+const { assignTeamBadge } = require('../services/badge/trigger');
 
 // nickname으로 userId 값 불러온 후 정보 가져오기
 router.get("/:nickname", async (req, res, next) => {
@@ -116,6 +117,9 @@ router.patch("/update", isLoggedIn, async (req, res, next) => {
     if (Object.keys(userInfoFields).length > 0) {
       await UserInfo.update(userInfoFields, { where: { users_id: userId } });
     }
+
+    // 응원팀 변경 시 뱃지 재부여
+    if (myteam_id !== undefined) { await assignTeamBadge(userId); }
 
     res.status(200).json({ message: "사용자 정보가 성공적으로 변경되었습니다." });
   } catch (error) {
