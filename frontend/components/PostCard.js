@@ -6,6 +6,7 @@ import { FaHeart, FaRegHeart, FaRegComment, FaBookmark, FaRegBookmark, FaRetweet
 import PostMenu from './PostMenu';
 import PostDetailModal from './PostDetailModal';
 import ReportModal from './ReportModal';
+import MapModal from './MapModal'; // 지도 모달 추가
 import { getTotalCommentCount } from '../utils/comment';
 import Comment from './Comment';
 
@@ -32,6 +33,7 @@ const PostCard = ({ post }) => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showMapModal, setShowMapModal] = useState(false); // 위치 모달 state
   const menuRef = useRef(null);
 
   // 👉 공유 링크 복사용 상태/함수 추가
@@ -192,7 +194,7 @@ const PostCard = ({ post }) => {
             />
           </div>
         </div>
-
+        {/* 작성일 */}
         <div style={{ fontSize: 13, color: '#bbb', margin: '2px 0 6px 0' }}>
           작성일&nbsp;
           {post.createdAt ? new Date(post.createdAt).toLocaleString('ko-KR', {
@@ -200,7 +202,13 @@ const PostCard = ({ post }) => {
             hour: '2-digit', minute: '2-digit'
           }) : ''}
         </div>
-
+        {/* 위치(주소) */}
+        {post.location && (
+          <div style={{ fontSize: 15, color: '#1558d6', marginBottom: 10, cursor: 'pointer', fontWeight: 500, textDecoration: 'underline' }}
+            onClick={() => setShowMapModal(true)}>
+            {post.location}
+          </div>
+        )}
         <div style={{
           fontSize: 17, lineHeight: 1.6, marginBottom: 12,
           minHeight: 60, maxHeight: 130, overflowY: 'auto', overflowX: 'hidden', wordBreak: 'break-all',
@@ -290,6 +298,12 @@ const PostCard = ({ post }) => {
           링크가 복사되었습니다!
         </div>
       )}
+      {/* 위치 지도 모달 */}
+      <MapModal
+        visible={showMapModal}
+        onClose={() => setShowMapModal(false)}
+        location={post.location}
+      />
     </div>
   );
 };

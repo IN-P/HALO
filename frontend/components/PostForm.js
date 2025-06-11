@@ -8,6 +8,7 @@ import {
   REMOVE_IMAGE, RESET_IMAGE_PATHS
 } from '../reducers/post_IN';
 import { useRouter } from 'next/router';
+import KakaoMapPicker from '../components/KakaoMapPicker';
 import MentionInput from '../components/MentionInput';
 
 const PostForm = ({ editMode = false, originPost }) => {
@@ -29,10 +30,14 @@ const PostForm = ({ editMode = false, originPost }) => {
       : []
   );
   const [content, setContent] = useState(editMode && originPost ? originPost.content : '');
-  // **여기!**
   const [private_post, setPrivatePost] = useState(
     editMode && originPost ? !!originPost.private_post : false
   );
+
+  // 위치(지도, 주소, 위경도)
+  const [location, setLocation] = useState(editMode && originPost ? originPost.location || '' : '');
+  const [latitude, setLatitude] = useState(editMode && originPost ? originPost.latitude || '' : '');
+  const [longitude, setLongitude] = useState(editMode && originPost ? originPost.longitude || '' : '');
 
   // 글 작성/수정 성공시 폼 리셋
   useEffect(() => {
@@ -40,6 +45,9 @@ const PostForm = ({ editMode = false, originPost }) => {
       message.success('게시글이 성공적으로 등록되었습니다!');
       setContent('');
       setOldImages([]);
+      setLocation('');
+      setLatitude('');
+      setLongitude('');
       dispatch({ type: ADD_POST_RESET });
       router.push('/');
     }
@@ -55,7 +63,10 @@ const PostForm = ({ editMode = false, originPost }) => {
     if (editMode && originPost) {
       setContent(originPost.content || '');
       setOldImages(Array.isArray(originPost.Images) ? originPost.Images.map(img => img.src) : []);
-      setPrivatePost(!!originPost.private_post); // 여기!
+      setPrivatePost(!!originPost.private_post);
+      setLocation(originPost.location || '');
+      setLatitude(originPost.latitude || '');
+      setLongitude(originPost.longitude || '');
       dispatch({ type: RESET_IMAGE_PATHS });
     }
   }, [editMode, originPost, dispatch]);
@@ -71,14 +82,13 @@ const PostForm = ({ editMode = false, originPost }) => {
   }, [dispatch]);
   const onRemoveImage = useCallback(index => dispatch({ type: REMOVE_IMAGE, index }), [dispatch]);
   const onRemoveOldImage = idx => setOldImages(prev => prev.filter((_, i) => i !== idx));
-  // 공개범위 토글
   const onTogglePrivate = useCallback(checked => setPrivatePost(!checked), []);
 
   const onSubmit = useCallback(() => {
     if (!content.trim()) return message.warning('내용을 입력해주세요!');
+    if (!location || !latitude || !longitude) return message.warning('위치를 선택해주세요!');
 
     if (editMode) {
-      // 순서 유지하면서 중복 제거 (oldImages 앞, imagePaths 뒤)
       const combinedImages = [...oldImages, ...imagePaths];
       const uniqueImages = combinedImages.filter((img, idx) => combinedImages.indexOf(img) === idx);
 
@@ -88,7 +98,10 @@ const PostForm = ({ editMode = false, originPost }) => {
           postId: originPost.id,
           content,
           images: uniqueImages,
-          private_post, // 여기!
+          private_post,
+          location,
+          latitude,
+          longitude,
         },
       });
     } else {
@@ -97,11 +110,14 @@ const PostForm = ({ editMode = false, originPost }) => {
         data: {
           content,
           images: imagePaths,
-          private_post, // 여기!
+          private_post,
+          location,
+          latitude,
+          longitude,
         },
       });
     }
-  }, [content, imagePaths, private_post, dispatch, editMode, oldImages, originPost]);
+  }, [content, imagePaths, private_post, dispatch, editMode, oldImages, originPost, location, latitude, longitude]);
 
   return (
     <Form layout="vertical" style={{ padding: 24, background: '#fff', borderRadius: 8 }}
@@ -138,6 +154,26 @@ const PostForm = ({ editMode = false, originPost }) => {
           ))}
         </div>
       )}
+      {/* 위치 선택 (카카오맵) */}
+      <Form.Item label="위치 선택 (지도에서 클릭)">
+        <KakaoMapPicker
+          latitude={latitude}
+          longitude={longitude}
+          setLatitude={setLatitude}
+          setLongitude={setLongitude}
+          location={location}
+          setLocation={setLocation}
+        />
+        <Input
+          value={location}
+          readOnly
+          placeholder="주소가 자동 입력됩니다"
+          style={{ marginTop: 8 }}
+        />
+        <div style={{ fontSize: 13, color: "#888" }}>
+          위도: {latitude} / 경도: {longitude}
+        </div>
+      </Form.Item>
       <Form.Item label="공개 설정">
         <Switch
           checked={!private_post}

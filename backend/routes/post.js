@@ -40,6 +40,9 @@ router.post('/', isLoggedIn, async (req, res, next) => {
       content: req.body.content,
       user_id: req.user.id,
       private_post: req.body.private_post ?? false,
+      location: req.body.location,
+      latitude: req.body.latitude,
+      longitude: req.body.longitude,
     });
 
     // 해시태그 등록/연결
@@ -53,7 +56,15 @@ router.post('/', isLoggedIn, async (req, res, next) => {
     }
 
     // 이미지 등록
-    if (req.body.images) {
+    const user = await User.findByPk(req.user.id);
+    const teamId = user.myteam_id || 1; // 팀없음=1
+
+    if (!req.body.images || req.body.images.length === 0) {
+      // 첨부 이미지가 하나도 없을 때: 팀로고 더미 연결
+      const dummySrc = `team_logo_${teamId}.png`;
+      await Image.create({ src: dummySrc, post_id: post.id });
+    } else {
+      // 기존대로 첨부 이미지 등록
       const images = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
       for (const src of images) {
         await Image.create({ src, post_id: post.id });
@@ -182,7 +193,13 @@ router.patch('/:postId', isLoggedIn, async (req, res, next) => {
   const hashtags = req.body.content.match(/#[^\s#]+/g);
   try {
     await Post.update(
-      { content: req.body.content, private_post: req.body.private_post ?? false },
+      { 
+        content: req.body.content, 
+        private_post: req.body.private_post ?? false,
+        location: req.body.location,
+        latitude: req.body.latitude,
+        longitude: req.body.longitude,
+      },
       { where: { id: req.params.postId, user_id: req.user.id } }
     );
 
