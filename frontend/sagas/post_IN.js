@@ -115,10 +115,10 @@ function* removePost(action) {
   }
 }
 
-function editPostAPI({ postId, content, images, private_post }) {
+function editPostAPI({ postId, content, images, private_post, location, latitude, longitude }) {
   return axios.patch(
     `http://localhost:3065/post/${postId}`,
-    { content, images, private_post },
+    { content, images, private_post, location, latitude, longitude },
     { withCredentials: true }
   );
 }

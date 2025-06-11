@@ -8,8 +8,7 @@ import {
   REMOVE_IMAGE, RESET_IMAGE_PATHS
 } from '../reducers/post_IN';
 import { useRouter } from 'next/router';
-import KakaoMapPicker from '../components/KakaoMapPicker';
-import MentionInput from '../components/MentionInput';
+import SelectMapModal from './SelectMapModal';
 import MentionTextArea from '../components/MentionTextArea';
 
 const PostForm = ({ editMode = false, originPost }) => {
@@ -24,8 +23,6 @@ const PostForm = ({ editMode = false, originPost }) => {
 
   const imageInput = useRef();
 
-  const [receiverId, setReceiverId] = useState(null);
-
   // 기존 이미지(수정모드)
   const [oldImages, setOldImages] = useState(
     editMode && originPost && Array.isArray(originPost.Images)
@@ -37,7 +34,11 @@ const PostForm = ({ editMode = false, originPost }) => {
     editMode && originPost ? !!originPost.private_post : false
   );
 
-  // 위치(지도, 주소, 위경도)
+  // 위치 입력 토글 & 지도모달
+  const [showLocation, setShowLocation] = useState(false);
+  const [mapModalOpen, setMapModalOpen] = useState(false);
+
+  // 위치(주소, 위경도)
   const [location, setLocation] = useState(editMode && originPost ? originPost.location || '' : '');
   const [latitude, setLatitude] = useState(editMode && originPost ? originPost.latitude || '' : '');
   const [longitude, setLongitude] = useState(editMode && originPost ? originPost.longitude || '' : '');
@@ -51,6 +52,7 @@ const PostForm = ({ editMode = false, originPost }) => {
       setLocation('');
       setLatitude('');
       setLongitude('');
+      setShowLocation(false);
       dispatch({ type: ADD_POST_RESET });
       router.push('/');
     }
@@ -71,6 +73,7 @@ const PostForm = ({ editMode = false, originPost }) => {
       setLatitude(originPost.latitude || '');
       setLongitude(originPost.longitude || '');
       dispatch({ type: RESET_IMAGE_PATHS });
+      setShowLocation(!!originPost.location); // 기존 글에 위치가 있으면 true
     }
   }, [editMode, originPost, dispatch]);
 
@@ -89,57 +92,42 @@ const PostForm = ({ editMode = false, originPost }) => {
 
   const onSubmit = useCallback(() => {
     if (!content.trim()) return message.warning('내용을 입력해주세요!');
-    if (!location || !latitude || !longitude) return message.warning('위치를 선택해주세요!');
-
-    if (editMode) {
-      const combinedImages = [...oldImages, ...imagePaths];
-      const uniqueImages = combinedImages.filter((img, idx) => combinedImages.indexOf(img) === idx);
-
-      dispatch({
-        type: EDIT_POST_REQUEST,
-        data: {
-          postId: originPost.id,
-          content,
-          images: uniqueImages,
-          private_post, // 여기!
-          receiver_id: receiverId,
-          private_post,
-          location,
-          latitude,
-          longitude,
-        },
-      });
-    } else {
-      dispatch({
-        type: ADD_POST_REQUEST,
-        data: {
-          content,
-          images: imagePaths,
-          private_post, // 여기!
-          receiver_id: receiverId,
-          private_post,
-          location,
-          latitude,
-          longitude,
-        },
-      });
+    if (showLocation && (!location || !latitude || !longitude)) {
+      return message.warning('위치를 선택해주세요!');
     }
-  }, [content, imagePaths, private_post, dispatch, editMode, oldImages, originPost, location, latitude, longitude]);
+
+    const payload = editMode ? {
+      postId: originPost.id,
+      content,
+      images: [...oldImages, ...imagePaths].filter((img, idx, arr) => arr.indexOf(img) === idx),
+      private_post,
+      location: showLocation ? location : null,
+      latitude: showLocation ? latitude : null,
+      longitude: showLocation ? longitude : null,
+    } : {
+      content,
+      images: imagePaths,
+      private_post,
+      location: showLocation ? location : null,
+      latitude: showLocation ? latitude : null,
+      longitude: showLocation ? longitude : null,
+    };
+
+    dispatch({
+      type: editMode ? EDIT_POST_REQUEST : ADD_POST_REQUEST,
+      data: payload,
+    });
+  }, [content, imagePaths, private_post, dispatch, editMode, oldImages, originPost, showLocation, location, latitude, longitude]);
 
   return (
     <Form layout="vertical" style={{ padding: 24, background: '#fff', borderRadius: 8 }}
       encType="multipart/form-data" onFinish={onSubmit}>
       <Form.Item label="게시글 내용" required>
-  <MentionTextArea
-    value={content}
-    onChange={(e) => setContent(e.target.value)}
-    onMentionSelect={(user) => {
-      console.log('선택한 유저:', user);
-      setReceiverId(user.id);
-      // 나중에 receiver_id 상태 저장하기
-    }}
-  />
-</Form.Item>
+        <MentionTextArea
+          value={content}
+          onChange={onChangeContent}
+        />
+      </Form.Item>
       <Form.Item label="이미지 업로드">
         <input type="file" multiple hidden ref={imageInput} onChange={onChangeImages} accept="image/*" />
         <Button onClick={onClickImageUpload} loading={uploadImagesLoading}>이미지 선택</Button>
@@ -168,26 +156,49 @@ const PostForm = ({ editMode = false, originPost }) => {
           ))}
         </div>
       )}
-      {/* 위치 선택 (카카오맵) */}
-      <Form.Item label="위치 선택 (지도에서 클릭)">
-        <KakaoMapPicker
-          latitude={latitude}
-          longitude={longitude}
-          setLatitude={setLatitude}
-          setLongitude={setLongitude}
-          location={location}
-          setLocation={setLocation}
+      {/* 위치 입력 토글 */}
+      <Form.Item label="위치 정보 추가">
+        <Switch
+          checked={showLocation}
+          onChange={(checked) => {
+            setShowLocation(checked);
+            if (!checked) {
+              setLocation('');
+              setLatitude('');
+              setLongitude('');
+            }
+          }}
         />
-        <Input
-          value={location}
-          readOnly
-          placeholder="주소가 자동 입력됩니다"
-          style={{ marginTop: 8 }}
-        />
-        <div style={{ fontSize: 13, color: "#888" }}>
-          위도: {latitude} / 경도: {longitude}
-        </div>
+        <span style={{ marginLeft: 10, fontSize: 15 }}>{showLocation ? "위치 입력" : "선택 안함"}</span>
       </Form.Item>
+      {/* 지도에서 위치 선택 */}
+      {showLocation && (
+        <Form.Item label="위치 선택 (지도에서 클릭)">
+          <Button type="primary" onClick={() => setMapModalOpen(true)}>
+            지도에서 위치 선택
+          </Button>
+          <Input
+            value={location}
+            readOnly
+            placeholder="주소가 자동 입력됩니다"
+            style={{ marginTop: 8 }}
+          />
+          <div style={{ fontSize: 13, color: "#888" }}>
+            위도: {latitude} / 경도: {longitude}
+          </div>
+          {/* 지도 모달 */}
+          <SelectMapModal
+            visible={mapModalOpen}
+            onClose={() => setMapModalOpen(false)}
+            onSelect={({ address, latitude, longitude }) => {
+              setLocation(address);
+              setLatitude(latitude);
+              setLongitude(longitude);
+              setMapModalOpen(false);
+            }}
+          />
+        </Form.Item>
+      )}
       <Form.Item label="공개 설정">
         <Switch
           checked={!private_post}
