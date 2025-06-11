@@ -150,12 +150,12 @@ router.get('/', isLoggedIn, async (req, res, next) => {
         {
           model: User,
           as: 'User1',
-          attributes: ['id', 'nickname'],
+          attributes: ['id', 'nickname' , 'profile_img'],
         },
         {
           model: User,
           as: 'User2',
-          attributes: ['id', 'nickname'],
+          attributes: ['id', 'nickname', 'profile_img'],
         },
         {
           model: ChatRoomExit,

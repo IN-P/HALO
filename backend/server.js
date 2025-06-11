@@ -399,6 +399,7 @@ if (!isOpponentActive) {
 
   socket.on('disconnect', () => {
     console.log('🔴 유저 연결 해제:', socket.id);
+    
 
   });
 });

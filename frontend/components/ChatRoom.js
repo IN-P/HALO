@@ -23,7 +23,7 @@ const ChatRoom = ({
   const [showReportMenu, setShowReportMenu] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
 
-
+const API_URL = 'http://localhost:3065';
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
@@ -221,16 +221,16 @@ const ChatRoom = ({
             >
               {!isMine && sender && (
                 <img
-                  src={sender?.profile_img ?? "default.png"}
-                  alt="프로필"
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    marginRight: 8,
-                    marginLeft: 4,
-                  }}
-                />
+  src={sender?.profile_img ? `${API_URL}${sender.profile_img}` : '/default.png'}
+  alt="프로필"
+  style={{
+    width: 32,
+    height: 32,
+    borderRadius: '50%',
+    marginRight: 8,
+    marginLeft: 4,
+  }}
+/>
               )}
 
               <div style={{ maxWidth: '70%' }}>
