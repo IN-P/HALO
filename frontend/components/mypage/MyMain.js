@@ -201,11 +201,13 @@ const MyMain = ({ data, isMyProfile, loginUser, onRefetch }) => {
         open={isFollowerModalOpen}
         onClose={() => setIsFollowerModalOpen(false)}
         onUpdate={refetchUserInfo}
+        nickname={nickname}
       />
       <FollowingsModal
         open={isFollowingModalOpen}
         onClose={() => setIsFollowingModalOpen(false)}
         onUpdate={refetchUserInfo}
+        nickname={nickname}
       />
 
     </div>

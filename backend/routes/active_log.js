@@ -32,52 +32,7 @@ router.get("/:userId", isLoggedIn, async (req, res, next) => {
     next(error);
   }
 });
-// 대상 리소스 + 작성자 유저 ID 확인
-router.get("/:target_type_id/:target_id", isLoggedIn, async (req, res, next) => {
-  const { target_type_id, target_id } = req.params;
-  try {
-    const targetType = await TargetType.findOne({ where: { id: target_type_id } });
-    if (!targetType) {
-      return res.status(404).json({ message: 'Target type not found' });
-    }
 
-    let resourceData;
-    let userId;
-
-    switch (targetType.code) {
-      case 'USER':
-        resourceData = await User.findOne({ where: { id: target_id } });
-        userId = resourceData?.id;
-        break;
-
-      case 'POST':
-        resourceData = await Post.findOne({ where: { id: target_id } });
-        userId = resourceData?.user_id;
-        break;
-
-      case 'COMMENT':
-        resourceData = await Comment.findOne({ where: { id: target_id } });
-        userId = resourceData?.user_id;
-        break;
-
-      default:
-        return res.status(400).json({ message: 'Unknown target type code' });
-    }
-
-    if (!resourceData) {
-      return res.status(404).json({ message: `${targetType.code} not found` });
-    }
-
-    return res.json({
-      data: resourceData,
-      reportedUserId: userId, // 신고 대상 유저 ID 추가
-    });
-
-  } catch (error) {
-    console.error(error);
-    next(error);
-  }
-});
 
 // 최근 활동 참조 테이블 불러오기
 router.get("/:target_type_id/:target_id", isLoggedIn, async (req, res, next) => {
@@ -88,7 +43,7 @@ router.get("/:target_type_id/:target_id", isLoggedIn, async (req, res, next) => 
     if (!targetType) { return res.status(404).json({ message: 'Target type not found' }); }
 
     // 2. code 값에 따라 처리 분기
-    switch(targetType.code) {
+    switch (targetType.code) {
       case 'user':
         const user = await User.findOne({ where: { id: target_id } });
         if (!user) return res.status(404).json({ message: 'User not found' });
@@ -131,6 +86,10 @@ router.get("/reported-user/:target_type_id/:target_id", isLoggedIn, async (req, 
         userId = user?.id;
         break;
 
+      case 'chat': // ✅ 'chat'은 target_id = 유저 ID
+        userId = parseInt(target_id, 10);
+        break;
+
       case 'post':
         const post = await Post.findOne({ where: { id: target_id } });
         userId = post?.user_id;
@@ -144,7 +103,6 @@ router.get("/reported-user/:target_type_id/:target_id", isLoggedIn, async (req, 
       default:
         return res.status(400).json({ message: 'Unknown target type code' });
     }
-
     if (!userId) {
       return res.status(404).json({ message: '작성자 유저 ID를 찾을 수 없습니다.' });
     }
@@ -155,6 +113,7 @@ router.get("/reported-user/:target_type_id/:target_id", isLoggedIn, async (req, 
     next(error);
   }
 });
+
 
 
 module.exports = router;

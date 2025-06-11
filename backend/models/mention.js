@@ -16,6 +16,10 @@ module.exports = (sequelize, DataTypes) => {
     target_type: {
       type: DataTypes.ENUM('POST', 'COMMENT', 'USER'),
     },
+       target_id: {        
+     type: DataTypes.BIGINT,
+     allowNull: false,         
+   },
     context: {
       type: DataTypes.TEXT,
     },
