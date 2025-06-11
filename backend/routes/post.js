@@ -115,6 +115,21 @@ router.delete('/:postId', isLoggedIn, async (req, res, next) => {
   try {
     const post = await Post.findByPk(req.params.postId);
 
+    let deletedRegramIds = [];
+    if (post && !post.regram_id) {
+      // 1. 리그램글 목록 조회
+      const regrams = await Post.findAll({ where: { regram_id: req.params.postId } });
+      // 2. 각 리그램글의 댓글/이미지 먼저 삭제
+      for (const rg of regrams) {
+        await Comment.destroy({ where: { post_id: rg.id } });
+        await Image.destroy({ where: { post_id: rg.id } });
+      }
+      // 3. 그 후 리그램글 삭제
+      await Post.destroy({ where: { regram_id: req.params.postId } });
+      // 4. 삭제된 리그램글 id 저장
+      deletedRegramIds = regrams.map(rg => rg.id);
+    }
+
     await Image.destroy({ where: { post_id: req.params.postId } });
     await Comment.destroy({ where: { post_id: req.params.postId } });
     await Post.destroy({
@@ -143,17 +158,16 @@ router.delete('/:postId', isLoggedIn, async (req, res, next) => {
       });
     }
 
-    // 활동 내역 추가 - 준혁 추가
     await ActiveLog.create({
       action: "DELETE",
       target_id: req.params.postId,
       users_id: req.user.id,
       target_type_id: 1,
     });
-    // 준혁 추가
 
     res.status(200).json({
       PostId: parseInt(req.params.postId, 10),
+      deletedRegramIds, // <<== 추가!
       ...(basePost && { basePost }),
     });
   } catch (error) {
