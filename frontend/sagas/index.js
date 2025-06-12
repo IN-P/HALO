@@ -9,7 +9,7 @@ import reportSaga from './report_YB';
 import user_YG from './user_YG'; 
 import profile_jh from './profile_jh'; 
 import chatSaga from './chatSaga_JW';
-import blockSaga from './block';;//율비
+import blockSaga from './block';
 import notification_JH from './notification_JH';
 import quizSaga from './quiz_GM';
 import adminQuizSaga from './adminQuiz_GM';
@@ -32,14 +32,14 @@ export default function* rootSaga() {
     fork(user_YG),
     fork(profile_jh),
     fork(chatSaga),
-    fork(blockSaga),//율비
-    fork(notification_JH), // 준혁추가
+    fork(blockSaga),
+    fork(notification_JH),
     fork(quizSaga),
     fork(adminQuizSaga),
     fork(playerDrawSaga),
     fork(adminPlayer),
-    fork(activeLog_JH), //준혁
+    fork(activeLog_JH),
     fork(reportResultSaga),
-    fork(badge_JH), //준혁  
+    fork(badge_JH),  
   ]);
 }

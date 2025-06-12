@@ -13,9 +13,8 @@ import report_YB from '../reducers/report_YB';
 import user_YG from '../reducers/user_YG'; 
 import chatReducer from '../reducers/chatReducer_JW'; 
 import profile_jh from '../reducers/profile_jh';
-import reportReducer from '../reducers/report_YB';
-import block from '../reducers/block'// 율비 추가
-import notification_JH from '../reducers/notification_JH' // 준혁추가
+import block from '../reducers/block'
+import notification_JH from '../reducers/notification_JH'
 import quiz from '../reducers/quiz_GM';
 import adminQuiz from '../reducers/adminPlayer_GM';
 import adminPlayer from '../reducers/adminPlayer_GM';
@@ -31,7 +30,7 @@ const rootReducer = combineReducers({
   regram_IN,
   bookmark_IN,
   follow_YB,
-  block, // 율비
+  block,
   report_YB,
   user_YG, 
   profile_jh,
@@ -41,9 +40,9 @@ const rootReducer = combineReducers({
   adminQuiz,
   adminPlayer,
   playerDraw,
-  activeLog_JH, //준혁
+  activeLog_JH,
   reportResult_YB,
-  badge_JH, //준혁
+  badge_JH,
 
 });
 
