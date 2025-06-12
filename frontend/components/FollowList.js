@@ -58,7 +58,7 @@ const FollowList = ({ data, type, onUpdate }) => {
               >
                 {user.nickname}
               </a>
-              {me?.nickname === nickname && (
+              {me?.nickname === data?.nickname && (
                 <button
                   onClick={() => handleRemove(user.id)}
                   style={{
