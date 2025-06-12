@@ -146,13 +146,12 @@ router.patch("/update", isLoggedIn, async (req, res, next) => {
       await User.update(userFields, { where: { id: userId } });
     }
 
-    const userInfoFields = {};
-    if (introduce !== undefined) userInfoFields.introduce = introduce;
-    if (phone !== undefined) userInfoFields.phone = phone;
+  const userInfoFields = {};
+  if (introduce !== undefined) { userInfoFields.introduce = introduce === "" ? null : introduce; }
+  if (phone !== undefined) { userInfoFields.phone = phone === "" ? null : phone; }
+  if (Object.keys(userInfoFields).length > 0) {
+    await UserInfo.update(userInfoFields, { where: { users_id: userId } }); }
 
-    if (Object.keys(userInfoFields).length > 0) {
-      await UserInfo.update(userInfoFields, { where: { users_id: userId } });
-    }
 
     // 응원팀 변경 시 뱃지 재부여
     if (myteam_id !== undefined) { await assignTeamBadge(userId); }

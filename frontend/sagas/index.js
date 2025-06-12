@@ -18,6 +18,7 @@ import adminPlayer from './adminPlayer_GM'
 import activeLog_JH from './activeLog_JH';
 import reportResultSaga from './reportResult_YB';
 import badge_JH from './badge_JH';
+import achievement_JH from './achievement_JH';
 
 export default function* rootSaga() {
   yield all([
@@ -40,6 +41,7 @@ export default function* rootSaga() {
     fork(adminPlayer),
     fork(activeLog_JH),
     fork(reportResultSaga),
-    fork(badge_JH),  
+    fork(badge_JH),
+    fork(achievement_JH),
   ]);
 }

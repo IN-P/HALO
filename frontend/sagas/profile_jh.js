@@ -12,6 +12,7 @@ function loadUserInfoAPI(userId) {
 }
 
 function* loadUserInfo(action) {
+  console.log("loadUserInfo action.data:", action.data);
   try {
     const result = yield call(loadUserInfoAPI, action.data);
     yield put({

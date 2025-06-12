@@ -50,7 +50,7 @@ module.exports = (sequelize, DataTypes) => {
       ignoreDuplicates: true, // 중복 데이터 무시
     });
   }).catch((err) => {
-    console.error('💥 TargetType 초기값 삽입 오류:', err);
+    console.error('초기값 삽입 오류:', err);
   });
 
   return Badge;

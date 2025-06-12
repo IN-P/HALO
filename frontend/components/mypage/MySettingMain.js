@@ -72,7 +72,7 @@ const MySettingMain = ({ data, onClose, reload, reloadLogInUser }) => {
           {selectedTab === "achievement" && <MySettingAchievement data={data} />}
           {selectedTab === "badge" && <MySettingBadges data={data} />}
           {selectedTab === "activeLog" && <MySettingActiveLog userId={userId} />}
-          {selectedTab === "followers" && <MySettingFollowers userId={userId} />}
+          {selectedTab === "followers" && <MySettingFollowers data={data} />}
           {selectedTab === "followings" && <MySettingFollowings data={data} />}
         </Col>
       </Row>
