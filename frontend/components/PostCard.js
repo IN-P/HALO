@@ -32,10 +32,7 @@ const PostCard = ({ post }) => {
   // ------ 리그램/원본글 구분 ------
   const isRegram = !!post.regram_id;
   const origin = post.Regram;
-  // 실제 렌더/로직에 사용할 "기준글"
   const basePost = isRegram && origin ? origin : post;
-
-  // 👇 아래 변수들은 무조건 "원본" 기준!
   const privatePost = isRegram && origin ? origin.private_post : post.private_post;
   const location = isRegram && origin ? origin.location : post.location;
   const latitude = isRegram && origin ? origin.latitude : post.latitude;
@@ -131,8 +128,47 @@ const PostCard = ({ post }) => {
           : part)
       : null;
 
+  // ⭐ 리그램 표시문구: 위치-내용 사이
+  const RegramInfo = isRegram && origin && origin.User && (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      marginBottom: 10,
+      fontSize: 15,
+      color: '#444'
+    }}>
+      <img
+        src={origin.User.profile_img ? `http://localhost:3065${origin.User.profile_img}` : 'http://localhost:3065/img/profile/default.jpg'}
+        alt="프로필"
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: '50%',
+          objectFit: 'cover',
+          marginRight: 7,
+          border: '1.5px solid #bbb',
+          cursor: 'pointer'
+        }}
+        onClick={() => window.location.href = `/profile/${origin.User.nickname}`}
+      />
+      <span
+        style={{
+          fontWeight: 700,
+          marginRight: 5,
+          cursor: 'pointer',
+          color: '#0055ff'
+        }}
+        onClick={() => window.location.href = `/profile/${origin.User.nickname}`}
+      >
+        {origin.User.nickname}
+      </span>
+      님의 게시글을 리그램했습니다
+    </div>
+  );
+
   return (
     <div style={cardStyle}>
+      {/* 오른쪽 상단 리그램 오버레이 */}
       <div style={{ ...IMAGE_SIZE, position: 'relative', background: '#eee', flexShrink: 0 }}>
         {currentImages.length > 0 ? (
           <img
@@ -151,19 +187,24 @@ const PostCard = ({ post }) => {
           </>
         )}
       </div>
-
       <div style={{
         flex: 1, height: IMAGE_SIZE.height, display: 'flex', flexDirection: 'column',
         background: '#fff', minWidth: 390, boxSizing: 'border-box', padding: '20px 24px', overflowX: 'hidden'
       }}>
         {isRegram && (
           <div style={{
-            display: 'flex', alignItems: 'center', marginBottom: 12,
-            color: '#0088ff', fontWeight: 600, fontSize: 15,
+            display: 'flex',
+            alignItems: 'center',
+            color: '#0088ff',
+            fontWeight: 600,
+            fontSize: 15,
+            marginBottom: 4,
+            gap: 5
           }}>
-            <FaRetweet style={{ marginRight: 5 }} />재게시했습니다
+            <FaRetweet />재게시했습니다
           </div>
-        )}
+        )}        
+        {/* 작성자 정보 */}
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8, minHeight: 54 }}>
           <img
             src={userInfo?.profile_img ? `http://localhost:3065${userInfo.profile_img}` : 'http://localhost:3065/img/profile/default.jpg'}
@@ -230,6 +271,9 @@ const PostCard = ({ post }) => {
             {location}
           </div>
         )}
+        {/* ⭐ 리그램정보 */}
+        {RegramInfo}
+        {/* 본문 내용 */}
         <div style={{
           fontSize: 17, lineHeight: 1.6, marginBottom: 12,
           minHeight: 60, maxHeight: 130, overflowY: 'auto', overflowX: 'hidden', wordBreak: 'break-all',
@@ -256,7 +300,6 @@ const PostCard = ({ post }) => {
             {bookmarked ? <FaBookmark color="#007bff" /> : <FaRegBookmark />}
             <span style={countStyle}>{bookmarkCount}</span>
           </button>
-          {/* 공유(주소복사) 아이콘 */}
           <button style={iconBtnStyle} onClick={handleCopyLink} title="공유 링크 복사">
             <FaShareAlt />
             <span style={{ fontSize: 16, marginLeft: 2, fontWeight: 500 }}>공유</span>
@@ -333,6 +376,7 @@ const cardStyle = {
   margin: '28px 0',
   padding: 0,
   overflow: 'hidden',
+  position: 'relative', // ⭐ 리그램오버레이위치!
 };
 const arrowBtnStyle = {
   position: 'absolute',
