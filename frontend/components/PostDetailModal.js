@@ -20,7 +20,7 @@ const PostDetailModal = ({
   const prevImage = () => setImageIndex(i => (i > 0 ? i - 1 : images.length - 1));
   const nextImage = () => setImageIndex(i => (i < images.length - 1 ? i + 1 : 0));
 console.log('1번',post);
-console.log('2번',post.Mentions);  //없음
+console.log('2번',post.Mentions);
   // 지도 모달용 state
   const [showMapModal, setShowMapModal] = useState(false);
 
@@ -30,8 +30,8 @@ console.log('2번',post.Mentions);  //없음
 
 const userMap = {};
 post.Mentions?.forEach(m => {
-  console.log('3번',userMap[m.Receiver.nickname.toLowerCase()], m.Receiver.id);
-  userMap[m.Receiver.nickname.toLowerCase()] = m.Receiver.id;
+  userMap[m.nickname.toLowerCase()] = m.user_id; // 지금은 undefined, 나중에 user_id 넣으면 됨
+  console.log('3번', m.nickname.toLowerCase(), userMap[m.nickname.toLowerCase()]);
 });
 
   // 작성일 텍스트

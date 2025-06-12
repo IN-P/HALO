@@ -309,7 +309,7 @@ const renderContent = (content, userMap = {}) =>
           fontSize: 17, lineHeight: 1.6, marginBottom: 12,
           minHeight: 60, maxHeight: 130, overflowY: 'auto', overflowX: 'hidden', wordBreak: 'break-all',
         }}>
-          {renderContent(post.content)}
+          {renderContent(post.content, userMap)}
         </div>
         <div style={{
           display: 'flex', alignItems: 'center', gap: 22, fontSize: 26, margin: '12px 0 0 0',

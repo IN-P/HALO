@@ -207,19 +207,54 @@ if (preview) {
   const onAvatarClick = (nickname) => {
     if (nickname) router.push(`/profile/${nickname}`);
   };
-  const renderCommentContent = (content, parentNickname) => {
-    if (!content) return null;
-    let text = content;
-    if (parentNickname && content.startsWith(`@${parentNickname}`)) {
-      text = content.slice(parentNickname.length + 1).trimStart();
-    }
-    return (
-      <>
-        {parentNickname && <b>@{parentNickname} </b>}
-        {text}
-      </>
-    );
-  };
+ const renderCommentContent = (content, mentions = [], parentNickname) => {
+  if (!content) return null;
+
+  // userMap 구성
+  const userMap = {};
+  mentions.forEach(m => {
+    userMap[m.nickname.toLowerCase()] = m.user_id;
+  });
+
+  // parentNickname 제거 후 나머지 텍스트 처리
+  let text = content;
+  let showParentNickname = false;
+  if (parentNickname && content.startsWith(`@${parentNickname}`)) {
+    text = content.slice(parentNickname.length + 1).trimStart();
+    showParentNickname = true;
+  }
+
+  return (
+    <>
+      {showParentNickname && <b>@{parentNickname} </b>}
+      {text
+        .split(/(#[^\s#]+|@[^\s@]+)/g)
+        .filter(Boolean)
+        .map((part, i) => {
+          if (part.startsWith('#')) {
+            return (
+              <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: '#007bff', textDecoration: 'none' }}>
+                {part}
+              </a>
+            );
+          }
+          if (part.startsWith('@')) {
+            const nickname = part.slice(1).toLowerCase();
+            const userId = userMap[nickname];
+            return userId ? (
+              <a key={i} href={`/profile/${userId}`} style={{ color: '#28a745', textDecoration: 'none' }}>
+                {part}
+              </a>
+            ) : (
+              <span key={i} style={{ color: '#28a745' }}>{part}</span>
+            );
+          }
+          return <span key={i}>{part}</span>;
+        })}
+    </>
+  );
+};
+
   const renderTree = (list, level = 0) => {
     if (!Array.isArray(list)) return null;
     return list.map((c) => {
@@ -269,7 +304,7 @@ if (preview) {
                 >
                   {c.is_deleted
                     ? "삭제된 댓글입니다."
-                    : renderCommentContent(c.content, c.Parent?.User?.nickname)}
+                    : renderCommentContent(c.content, c.Mentions, c.Parent?.User?.nickname)}
                 </div>
               </div>
               {!c.is_deleted && (
