@@ -133,6 +133,7 @@ const MySettingEditForm = ({ data, reload, reloadLogInUser }) => {
                   message.success("닉네임이 성공적으로 변경되었습니다.");
                   router.push(`/profile/${newNickname}`);
                   toggleNickname();
+                  reload();
                 } catch (err) {
                   console.error(err);
                   message.error("닉네임 변경에 실패했습니다.");

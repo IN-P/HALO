@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { isLoggedIn } = require("./middlewares");
 const { User, Block, Achievement, Badge, UserInfo, Follow, Myteam, Post, UserPoint, UserPayment, ActiveLog, Image } = require("../models");
-const { assignTeamBadge } = require('../services/badge/trigger');
+const { assignTeamBadge } = require('../services/badge/teambadge');
 
 // userId 로 사용자 프로필 불러오기
 router.get("/:userId", async (req, res, next) => {
@@ -27,7 +27,7 @@ router.get("/:userId", async (req, res, next) => {
           { model: User, as: 'Followings', attributes: ['id', 'nickname', 'profile_img'], },
         ], },
         { model: Achievement, attributes: ['id', 'name', 'description'], through: { attributes: ['createdAt', 'updatedAt'], }, },
-        { model: Badge, attributes: ['id', 'name', 'img', 'description'], through: { attributes: ['createdAt', 'updatedAt'], }, },
+        { model: Badge, attributes: ['id', 'name', 'img', 'description'], through: {   }, },
         { model: Myteam, attributes: ['id', 'teamname', 'teamcolor', 'region'], },
         { model: Block, as: 'Blockeds', include: [
           { model: User, as: 'Blocked', attributes: ['id', 'nickname', 'profile_img'], } ] },

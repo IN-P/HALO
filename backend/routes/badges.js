@@ -1,8 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const { User, Badge, sequelize } = require("../models");
+const { User, Badge, sequelize, UserBadge } = require("../models");
 const multer = require('multer');
 const path = require('path');
+const { isLoggedIn } = require('./middlewares'); // 로그인 여부 체크 미들웨어
 
 // multer 셋팅 (uploads/badges 폴더에 저장)
 const storage = multer.diskStorage({
@@ -79,6 +80,36 @@ router.post("/:userId", async (req, res, next) => {
         next(error);
     }
 });
+
+// 유저 뱃지 선택
+router.patch('/:userId/:badgeId/:isSelected', isLoggedIn, async (req, res) => {
+  const { userId, badgeId, isSelected } = req.params;
+
+  try {
+    // 모든 뱃지 선택 초기화
+      await UserBadge.update(
+        { isSelected: false },
+        { where: { user_id: userId } }
+      )
+
+    // 대상 UserBadge가 없으면 에러 처리 필요
+    const [updated] = await UserBadge.update(
+      { isSelected: isSelected },
+      { where: { user_id: userId, badge_id: badgeId } }
+    );
+
+    if (updated === 0) {
+      return res.status(404).json({ message: 'UserBadge not found' });
+    }
+
+    return res.json({ message: 'UserBadge selection updated successfully' });
+  } catch (error) {
+    console.error('Error updating UserBadge selection:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+module.exports = router;
 
 // 뱃지 수정
 // patch

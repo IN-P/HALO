@@ -9,6 +9,10 @@ export const initialState = {
   addBadgeLoading: false,
   addBadgeDone: false,
   addBadgeError: null,
+
+  selectBadgeLoading: false,
+  selectBadgeDone: false,
+  selectBadgeError: null,
 };
 
 export const LOAD_BADGE_REQUEST = "LOAD_BADGE_REQUEST";
@@ -18,6 +22,10 @@ export const LOAD_BADGE_FAILURE = "LOAD_BADGE_FAILURE";
 export const ADD_BADGE_REQUEST = "ADD_BADGE_REQUEST";
 export const ADD_BADGE_SUCCESS = "ADD_BADGE_SUCCESS";
 export const ADD_BADGE_FAILURE = "ADD_BADGE_FAILURE";
+
+export const SELECT_BADGE_REQUEST = "SELECT_BADGE_REQUEST";
+export const SELECT_BADGE_SUCCESS = "SELECT_BADGE_SUCCESS";
+export const SELECT_BADGE_FAILURE = "SELECT_BADGE_FAILURE";
 
 const badge_JH = (state = initialState, action) =>
   produce(state, (draft) => {
@@ -49,6 +57,20 @@ const badge_JH = (state = initialState, action) =>
       case ADD_BADGE_FAILURE:
         draft.addBadgeLoading = false;
         draft.addBadgeError = action.data;
+        break;
+      case SELECT_BADGE_REQUEST:
+        draft.selectBadgeLoading = true;
+        draft.selectBadgeDone = false;
+        draft.selectBadgeError = null;
+        break;
+      case SELECT_BADGE_SUCCESS:
+        draft.selectBadgeLoading = false;
+        draft.selectBadgeDone = true;
+        draft.UserBadges = action.data;
+        break;
+      case SELECT_BADGE_FAILURE:
+        draft.selectBadgeLoading = false;
+        draft.UserBadges = action.data;
         break;
       default:
         break;
