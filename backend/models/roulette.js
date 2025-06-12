@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true,
     },
     reward_value: {
-      type: DataTypes.DATE,
+      type: DataTypes.INTEGER,
       allowNull:false,        
     },
     users_id: {

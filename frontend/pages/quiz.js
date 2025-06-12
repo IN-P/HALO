@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { LOAD_QUIZZES_REQUEST } from '../reducers/quiz_GM';
 import QuizList from '../components/QuizList';
 import AppLayout from '../components/AppLayout';
+import EventSidebar from '../components/EventSidebar';
 
 const QuizPage = () => {
     const dispatch = useDispatch();
@@ -47,8 +48,16 @@ const QuizPage = () => {
 
     return (
         <AppLayout>
-            <div style={{padding: '20px', boxSizing: 'border-box'}}>
-                <QuizList />
+            <div style={{ display: 'flex' }}>
+                {/* 🟦 이벤트 사이드바 */}
+                <div style={{ width: 220 }}>
+                    <EventSidebar />
+                </div>
+
+                {/* 🟧 본문 퀴즈 목록 */}
+                <div style={{ flex: 1, padding: '20px' }}>
+                    <QuizList />
+                </div>
             </div>
         </AppLayout>
     );
