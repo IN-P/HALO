@@ -28,10 +28,22 @@ module.exports = (passport) => {
           const email = profile.emails[0].value;
           const ip = getRealIp(req);
 
-          // 기존 유저라면 last_active 업데이트
+                    // 기존 유저라면 last_active 업데이트
           const exUser = await User.findOne({ where: { email } });
           if (exUser) {
-            await exUser.update({ last_active: new Date(), ip }); // ← 여기도 같이 갱신 가능
+            // 상태 검사 먼저!
+            if (exUser.user_status_id === 2) {
+              return done(null, false, { message: '탈퇴한 계정입니다.' });
+            }
+            if (exUser.user_status_id === 3) {
+              return done(null, false, { message: '정지된 계정입니다.' });
+            }
+            if (exUser.user_status_id === 4) {
+              return done(null, false, { message: '휴면 계정입니다. 복구 후 로그인 가능합니다.' });
+            }
+
+            // 정상 상태면 로그인 처리
+            await exUser.update({ last_active: new Date(), ip });
             return done(null, exUser);
           }
 

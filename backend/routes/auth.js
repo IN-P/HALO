@@ -12,7 +12,7 @@ router.get('/google', passport.authenticate('google', {
 router.get(
   '/google/callback',
   passport.authenticate('google', {
-    failureRedirect: '/login',
+    failureRedirect: 'http://localhost:3000/login?error=oauth',
   }),
   (req, res) => {
     res.redirect('http://localhost:3000');
@@ -26,7 +26,7 @@ router.get('/kakao', passport.authenticate('kakao'));
 router.get(
   '/kakao/callback',
   passport.authenticate('kakao', {
-    failureRedirect: '/login',
+    failureRedirect: 'http://localhost:3000/login?error=oauth',
   }),
   (req, res) => {
     res.redirect('http://localhost:3000');

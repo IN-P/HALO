@@ -33,6 +33,14 @@ const { Title, Text, Paragraph } = Typography;
 
 const LoginPage = () => {
   const router = useRouter();
+  const { error } = router.query;
+
+  useEffect(() => {
+    if (error === 'oauth') {
+      alert('간편 로그인에 실패했습니다. 계정 상태를 확인하세요.');
+    }
+  }, [error]);
+  
   const dispatch = useDispatch();
   const { logInLoading, logInError, logInDone, isLogin } = useSelector((state) => state.user_YG);
 
