@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import useDebounce from '../hooks/useDebounce'; // 너 기존에 있던 debounce 훅 쓰면 됨
+import useDebounce from '../hooks/useDebounce'; 
 
 const MentionTextArea = ({ value, onChange, onMentionSelect }) => {
   const [mentionQuery, setMentionQuery] = useState('');
@@ -8,7 +8,9 @@ const MentionTextArea = ({ value, onChange, onMentionSelect }) => {
   const [showMentionList, setShowMentionList] = useState(false);
 
   const debouncedMentionQuery = useDebounce(mentionQuery, 300);
-const API_URL = 'http://localhost:3065';
+  const API_URL = 'http://localhost:3065'; 
+  const textareaRef = useRef(null);
+
   useEffect(() => {
     if (debouncedMentionQuery) {
       fetchMentionUsers(debouncedMentionQuery);
@@ -19,7 +21,7 @@ const API_URL = 'http://localhost:3065';
 
   const fetchMentionUsers = async (query) => {
     try {
-      const response = await axios.get(`/mention/users?q=${encodeURIComponent(query)}&limit=5`, { withCredentials: true });
+      const response = await axios.get(`${API_URL}/mention/users?q=${encodeURIComponent(query)}&limit=5`, { withCredentials: true });
       setMentionResults(response.data);
     } catch (error) {
       console.error('mention user fetch error:', error);
@@ -28,13 +30,13 @@ const API_URL = 'http://localhost:3065';
 
   const handleInputChange = (e) => {
     const newValue = e.target.value;
-    onChange(e); // 기존 PostForm의 setContent가 실행됨
+    onChange(e); 
 
-    // @입력 감지
+
     const mentionMatch = newValue.slice(0, e.target.selectionStart).match(/@([^\s@]*)$/);
     if (mentionMatch) {
-      setMentionQuery(mentionMatch[1]);
-      setShowMentionList(true);
+      setMentionQuery(mentionMatch[1]); 
+      setShowMentionList(true); 
     } else {
       setMentionQuery('');
       setShowMentionList(false);
@@ -42,25 +44,23 @@ const API_URL = 'http://localhost:3065';
   };
 
   const handleMentionClick = (user) => {
-    // @닉네임 치환
+ 
     const textarea = textareaRef.current;
     const { selectionStart } = textarea;
+
+
     const textBefore = value.slice(0, selectionStart).replace(/@([^\s@]*)$/, `@${user.nickname} `);
     const textAfter = value.slice(selectionStart);
 
     const newText = textBefore + textAfter;
-    onChange({ target: { value: newText } });
-
-    if (onMentionSelect) {
-      onMentionSelect(user);
-    }
+    onChange({ target: { value: newText } }); 
 
     setMentionQuery('');
     setMentionResults([]);
     setShowMentionList(false);
-  };
 
-  const textareaRef = useRef();
+   
+  };
 
   return (
     <div style={{ position: 'relative' }}>
@@ -68,7 +68,7 @@ const API_URL = 'http://localhost:3065';
         ref={textareaRef}
         value={value}
         onChange={handleInputChange}
-        placeholder="게시글 내용을 입력하세요 (@닉네임 입력 가능)"
+        placeholder="게시글 내용을 입력하세요"
         rows={4}
         style={{ width: '100%', padding: 8 }}
       />
@@ -77,7 +77,7 @@ const API_URL = 'http://localhost:3065';
         <ul
           style={{
             position: 'absolute',
-            top: '100%',
+            top: '100%', // textarea 바로 아래에 위치
             left: 0,
             width: '100%',
             background: 'white',
@@ -93,18 +93,14 @@ const API_URL = 'http://localhost:3065';
           {mentionResults.map((user) => (
             <li
               key={user.id}
-              onClick={() => handleMentionClick(user)}
-              style={{ padding: '5px', cursor: 'pointer' }}
+              onClick={() => handleMentionClick(user)} // <li> 클릭 시 자동 완성만 처리
+              style={{ padding: '5px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
             >
               <img
-  src={
-    user.profile_img
-      ? `http://localhost:3065${user.profile_img}` // 서버에서 /img로 줄 경우 prefix 붙여줘야 함
-      : 'http://localhost:3065/img/profile/default.jpg' // 디폴트 이미지 경로
-  }
-  alt={user.nickname}
-  style={{ width: '20px', height: '20px', borderRadius: '50%', marginRight: '5px' }}
-/>
+                src={user.profile_img ? `${API_URL}${user.profile_img}` : `${API_URL}/img/profile/default.jpg`}
+                alt={user.nickname}
+                style={{ width: '20px', height: '20px', borderRadius: '50%', marginRight: '5px' }}
+              />
               {user.nickname}
             </li>
           ))}
