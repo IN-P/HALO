@@ -226,7 +226,7 @@ const skipAutoSelect = useRef(false);
     }
 
     try {
-      const res = await axios.post('http://localhost:3065/api/chat', {
+      const res = await axios.post('http://localhost:3065/api/chat', {  
         targetUserId: user.id,
         allowCreate: true,
       }, { withCredentials: true });
