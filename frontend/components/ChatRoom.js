@@ -22,6 +22,28 @@ const ChatRoom = ({
 
   const [showReportMenu, setShowReportMenu] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [isBlockedByMe, setIsBlockedByMe] = useState(false);
+const [isBlockingMe, setIsBlockingMe] = useState(false);
+useEffect(() => {
+  const fetchBlockStatus = async () => {
+    if (!selectedUser) return;
+
+    try {
+      const res = await fetch(`http://localhost:3065/block/status/${selectedUser.id}`, {
+        credentials: 'include',
+      });
+      const data = await res.json();
+      setIsBlockedByMe(data.isBlockedByMe);
+      setIsBlockingMe(data.isBlockingMe);
+    } catch (err) {
+      console.error('차단 상태 가져오기 실패:', err);
+    }
+  };
+
+  fetchBlockStatus();
+}, [selectedUser]);
+
+
 
 const API_URL = 'http://localhost:3065';
   useEffect(() => {
@@ -309,38 +331,57 @@ const API_URL = 'http://localhost:3065';
         </div>
       )}
 
-      {/* 메시지 입력 */}
-      <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-        <input
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyPress={(e) => {
-            if (e.key === 'Enter') onSendMessage();
-          }}
-          placeholder="메시지를 입력하세요"
-          style={{
-            flex: 1,
-            padding: '12px 16px',
-            fontSize: '16px',
-            borderRadius: '8px',
-            border: '1px solid #ccc',
-          }}
-        />
-        <button
-          onClick={onSendMessage}
-          style={{
-            padding: '12px 20px',
-            fontSize: '16px',
-            borderRadius: '8px',
-            border: 'none',
-            background: '#4a90e2',
-            color: '#fff',
-            cursor: 'pointer',
-          }}
-        >
-          전송
-        </button>
-      </div>
+     {/* 메시지 입력 */}
+{isBlockedByMe ? (
+  <div style={{ textAlign: 'center', color: '#999', padding: '16px' }}>
+    ⚠️ 차단한 유저입니다. 메시지를 보낼 수 없습니다.
+  </div>
+) : (
+  <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+    <input
+      value={message}
+      onChange={(e) => setMessage(e.target.value)}
+      onKeyPress={(e) => {
+        if (e.key === 'Enter' && !isBlockingMe) {
+          onSendMessage();
+        }
+      }}
+      placeholder="메시지를 입력하세요"
+      disabled={isBlockingMe}
+      style={{
+        flex: 1,
+        padding: '12px 16px',
+        fontSize: '16px',
+        borderRadius: '8px',
+        border: '1px solid #ccc',
+        background: isBlockingMe ? '#f2f2f2' : 'white',
+        color: isBlockingMe ? '#aaa' : 'black',
+      }}
+    />
+    <button
+      onClick={onSendMessage}
+      disabled={isBlockingMe}
+      style={{
+        padding: '12px 20px',
+        fontSize: '16px',
+        borderRadius: '8px',
+        border: 'none',
+        background: isBlockingMe ? '#ccc' : '#4a90e2',
+        color: '#fff',
+        cursor: isBlockingMe ? 'not-allowed' : 'pointer',
+      }}
+    >
+      {isBlockingMe ? '전송 불가' : '전송'}
+    </button>
+  </div>
+)}
+
+{isBlockingMe && !isBlockedByMe && (
+  <div style={{ color: '#f00', fontSize: 12, textAlign: 'right', marginTop: 4 }}>
+    ⚠️ 메시지를 보낼 수 없습니다.
+  </div>
+)}
+
 
       {/* 나가기 버튼 */}
       <div style={{ marginTop: '16px', textAlign: 'right' }}>
