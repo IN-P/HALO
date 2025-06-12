@@ -116,6 +116,7 @@ app.use("/log", activeLog); //## 준혁
 app.use("/achievements", achievements) // ## 준혁
 app.use("/badges", badges) // ## 준혁
 
+app.use('/img/player', express.static(path.join(__dirname, 'uploads/player')));
 app.use('/event/quizzes', quizRouter);  //## 경미
 app.use('/event/admin', adminQuizRouter);  //## 경미
 app.use('/store/draw', playerDrawRouter);   //## 경미

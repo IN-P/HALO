@@ -106,7 +106,9 @@ const Sidebar = ({ showNotification, onToggleNotification, notificationCount, th
           <Link href="/chat" passHref>
             <SidebarButton icon={<MessageOutlined />}>채팅 (DM)</SidebarButton>
           </Link>
-          <SidebarButton icon={<ShopOutlined />}>상점</SidebarButton>
+          <Link href="/store" passHref>
+            <SidebarButton icon={<ShopOutlined />}>상점</SidebarButton>
+          </Link>
           <Link href="/quiz" passHref>
             <SidebarButton icon={<GiftOutlined />}>이벤트</SidebarButton>
           </Link>
