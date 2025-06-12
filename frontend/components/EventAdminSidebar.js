@@ -20,7 +20,7 @@ const EventAdminSidebar = () => {
         <Link href="/admin/event/roulette">룰렛 참여</Link>
       </Menu.Item>
       <Menu.Item key="quiz">
-        <Link href="/admin/quiz/index">퀴즈 참여</Link>
+        <Link href="/admin/quiz">퀴즈 참여</Link>
       </Menu.Item>
     </Menu>
   );
