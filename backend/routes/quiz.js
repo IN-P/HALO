@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const { Quiz, QuizOption, UsersQuiz } = require("../models");
+const { Quiz, QuizOption, UsersQuiz,UserPoint, PointLogs } = require("../models");
+const { isLoggedIn } = require('./middlewares');
 
 // 1. 전체 퀴즈 목록 (문제만)
-router.get("/", async (req, res) => {
+router.get("/", isLoggedIn, async (req, res) => {
     const quizzes = await Quiz.findAll({
         attributes: ["id", "question", "point_reward", "createdAt"],
         order: [["createdAt", "desc"]],
@@ -12,7 +13,7 @@ router.get("/", async (req, res) => {
 });
 
 // 2. 특정 퀴즈 보기 + 선택지
-router.get("/:id", async (req, res) => {
+router.get("/:id", isLoggedIn, async (req, res) => {
     const quiz = await Quiz.findByPk(req.params.id, {
         attributes: ["id", "question", "point_reward"],
         include: [
@@ -28,8 +29,10 @@ router.get("/:id", async (req, res) => {
 });
 
 // 3. 퀴즈 응답 제출 (정답 판별 + 저장)
-router.post("/:id/submit", async (req, res) => {
-    const { users_id, quizOption_id } = req.body;
+router.post("/:id/submit", isLoggedIn, async (req, res) => {
+    // const { users_id, quizOption_id } = req.body;
+    const { quizOption_id } = req.body;
+    const users_id = req.user.id;
 
     // 중복 응시 체크 먼저
     const alreadySubmitted = await UsersQuiz.findOne({
@@ -71,12 +74,45 @@ router.post("/:id/submit", async (req, res) => {
         point_earned: point,    // 맞으면 포인트, 틀리면 0
     });
 
+    // 포인트 적립 처리 (정답일 경우만)
+    if (isCorrect && point > 0) {
+        const [userPoint] = await UserPoint.findOrCreate({
+            where: { users_id },
+            defaults: { total_points: 0 },
+        });
+        userPoint.total_points += point;
+        await userPoint.save();
+
+        await PointLogs.create({
+            type: point,
+            source: 'QUIZ',
+            users_id,
+        });
+    }
+
     res.json({
         message: "퀴즈 결과 저장 완료",
         is_correct: isCorrect,
         point_earned: point,
         result_id: result.id,
     });
+});
+
+// 퀴즈 보기(옵션) 불러오기
+router.get("/:id/options", isLoggedIn, async (req, res) => {
+    try {
+        const quizId = req.params.id;
+
+        const options = await QuizOption.findAll({
+            where: {quizzes_id: quizId},
+            attributes: ['id', 'question_option'],  // 정답 유출 방지 위해 answer 제외
+        });
+
+        res.json(options);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({error: '옵션 불러오기 실패'});
+    }
 });
 
 module.exports = router;

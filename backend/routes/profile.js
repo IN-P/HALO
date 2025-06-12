@@ -2,19 +2,18 @@ const express = require("express");
 const router = express.Router();
 const { isLoggedIn } = require("./middlewares");
 const { User, Block, Achievement, Badge, UserInfo, Follow, Myteam, Post, UserPoint, UserPayment, ActiveLog, Image } = require("../models");
-const { assignTeamBadge } = require('../services/badge/trigger');
+const { assignTeamBadge } = require('../services/badge/teambadge');
 
 // userId 로 사용자 프로필 불러오기
 router.get("/:userId", async (req, res, next) => {
   try {
     const { userId } = req.params;
 
-    if (isNaN(userId)) { return res.status(400).json({ message: "유효하지 않은 사용자 ID입니다." }); }
-
-    const userIdNum = parseInt(userId, 10);
+    const existUser = await User.findByPk(userId);
+    if (!existUser) { return res.status(404).json("존재하지 않는 계정입니다") }
 
     const fullUser = await User.findOne({
-      where: { id: userIdNum },
+      where: { id: userId },
       attributes: ["id", "nickname", "profile_img", "theme_mode", "is_private", "myteam_id", "role", "email"],
       include: [
         { model: UserInfo },
@@ -28,7 +27,7 @@ router.get("/:userId", async (req, res, next) => {
           { model: User, as: 'Followings', attributes: ['id', 'nickname', 'profile_img'], },
         ], },
         { model: Achievement, attributes: ['id', 'name', 'description'], through: { attributes: ['createdAt', 'updatedAt'], }, },
-        { model: Badge, attributes: ['id', 'name', 'img', 'description'], through: { attributes: ['createdAt', 'updatedAt'], }, },
+        { model: Badge, attributes: ['id', 'name', 'img', 'description'], through: {   }, },
         { model: Myteam, attributes: ['id', 'teamname', 'teamcolor', 'region'], },
         { model: Block, as: 'Blockeds', include: [
           { model: User, as: 'Blocked', attributes: ['id', 'nickname', 'profile_img'], } ] },
@@ -147,13 +146,12 @@ router.patch("/update", isLoggedIn, async (req, res, next) => {
       await User.update(userFields, { where: { id: userId } });
     }
 
-    const userInfoFields = {};
-    if (introduce !== undefined) userInfoFields.introduce = introduce;
-    if (phone !== undefined) userInfoFields.phone = phone;
+  const userInfoFields = {};
+  if (introduce !== undefined) { userInfoFields.introduce = introduce === "" ? null : introduce; }
+  if (phone !== undefined) { userInfoFields.phone = phone === "" ? null : phone; }
+  if (Object.keys(userInfoFields).length > 0) {
+    await UserInfo.update(userInfoFields, { where: { users_id: userId } }); }
 
-    if (Object.keys(userInfoFields).length > 0) {
-      await UserInfo.update(userInfoFields, { where: { users_id: userId } });
-    }
 
     // 응원팀 변경 시 뱃지 재부여
     if (myteam_id !== undefined) { await assignTeamBadge(userId); }

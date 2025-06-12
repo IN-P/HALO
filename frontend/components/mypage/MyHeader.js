@@ -10,7 +10,7 @@ import ProfileShare from "./ProfileShare"; // ✅ default import
 import ReportButton from "../ReportButton";//율비
 import ReportModal from "../ReportModal"; //율비
 
-const MyHeader = ({ data, onClickSetting, isMyProfile }) => {
+const MyHeader = ({ data, onClickSetting, isMyProfile, reload }) => {
   const [showShare, setShowShare] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);//율비
 

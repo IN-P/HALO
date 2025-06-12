@@ -61,18 +61,18 @@ const MySettingMain = ({ data, onClose, reload, reloadLogInUser }) => {
               style={{ fontSize: "20px", cursor: "pointer", marginLeft: "12px" }}
               onClick={onClose}
             >
-              <CloseOutlined />
+              <CloseOutlined onClick={reload} />
             </span>
           </div>
 
           {selectedTab === "profile" && <MySettingProfile data={data} reload={reload} reloadLogInUser={reloadLogInUser} />}
           {selectedTab === "balance" && <MySettingBalance user={user} data={data} />}
           {selectedTab === "password" && <MySettingPassword data={data} />}
-          {selectedTab === "block" && <MySettingBlock data={data} />}
+          {selectedTab === "block" && <MySettingBlock data={data} reload={reload} />}
           {selectedTab === "achievement" && <MySettingAchievement data={data} />}
           {selectedTab === "badge" && <MySettingBadges data={data} />}
           {selectedTab === "activeLog" && <MySettingActiveLog userId={userId} />}
-          {selectedTab === "followers" && <MySettingFollowers userId={userId} />}
+          {selectedTab === "followers" && <MySettingFollowers data={data} />}
           {selectedTab === "followings" && <MySettingFollowings data={data} />}
         </Col>
       </Row>

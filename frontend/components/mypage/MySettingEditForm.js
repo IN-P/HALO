@@ -65,7 +65,7 @@ const MySettingEditForm = ({ data, reload, reloadLogInUser }) => {
   // 닉네임
   const [editNicknameOpen, setNicknameEditOpen] = useState(false);
   const toggleNickname = () => { setNicknameEditOpen(prev => !prev); };
-  const [newNickname, setNewNickname] = useState(data?.nickname || "");
+  const [newNickname, setNewNickname] = useState(user?.nickname || "");
 
   // 이메일
   const [editEmailOpen, setEmailEditOpen] = useState(false);
@@ -116,7 +116,7 @@ const MySettingEditForm = ({ data, reload, reloadLogInUser }) => {
               style={{ width: "100%", height: "48px", fontSize: "16px" }}
               placeholder="사용자 이름을 입력해주세요"
               prefix={<UserOutlined />}
-              suffix={<Tooltip title="이 이름은 중복 사용이 불가합니다">
+              suffix={<Tooltip title="정책에 위배된 이름을 사용하실 경우 경고없이 제재될 수 있습니다">
                 <InfoCircleOutlined style={{ color: "rgba(0,0,0,.45)" }} />
               </Tooltip>}
             />
@@ -131,8 +131,8 @@ const MySettingEditForm = ({ data, reload, reloadLogInUser }) => {
                   }, { withCredentials: true });
 
                   message.success("닉네임이 성공적으로 변경되었습니다.");
-                  router.push(`/profile/${newNickname}`);
                   toggleNickname();
+                  reload(); reloadLogInUser();
                 } catch (err) {
                   console.error(err);
                   message.error("닉네임 변경에 실패했습니다.");
@@ -190,7 +190,7 @@ const MySettingEditForm = ({ data, reload, reloadLogInUser }) => {
       )}
       
       {/* 휴대전화 */}
-      <StyledBar onClick={togglePhone}>{user?.UserInfo?.phone || "전화번호 없음"}</StyledBar>
+      <StyledBar onClick={togglePhone}>{user?.UserInfo?.phone || data?.UserInfo?.phone || "전화번호 없음"}</StyledBar>
       {editPhoneOpen && (
         <StyledEditBar>
           <Title>휴대전화번호 변경</Title>
@@ -211,7 +211,8 @@ const MySettingEditForm = ({ data, reload, reloadLogInUser }) => {
               type="primary"
               onClick={async () => {
                 try {
-                  await axios.patch("http://localhost:3065/user", {
+                  // 공백 포함해서 newPhone 그대로 보냄
+                  await axios.patch("http://localhost:3065/profile/update", {
                     phone: newPhone,
                   }, { withCredentials: true });
 
@@ -255,7 +256,7 @@ const MySettingEditForm = ({ data, reload, reloadLogInUser }) => {
               type="primary"
               onClick={async () => {
                 try {
-                  await axios.patch("http://localhost:3065/user", {
+                  await axios.patch("http://localhost:3065/profile/update", {
                     introduce: newIntroduce,
                   }, { withCredentials: true });
 

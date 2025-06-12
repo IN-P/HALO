@@ -5,7 +5,7 @@ import bookmark_IN from './bookmark_IN';
 import comment_IN from './comment_IN';
 import hashtag_IN from './hashtag_IN';
 import regram_IN from './regram_IN';
-import notification_JH from './notification_JH'; //준혁추가
+import notification_JH from './notification_JH';
 import follow_YB from './follow_YB';
 import reportReducer from './report_YB';
 import block from './block';
@@ -17,7 +17,8 @@ import adminPlayer from './adminPlayer_GM';
 import playerDraw from './playerDraw_GM'; 
 import activeLog_JH from './activeLog_JH';
 import reportResult_YB from './reportResult_YB';
-import badge_JH from './badge_JH'; //준혁
+import badge_JH from './badge_JH';
+import achievement_JH from './achievement_JH';
 
 const rootReducer = combineReducers({
   index: (state = {}, action) => {
@@ -39,14 +40,15 @@ const rootReducer = combineReducers({
   block,
   user_YG,
   profile_jh,
-  notification_JH, //준혁추가
+  notification_JH,
   quiz,
   adminQuiz,
   adminPlayer,
   playerDraw,
-  activeLog_JH, //준혁
+  activeLog_JH,
   reportResult_YB,
-  badge_JH, //준혁
+  badge_JH,
+  achievement_JH,
 
 });
 

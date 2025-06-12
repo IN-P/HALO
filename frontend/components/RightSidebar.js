@@ -85,11 +85,13 @@ const RightSidebar = () => {
         3: { label: '신고 관리', path: '/admin/report/report'},
         4: { label: '문의 관리', path: '/admin/inquiry/inquiry' },
         5: { label: '유저 관리', path: '/admin/users' },
-        6: { label: '보안 로그', path: '/admin/security' },
+        6: { label: '보안 로그', path: '/admin/logs' },
         7: { label: '커스텀 관리', path: '/admin/custom' },
         8: { label: '업적 관리', path: '/admin/achievements' },
         9: { label: '채팅 관리', path: '/admin/chat' },
-        10: { label: '포스트 관리', path: '/admin/posts' },
+        10: { label: '포스트 관리', path: '/admin/post/posts' },
+        11: { label: '분석 리포트', path: '/admin/analytics/analytics' },
+        12: { label: '이벤트 관리', path: '/admin/event/roulette' },
     };
 
     return (

@@ -94,6 +94,23 @@ router.delete('/:id', async (req, res, next) => {
     const report = await Report.findByPk(req.params.id);
     if (!report) return res.status(404).json({ message: '해당 신고 없음' });
 
+    // ✅ 연결된 ReportResult 확인
+    const result = await require('../models').ReportResult.findOne({
+      where: { id: report.id }
+    });
+
+    // ✅ 유저 상태 복구 (정상: 1)
+    if (result) {
+      await User.update(
+        { user_status_id: 1 },
+        { where: { id: result.user_id } }
+      );
+
+      // ReportResult도 삭제
+      await result.destroy();
+    }
+
+    // 신고 삭제
     await report.destroy();
     res.status(204).send();
   } catch (error) {
@@ -101,5 +118,6 @@ router.delete('/:id', async (req, res, next) => {
     next(error);
   }
 });
+
 
 module.exports = router;

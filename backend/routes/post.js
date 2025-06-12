@@ -3,10 +3,13 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { Post, User, Image, Comment, Hashtag, ActiveLog, Notification, Block } = require('../models');
+const { Post, User, Image, Comment, Hashtag, ActiveLog, Notification, Block , Mention } = require('../models'); // 재원 맨션
 const { isLoggedIn } = require('./middlewares');
 const { Op } = require('sequelize');
 const { sendNotification } = require('../notificationSocket');
+
+const { checkAndAssignPostAchievements } = require('../services/achievement/post') //준혁
+const { checkAndAssignLikeAchievements } = require('../services/achievement/like'); // 준혁
 
 // uploads 폴더 생성
 try {
@@ -23,10 +26,11 @@ const upload = multer({
       done(null, 'uploads/post');
     },
     filename(req, file, done) {
-      const ext = path.extname(file.originalname);
-      const basename = path.basename(file.originalname, ext);
-      done(null, basename + '_' + new Date().getTime() + ext);
-    },
+      const originalname = Buffer.from(file.originalname, 'latin1').toString('utf8');
+      const ext = path.extname(originalname);
+      const basename = path.basename(originalname, ext);
+      done(null, basename + '_' + Date.now() + ext);
+    }
   }),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
 });
@@ -34,11 +38,15 @@ const upload = multer({
 // 게시글 등록
 router.post('/', isLoggedIn, async (req, res, next) => {
   try {
+    console.log('req.body.receiver_id:', req.body.receiver_id);
     const hashtags = req.body.content.match(/#[^\s#]+/g);
     const post = await Post.create({
       content: req.body.content,
       user_id: req.user.id,
       private_post: req.body.private_post ?? false,
+      location: req.body.location || null,
+      latitude: req.body.latitude || null,
+      longitude: req.body.longitude || null,
     });
 
     // 해시태그 등록/연결
@@ -52,11 +60,51 @@ router.post('/', isLoggedIn, async (req, res, next) => {
     }
 
     // 이미지 등록
-    if (req.body.images) {
-      const images = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
-      for (const src of images) {
-        await Image.create({ src, post_id: post.id });
+    const user = await User.findByPk(req.user.id);
+    const teamId = user.myteam_id || 1;
+
+    let images = req.body.images;
+    if (typeof images === 'string') {
+      try {
+        images = JSON.parse(images);
+      } catch {
+        images = [images];
       }
+    }
+    if (!images || (Array.isArray(images) && images.length === 0)) {
+      const dummySrc = `team_logo_${teamId}.png`;
+      await Image.create({ src: dummySrc, post_id: post.id });
+    } else {
+      const imgArr = Array.isArray(images) ? images : [images];
+      for (const src of imgArr) {
+        if (src && src.trim() !== '') {
+          await Image.create({ src, post_id: post.id });
+        }
+      }s
+    }
+ 
+    if (req.body.receiver_id) {
+      await Mention.create({
+        senders_id: req.user.id,
+        receiver_id: req.body.receiver_id,
+        target_type: 'POST',
+        target_id: post.id,
+        context: req.body.content,
+        createAt: new Date(),
+      });
+      console.log('✅ Mention 저장 완료');
+
+      const fullPost = await Post.findOne({
+        where: { id: post.id },
+        include: [
+          { model: Image },
+          { model: User, attributes: ['id', 'nickname'] },
+          { model: Comment, include: [{ model: User, attributes: ['id', 'nickname'] }] },
+          { model: User, as: 'Likers', attributes: ['id'] },
+          { model: User, as: 'Bookmarkers', attributes: ['id'] },
+          { model: Hashtag, attributes: ['id', 'name'] },
+        ],
+      });
     }
 
     const fullPost = await Post.findOne({
@@ -71,32 +119,26 @@ router.post('/', isLoggedIn, async (req, res, next) => {
       ],
     });
 
-    // 활동 내역 생성 - 준혁추가
     await ActiveLog.create({
       action: "CREATE",
       target_id: post.id,
       users_id: req.user.id,
       target_type_id: 1,
     })
-    // 준혁 추가
 
-    // 윫 - 차단된 댓글 필터링
+    const postCount = await Post.count({ where: { user_id: req.user.id } });
+    await checkAndAssignPostAchievements(req.user.id, postCount); // 준혁
+
     if (req.user) {
       const myId = req.user.id;
       const blockedRelations = await Block.findAll({
-        where: {
-          [Op.or]: [
-            { from_user_id: myId },
-            { to_user_id: myId },
-          ]
-        }
+        where: {[Op.or]:[{ from_user_id: myId },{ to_user_id: myId },]}
       });
       const blockedUserIds = blockedRelations.map(b =>
         b.from_user_id === myId ? b.to_user_id : b.from_user_id
       );
       fullPost.Comments = fullPost.Comments.filter(c => !blockedUserIds.includes(c.User.id));
     }
-    /////////////
 
     res.status(201).json(fullPost);
   } catch (error) {
@@ -181,7 +223,13 @@ router.patch('/:postId', isLoggedIn, async (req, res, next) => {
   const hashtags = req.body.content.match(/#[^\s#]+/g);
   try {
     await Post.update(
-      { content: req.body.content, private_post: req.body.private_post ?? false },
+      { 
+        content: req.body.content, 
+        private_post: req.body.private_post ?? false,
+        location: req.body.location || null,
+        latitude: req.body.latitude || null,
+        longitude: req.body.longitude || null,
+      },
       { where: { id: req.params.postId, user_id: req.user.id } }
     );
 
@@ -309,6 +357,8 @@ router.patch('/:postId/like', isLoggedIn, async (req, res, next) => {
       });
     }
     //
+    // 업적 부여
+    await checkAndAssignLikeAchievements(req.user.id);
 
     res.status(200).json({ basePost: fullOrigin });
   } catch (error) {
@@ -374,7 +424,6 @@ router.post('/:postId/regram', isLoggedIn, async (req, res, next) => {
       user_id: req.user.id,
       regram_id: targetPost.id,
       content: req.body.content || '',
-      private_post: req.body.private_post ?? false,
     });
 
     // 원본글 최신 데이터 포함 응답 (여기도 마찬가지!)
@@ -490,5 +539,77 @@ router.delete('/:postId/bookmark', isLoggedIn, async (req, res, next) => {
     next(error);
   }
 });
+
+// GET /post/:postId 단일 상세 조회
+router.get('/:postId', async (req, res, next) => {
+  try {
+    const post = await Post.findOne({
+      where: { id: req.params.postId },
+      include: [
+        { model: User, attributes: ['id', 'nickname', 'profile_img', 'last_active', 'is_private'] },
+        { model: Image },
+        { model: Comment, include: [{ model: User, attributes: ['id', 'nickname', 'profile_img', 'last_active'] }] },
+        { model: User, as: 'Likers', attributes: ['id'] },
+        { model: User, as: 'Bookmarkers', attributes: ['id'] },
+        { model: Hashtag, attributes: ['id', 'name'] },
+        {
+          model: Post,
+          as: 'Regram',
+          include: [
+            { model: User, attributes: ['id', 'nickname', 'profile_img', 'last_active', 'is_private'] },
+            { model: Image },
+          ],
+        },
+      ],
+    });
+    if (!post) return res.status(404).send('존재하지 않는 게시글입니다.');
+
+    const me = req.user; // 로그인 안했으면 undefined
+
+    // [1] 리그램글: 원본글이 나만보기/비공개/팔로워만 필터
+    if (post.regram_id && post.Regram) {
+      const origin = post.Regram;
+      // 1. 원본이 나만보기
+      if (origin.private_post && (!me || me.id !== origin.user_id)) {
+        return res.status(403).send('비공개 글입니다.');
+      }
+      // 2. 원본작성자 계정이 비공개, 로그인 안했거나 팔로워가 아니면 차단
+      if (origin.User && origin.User.is_private === 1) {
+        // 본인이 아니고, 팔로워 아니면
+        if (!me || (me.id !== origin.User.id && !(await isFollower(me.id, origin.User.id)))) {
+          return res.status(403).send('비공개 계정의 글입니다.');
+        }
+      }
+    }
+    // [2] 일반글: 글 자체가 나만보기/비공개/팔로워만 필터
+    else {
+      // 글이 나만보기
+      if (post.private_post && (!me || me.id !== post.user_id)) {
+        return res.status(403).send('비공개 글입니다.');
+      }
+      // 글쓴이 계정이 비공개
+      if (post.User && post.User.is_private === 1) {
+        // 본인이 아니고, 팔로워 아니면
+        if (!me || (me.id !== post.User.id && !(await isFollower(me.id, post.User.id)))) {
+          return res.status(403).send('비공개 계정의 글입니다.');
+        }
+      }
+    }
+    res.status(200).json(post);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+
+// 👉 팔로워 여부 확인 유틸 함수 예시
+async function isFollower(meId, userId) {
+  if (!meId || !userId) return false;
+  const { Follow } = require('../models');
+  const follow = await Follow.findOne({
+    where: { follower_id: meId, following_id: userId }
+  });
+  return !!follow;
+}
 
 module.exports = router;

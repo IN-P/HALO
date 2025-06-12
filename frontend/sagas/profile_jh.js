@@ -12,16 +12,18 @@ function loadUserInfoAPI(userId) {
 }
 
 function* loadUserInfo(action) {
+  console.log("loadUserInfo action.data:", action.data);
   try {
-    const res = yield call(loadUserInfoAPI, action.data);
+    const result = yield call(loadUserInfoAPI, action.data);
     yield put({
       type: LOAD_USER_INFO_SUCCESS,
-      data: res.data,
+      data: result.data,
     });
-  } catch (error) {
+  } catch (err) {
     yield put({
       type: LOAD_USER_INFO_FAILURE,
-      error: error.response?.data || error.message,
+      error: err.response?.data || err.message,
+      statusCode: err.response?.status,
     });
   }
 }

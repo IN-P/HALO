@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useSelector } from "react-redux";
 
-const FollowList = ({ nickname, type, onUpdate }) => {
+const FollowList = ({ data, type, onUpdate }) => {
   const [users, setUsers] = useState([]);
+  const me = useSelector((state) => state.user_YG?.user);
 
   const load = async () => {
     try {
-      const endpoint = `http://localhost:3065/follow/${type}/nickname/${nickname}`;
+      const endpoint = `http://localhost:3065/follow/${type}/nickname/${data?.nickname}`;
       const res = await axios.get(endpoint, { withCredentials: true });
       setUsers(res.data);
     } catch (err) {
@@ -15,8 +17,8 @@ const FollowList = ({ nickname, type, onUpdate }) => {
   };
 
   useEffect(() => {
-    if (nickname) load();
-  }, [nickname, type]);
+    if (data?.nickname) load();
+  }, [data?.nickname, type]);
 
   const handleRemove = async (targetUserId) => {
     try {
@@ -51,24 +53,26 @@ const FollowList = ({ nickname, type, onUpdate }) => {
                 style={{ width: 40, height: 40, borderRadius: '50%', marginRight: 10, objectFit: 'cover' }}
               />
               <a
-                href={`/profile/${user.nickname}`}
+                href={`/profile/${user.id}`}
                 style={{ flexGrow: 1, textDecoration: 'none', color: '#1890ff', fontWeight: 'bold' }}
               >
                 {user.nickname}
               </a>
-              <button
-                onClick={() => handleRemove(user.id)}
-                style={{
-                  background: '#ff4d4f',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 5,
-                  padding: '5px 10px',
-                  cursor: 'pointer'
-                }}
-              >
-                {type === 'followers' ? '삭제' : '언팔로우'}
-              </button>
+              {me?.nickname === data?.nickname && (
+                <button
+                  onClick={() => handleRemove(user.id)}
+                  style={{
+                    background: '#ff4d4f',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 5,
+                    padding: '5px 10px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {type === 'followers' ? '삭제' : '언팔로우'}
+                </button>
+              )}
             </li>
           ))
         )}

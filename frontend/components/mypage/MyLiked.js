@@ -75,6 +75,7 @@ const MyLiked = ({ data }) => {
         return (
           <PostCard key={post.id || idx}>
             <StyledImage
+              as="img"
               src={
                 imageSrc
                   ? `http://localhost:3065/uploads/post/${imageSrc}`
