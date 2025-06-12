@@ -23,7 +23,7 @@ const ChatRoom = ({
   const [showReportMenu, setShowReportMenu] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
 
-
+const API_URL = 'http://localhost:3065';
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
@@ -74,6 +74,8 @@ const ChatRoom = ({
     if (roomId) {
       socket.emit('join_room', roomId);
       console.log(`🔗 join_room emit: ${roomId}`);
+      socket.emit('mark_as_read', roomId);
+    console.log('✅ mark_as_read emit:', roomId);
     }
     return () => {
       if (roomId) {
@@ -82,6 +84,24 @@ const ChatRoom = ({
       }
     };
   }, [roomId]);
+
+  useEffect(() => {
+  const handleReceiveMessage = (message) => {
+    console.log('📩 receive_message 수신:', message);
+
+    // 현재 ChatRoom의 메시지라면 → mark_as_read emit 다시 보내기
+    if (message.roomId === roomId) {
+      console.log('✅ 현재 ChatRoom에서 새 메시지 수신 → mark_as_read emit:', roomId);
+      socket.emit('mark_as_read', roomId);
+    }
+  };
+
+  socket.on('receive_message', handleReceiveMessage);
+
+  return () => {
+    socket.off('receive_message', handleReceiveMessage);
+  };
+}, [roomId]);
 
 
   const handleExitConfirm = () => {
@@ -201,16 +221,16 @@ const ChatRoom = ({
             >
               {!isMine && sender && (
                 <img
-                  src={sender?.profile_img ?? "default.png"}
-                  alt="프로필"
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    marginRight: 8,
-                    marginLeft: 4,
-                  }}
-                />
+  src={sender?.profile_img ? `${API_URL}${sender.profile_img}` : '/default.png'}
+  alt="프로필"
+  style={{
+    width: 32,
+    height: 32,
+    borderRadius: '50%',
+    marginRight: 8,
+    marginLeft: 4,
+  }}
+/>
               )}
 
               <div style={{ maxWidth: '70%' }}>

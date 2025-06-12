@@ -24,9 +24,9 @@ function* loadComments(action) {
 // 댓글/대댓글 작성
 function addCommentAPI(data) {
   if (data.parentId) {
-    return axios.post(`http://localhost:3065/comment/${data.parentId}/reply`, { content: data.content }, { withCredentials: true });
+    return axios.post(`http://localhost:3065/comment/${data.parentId}/reply`, { content: data.content,receiver_id: data.receiver_id, }, { withCredentials: true });
   }
-  return axios.post(`http://localhost:3065/comment/post/${data.postId}`, { content: data.content }, { withCredentials: true });
+  return axios.post(`http://localhost:3065/comment/post/${data.postId}`, { content: data.content,receiver_id: data.receiver_id, }, { withCredentials: true });
 }
 function* addComment(action) {
   try {

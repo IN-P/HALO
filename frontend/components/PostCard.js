@@ -2,10 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { LIKE_POST_REQUEST, UNLIKE_POST_REQUEST } from '../reducers/post_IN';
 import { BOOKMARK_POST_REQUEST, UNBOOKMARK_POST_REQUEST } from '../reducers/bookmark_IN';
-import { FaHeart, FaRegHeart, FaRegComment, FaBookmark, FaRegBookmark, FaRetweet } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaRegComment, FaBookmark, FaRegBookmark, FaRetweet, FaShareAlt } from 'react-icons/fa';
 import PostMenu from './PostMenu';
 import PostDetailModal from './PostDetailModal';
 import ReportModal from './ReportModal';
+import MapModal from './MapModal';
 import { getTotalCommentCount } from '../utils/comment';
 import Comment from './Comment';
 
@@ -28,18 +29,38 @@ const PostCard = ({ post }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user_YG);
 
+  // ------ 리그램/원본글 구분 ------
+  const isRegram = !!post.regram_id;
+  const origin = post.Regram;
+  // 실제 렌더/로직에 사용할 "기준글"
+  const basePost = isRegram && origin ? origin : post;
+
+  // 👇 아래 변수들은 무조건 "원본" 기준!
+  const privatePost = isRegram && origin ? origin.private_post : post.private_post;
+  const location = isRegram && origin ? origin.location : post.location;
+  const latitude = isRegram && origin ? origin.latitude : post.latitude;
+  const longitude = isRegram && origin ? origin.longitude : post.longitude;
+  const userInfo = isRegram && origin ? origin.User : post.User;
+  const isAccountPrivate = isRegram && origin ? origin.User?.is_private : post.User?.is_private;
+
   const [imageIndex, setImageIndex] = useState(0);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showMapModal, setShowMapModal] = useState(false);
   const menuRef = useRef(null);
 
-  const isRegram = !!post.regram_id;
-  const origin = post.Regram;
-  const basePost = isRegram && origin ? origin : post;
+  const [showCopyToast, setShowCopyToast] = useState(false);
+  const handleCopyLink = () => {
+    const postUrl = `${window.location.origin}/post/${post.id}`;
+    navigator.clipboard.writeText(postUrl);
+    setShowCopyToast(true);
+    setTimeout(() => setShowCopyToast(false), 1300);
+  };
 
   const isMine = post.User?.id === user?.id;
 
+  // 리그램 여부/아이콘/툴팁 분기
   let myRegramPost = null;
   if (!isRegram && post.Regrams) {
     myRegramPost = post.Regrams.find(rg => rg.User?.id === user?.id);
@@ -59,9 +80,9 @@ const PostCard = ({ post }) => {
     regramIconColor = '#32e732';
     regramTooltip = '이미 리그램한 글입니다.';
   }
-
   if (isRegram && !origin) return null;
 
+  // 좋아요/북마크
   const liked = basePost.Likers?.some((u) => u.id === user?.id);
   const bookmarked = basePost.Bookmarkers?.some((u) => u.id === user?.id);
   const likeCount = basePost.Likers?.length || 0;
@@ -145,15 +166,15 @@ const PostCard = ({ post }) => {
         )}
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8, minHeight: 54 }}>
           <img
-            src={post.User?.profile_img ? `http://localhost:3065${post.User.profile_img}` : 'http://localhost:3065/img/profile/default.jpg'}
+            src={userInfo?.profile_img ? `http://localhost:3065${userInfo.profile_img}` : 'http://localhost:3065/img/profile/default.jpg'}
             alt="프로필"
             style={{ width: 54, height: 54, borderRadius: '50%', objectFit: 'cover', marginRight: 16, border: '2px solid #bbb' }}
-            onClick={() => window.location.href = `/profile/${post.User?.nickname}`}
+            onClick={() => window.location.href = `/profile/${userInfo?.nickname}`}
           />
           <div>
             <div style={{ fontWeight: 'bold', fontSize: 20, display: 'flex', alignItems: 'center', gap: 6 }}>
-              {post.User?.nickname}
-              {post.private_post && (
+              {userInfo?.nickname}
+              {privatePost && (
                 <span style={{
                   display: 'inline-block',
                   background: '#ffe3e3',
@@ -165,10 +186,22 @@ const PostCard = ({ post }) => {
                   marginLeft: 6,
                 }}>나만보기</span>
               )}
+              {isAccountPrivate === 1 && (
+                <span style={{
+                  display: 'inline-block',
+                  background: '#eee',
+                  color: '#1558d6',
+                  fontWeight: 700,
+                  fontSize: 12,
+                  padding: '2px 8px',
+                  borderRadius: 10,
+                  marginLeft: 6,
+                }}>비공개</span>
+              )}
             </div>
             <div style={{ fontSize: 13, color: '#aaa', marginTop: 2 }}>
               마지막 접속&nbsp;
-              {getRelativeTime(post.User?.last_active)}
+              {getRelativeTime(userInfo?.last_active)}
             </div>
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -183,7 +216,6 @@ const PostCard = ({ post }) => {
             />
           </div>
         </div>
-
         <div style={{ fontSize: 13, color: '#bbb', margin: '2px 0 6px 0' }}>
           작성일&nbsp;
           {post.createdAt ? new Date(post.createdAt).toLocaleString('ko-KR', {
@@ -191,14 +223,23 @@ const PostCard = ({ post }) => {
             hour: '2-digit', minute: '2-digit'
           }) : ''}
         </div>
-
+        {/* 위치(주소) */}
+        {location && (
+          <div style={{ fontSize: 15, color: '#1558d6', marginBottom: 10, cursor: 'pointer', fontWeight: 500, textDecoration: 'underline' }}
+            onClick={() => setShowMapModal(true)}>
+            {location}
+          </div>
+        )}
         <div style={{
           fontSize: 17, lineHeight: 1.6, marginBottom: 12,
           minHeight: 60, maxHeight: 130, overflowY: 'auto', overflowX: 'hidden', wordBreak: 'break-all',
         }}>
           {renderContent(post.content)}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 22, fontSize: 26, margin: '12px 0 0 0', borderTop: '1.5px solid #f2f2f2', paddingTop: 10 }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 22, fontSize: 26, margin: '12px 0 0 0',
+          borderTop: '1.5px solid #f2f2f2', paddingTop: 10
+        }}>
           <button style={iconBtnStyle} onClick={() => setShowDetailModal(true)}>
             <FaRegComment />
             <span style={countStyle}>{getTotalCommentCount(post.Comments || [])}</span>
@@ -214,6 +255,11 @@ const PostCard = ({ post }) => {
           <button style={iconBtnStyle} onClick={bookmarked ? onUnbookmark : onBookmark}>
             {bookmarked ? <FaBookmark color="#007bff" /> : <FaRegBookmark />}
             <span style={countStyle}>{bookmarkCount}</span>
+          </button>
+          {/* 공유(주소복사) 아이콘 */}
+          <button style={iconBtnStyle} onClick={handleCopyLink} title="공유 링크 복사">
+            <FaShareAlt />
+            <span style={{ fontSize: 16, marginLeft: 2, fontWeight: 500 }}>공유</span>
           </button>
         </div>
         <Comment
@@ -258,6 +304,22 @@ const PostCard = ({ post }) => {
         regramTooltip={regramTooltip}
         showReportModal={showReportModal}
         setShowReportModal={setShowReportModal}
+      />
+      {showCopyToast && (
+        <div style={{
+          position: 'fixed', bottom: 48, left: '50%', transform: 'translateX(-50%)',
+          background: '#222', color: '#fff', padding: '12px 26px', borderRadius: 10, fontSize: 16,
+          zIndex: 3000, boxShadow: '0 4px 16px rgba(0,0,0,0.15)'
+        }}>
+          링크가 복사되었습니다!
+        </div>
+      )}
+      <MapModal
+        visible={showMapModal}
+        onClose={() => setShowMapModal(false)}
+        location={location}
+        latitude={latitude}
+        longitude={longitude}
       />
     </div>
   );

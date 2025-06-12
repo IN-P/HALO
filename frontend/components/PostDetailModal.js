@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FaHeart, FaRegHeart, FaRegComment, FaBookmark, FaRegBookmark, FaRetweet } from 'react-icons/fa';
 import Comment from './Comment';
 import ReportModal from './ReportModal';
+import MapModal from './MapModal';
 
 const IMAGE_SIZE = { width: 540, height: 640 };
 
@@ -19,9 +20,18 @@ const PostDetailModal = ({
   const prevImage = () => setImageIndex(i => (i > 0 ? i - 1 : images.length - 1));
   const nextImage = () => setImageIndex(i => (i < images.length - 1 ? i + 1 : 0));
 
-  // 작성자/시간
+  // 지도 모달용 state
+  const [showMapModal, setShowMapModal] = useState(false);
+
+  // 작성일/접속시간
   const baseDate = post.User?.last_active ? new Date(post.User.last_active) : new Date(post.createdAt);
   const minutesAgo = Math.floor((Date.now() - baseDate.getTime()) / 60000);
+
+  // 작성일 텍스트
+  const writtenAt = post.createdAt ? new Date(post.createdAt).toLocaleString('ko-KR', {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit'
+  }) : '';
 
   // 본문 내용 렌더링
   const renderContent = (content) =>
@@ -61,7 +71,6 @@ const PostDetailModal = ({
             </>
           )}
         </div>
-
         {/* 오른쪽: 상세 본문+아이콘+댓글 */}
         <div style={{
           flex: 1,
@@ -83,12 +92,26 @@ const PostDetailModal = ({
             />
             <div>
               <div style={{ fontWeight: 'bold', fontSize: 20 }}>{post.User?.nickname}</div>
-              <div style={{ fontSize: 14, color: '#888' }}>
-                {minutesAgo < 1 ? '방금 전' : `${minutesAgo}분 전`}
+              <div style={{ fontSize: 13, color: '#aaa', marginTop: 2 }}>
+                마지막 접속&nbsp;
+                {post.User?.last_active
+                  ? (minutesAgo < 1 ? '방금 전' : `${minutesAgo}분 전`)
+                  : '-'}
               </div>
             </div>
           </div>
-
+          {/* 작성일 */}
+          <div style={{ fontSize: 13, color: '#bbb', margin: '2px 0 6px 0' }}>
+            작성일&nbsp;
+            {writtenAt}
+          </div>
+          {/* 위치(주소) */}
+          {post.location && (
+            <div style={{ fontSize: 15, color: '#1558d6', marginBottom: 10, cursor: 'pointer', fontWeight: 500, textDecoration: 'underline' }}
+              onClick={() => setShowMapModal(true)}>
+              {post.location}
+            </div>
+          )}
           {/* 본문/리그램 */}
           <div style={{
             fontSize: 17,
@@ -102,7 +125,6 @@ const PostDetailModal = ({
           }}>
             {renderContent(post.content)}
           </div>
-
           {/* 아이콘/카운트 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 22, fontSize: 26, marginBottom: 8 }}>
             <div style={iconBtnStyle}>
@@ -148,6 +170,12 @@ const PostDetailModal = ({
           }}
           onClick={onClose}
         >×</button>
+        {/* 지도 모달 */}
+        <MapModal
+          visible={showMapModal}
+          onClose={() => setShowMapModal(false)}
+          location={post.location}
+        />
       </div>
     </div>
   );
