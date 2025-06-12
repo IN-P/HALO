@@ -76,12 +76,12 @@ const MyPost = ({ data, isBlocked, isBlockedByTarget }) => {
         .map((post, idx) => (
           <PostCard key={post.id || idx}>
             <StyledImage
+              as="img"
               src={
                 post.Images?.[0]?.src
                   ? `http://localhost:3065/uploads/post/${post.Images[0].src}`
                   : "https://placehold.co/300x250"
               }
-              preview={false}
               alt={post.content || "post image"}
             />
             {post.regram_id !== null && <RegramIcon />}

@@ -2,6 +2,7 @@ import produce from "immer";
 
 export const initialState = {
   data: null,
+  statusCode: null,
   loadUserInfoLoading: false,
   loadUserInfoDone: false,
   loadUserInfoError: null,
@@ -26,7 +27,7 @@ const profile_jh = (state = initialState, action) =>
         break;
       case LOAD_USER_INFO_FAILURE:
         draft.loadUserInfoLoading = false;
-        draft.loadUserInfoError = action.error;
+        draft.statusCode = action.statusCode || null;
         break;
       default:
         break;

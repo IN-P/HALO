@@ -77,11 +77,22 @@ module.exports = (sequelize, DataTypes) => {
       through: 'user_achievements',
       timestamps: true,
     });
-
+    // 준혁 수정
     db.User.belongsToMany(db.Badge, {
-      through: 'user_badges',
+      through: db.UserBadge,
+      foreignKey: 'user_id',
+      otherKey: 'badge_id',
       timestamps: true,
     });
+
+    db.User.hasOne(db.UserBadge, {
+      as: 'selected',
+      foreignKey: 'user_id',
+      scope: { isSelected: true },
+    });
+
+    db.UserBadge.belongsTo(db.Badge, { foreignKey: 'badge_id' });
+    //
 
     db.User.hasMany(db.Notification, { foreignKey: 'users_id', onDelete: 'CASCADE' });
     db.User.hasMany(db.ActiveLog, { foreignKey: 'users_id', onDelete: 'CASCADE' });
