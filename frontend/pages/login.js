@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useDispatch, useSelector } from 'react-redux';
+import CatLottie from '../components/CatLottie';
 import { LOG_IN_REQUEST } from '../reducers/user_YG';
 import {
   Row,
@@ -102,12 +103,9 @@ const LoginPage = () => {
             bordered={false}
             style={{ borderRadius: 20, boxShadow: '0 15px 40px rgba(0,0,0,0.25)', padding: '30px 24px' }}
           >
-            <Space direction="vertical" style={{ width: '100%' }} align="center">
-              <Title level={2} style={{ textAlign: 'center' }}>
-                <SmileOutlined style={{ marginRight: 8 }} /> Welcome to <span style={{ color: '#1890ff' }}>Halo</span>
-              </Title>
-              <img src="/images/HALOlogo.png" alt="Halo Logo" width={64} style={{ marginBottom: 10, borderRadius: '50%' }} />
-            </Space>
+<Space direction="vertical" style={{ width: '100%' }} align="center">
+  <CatLottie width={180} height={180} />
+</Space>
 
             <Form
               form={form}
