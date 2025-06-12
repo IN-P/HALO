@@ -47,7 +47,7 @@ const recoveryRouter = require('./routes/recovery'); //윤기추가
 const membershipRouter = require('./routes/membership'); // 윤기추가
 const nicknameRouter = require('./routes/nickname'); //윤기추가
 const mentionRouter = require('./routes/mention'); // 재원
-
+const rouletteRouter = require('./routes/roulette');//율비
 // .env 적용
 dotenv.config();
 
@@ -129,6 +129,6 @@ app.use('/recovery', recoveryRouter); //윤기추가
 app.use('/membership', membershipRouter); // 윤기추가
 app.use('/nickname', nicknameRouter); //윤기추가 닉네임 추천
 app.use('/mention', mentionRouter); //재원
-
+app.use('/api/roulette', rouletteRouter);//율비
 module.exports = app;
 
