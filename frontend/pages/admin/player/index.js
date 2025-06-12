@@ -1,7 +1,7 @@
 // pages/adminPlayerPage.js
 import { useState, useEffect } from 'react';
-import PlayerForm from '../components/PlayerForm';
-import PlayerCard from '../components/PlayerCard';
+import PlayerForm from '../../../components/PlayerForm';
+import PlayerCard from '../../../components/PlayerCard';
 
 const AdminPlayerPage = () => {
   const [players, setPlayers] = useState([]);

@@ -9,9 +9,9 @@ import {
 import {
   REGISTER_QUIZ_REQUEST,
   RESET_QUIZ_FORM,
-} from "../reducers/adminQuiz_GM";
-import AppLayout from "../components/AppLayout";
-import QuizRegisterForm from "../components/QuizRegisterForm";
+} from "../../../reducers/adminQuiz_GM";
+import AppLayout from "../../../components/AppLayout";
+import QuizRegisterForm from "../../../components/QuizRegisterForm";
 
 const AdminQuizRegister = ({ onSuccess }) => {
   const dispatch = useDispatch();
