@@ -70,6 +70,12 @@ const MySettingSidebar = ({ selectedTab, onSelectTab }) => {
         >
           업적
         </ListItem>
+        <ListItem
+          selected={selectedTab === "point"}
+          onClick={() => onSelectTab("point")}
+        >
+          포인트
+        </ListItem>
       </List>
 
       <SectionTitle>회원관리</SectionTitle>
@@ -97,6 +103,12 @@ const MySettingSidebar = ({ selectedTab, onSelectTab }) => {
           onClick={() => onSelectTab("followers")}
         >
           팔로워 목록
+        </ListItem>
+        <ListItem
+          selected={selectedTab === "xxx"}
+          onClick={() => onSelectTab("xxx")}
+        >
+          회원탈퇴
         </ListItem>
       </List>
     </SidebarWrapper>
