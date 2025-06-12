@@ -12,7 +12,7 @@ router.post('/recommend', async (req, res) => {
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4', // ✅ GPT-4 모델 명시
+      model: 'gpt-3.5-turbo', // ✅ GPT-4 모델 명시
       messages: [
         {
           role: 'system',
