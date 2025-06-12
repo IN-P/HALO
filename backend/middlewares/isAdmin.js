@@ -9,7 +9,7 @@ const isAdmin = (req, res, next) => {
   }
 
   // role: 1~10 (관리자들만 허용), 0은 일반회원
-  if (req.user.role >= 1 && req.user.role <= 10) {
+  if (req.user.role >= 1 && req.user.role <= 11) {
     return next();
   }
 
