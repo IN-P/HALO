@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { Form, Input, InputNumber, Button, Select, Radio, message } from 'antd';
 import axios from 'axios';
-import AppLayout from '../../components/AppLayout';
+import AppLayout from '../../../components/AppLayout';
 
 const AdminQuizEditPage = () => {
     const [form] = Form.useForm();

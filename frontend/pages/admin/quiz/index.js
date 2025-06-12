@@ -3,8 +3,8 @@ import React, { useEffect } from 'react';
 import { Button } from 'antd';
 import Link from 'next/link';
 import { useDispatch, useSelector } from 'react-redux';
-import { LOAD_QUIZZES_REQUEST } from '../reducers/quiz_GM';
-import AppLayout from '../components/AppLayout';
+import { LOAD_QUIZZES_REQUEST } from '../../../reducers/quiz_GM';
+import AppLayout from '../../../components/AppLayout';
 
 const AdminQuizListPage = () => {
     const dispatch = useDispatch();
