@@ -1,22 +1,37 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
-const sectors = [
-  { value: 10, color: '#ffffff' },
-  { value: 20, color: '#dddddd' },
-  { value: 50, color: '#999999' },
-  { value: 100, color: '#000000' },
-];
-
-const anglePerSector = 360 / sectors.length;
+const colorPalette = ['#ffffff', '#dddddd', '#999999', '#000000', '#ffb6c1', '#add8e6', '#90ee90'];
 
 const RouletteWheel = () => {
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState(null);
+  const [sectors, setSectors] = useState([]);
   const wheelRef = useRef();
 
+  // ✅ 보상 목록 불러오기
+  useEffect(() => {
+    const fetchRewards = async () => {
+      try {
+        const res = await axios.get('/api/roulette/rewards', { withCredentials: true });
+        const rewards = res.data;
+        const sectorData = rewards.map((value, i) => ({
+          value,
+          color: colorPalette[i % colorPalette.length],
+        }));
+        setSectors(sectorData);
+      } catch (err) {
+        alert('보상 목록을 불러오지 못했습니다.');
+        console.error(err);
+      }
+    };
+    fetchRewards();
+  }, []);
+
+  const anglePerSector = sectors.length > 0 ? 360 / sectors.length : 0;
+
   const handleSpin = async () => {
-    if (spinning) return;
+    if (spinning || sectors.length === 0) return;
     setSpinning(true);
     setResult(null);
 
@@ -50,7 +65,6 @@ const RouletteWheel = () => {
 
   return (
     <div className="roulette-bg">
-      {/* 흐림 오버레이 */}
       <div className="bg-overlay" />
 
       <div style={{
@@ -78,7 +92,6 @@ const RouletteWheel = () => {
             borderRadius: '50%',
             boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
           }}>
-            {/* 🔥 스파크 */}
             {spinning && (
               <div className="spark">
                 {[...Array(12)].map((_, i) => (
@@ -91,7 +104,6 @@ const RouletteWheel = () => {
               </div>
             )}
 
-            {/* 룰렛 */}
             <div ref={wheelRef} style={{
               width: '100%',
               height: '100%',
@@ -136,7 +148,6 @@ const RouletteWheel = () => {
               })}
             </div>
 
-            {/* 포인터 */}
             <div style={{
               position: 'absolute',
               top: '-20px',
@@ -148,10 +159,9 @@ const RouletteWheel = () => {
             </div>
           </div>
 
-          {/* 버튼 */}
           <button
             onClick={handleSpin}
-            disabled={spinning}
+            disabled={spinning || sectors.length === 0}
             style={{
               marginTop: '20px',
               padding: '14px 30px',

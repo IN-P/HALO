@@ -25,6 +25,7 @@ const roleMap = {
   9: '채팅관리자',
   10: '포스트관리자',
   11: '분석관리자',
+  12: '이벤트관리자',
 };
 
 const AdminLogsChart = dynamic(() => import('../../../components/AdminLogsChart'), { ssr: false });
