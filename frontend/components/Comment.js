@@ -10,7 +10,7 @@ import {
 import ReportButton from "./ReportButton";
 import ReportModal from "./ReportModal";
 import { getTotalCommentCount, flattenComments } from "../utils/comment";
-import MentionTextArea from '../components/MentionTextArea'; // ㅈㅇ ㅁㅅ
+import MentionTextArea from '../components/MentionTextArea';
 
 // 스타일 정의 생략(아래쪽에 있음)
 
@@ -24,30 +24,27 @@ const Comment = ({
 }) => {
   const dispatch = useDispatch();
   const router = useRouter();
-  const { comments, addCommentLoading, loadCommentsDone } = useSelector((state) => state.comment_IN);
+  const { comments, addCommentLoading, loadCommentsDone, editCommentLoading } = useSelector((state) => state.comment_IN);
   const [receiverIdMap, setReceiverIdMap] = useState({});
 
-useEffect(() => {
-  if (!loadCommentsDone?.[postId]) {
-    dispatch({ type: LOAD_COMMENTS_REQUEST, postId });
-  }
-}, [dispatch, postId, loadCommentsDone]);;
+  useEffect(() => {
+    if (!loadCommentsDone?.[postId]) {
+      dispatch({ type: LOAD_COMMENTS_REQUEST, postId });
+    }
+  }, [dispatch, postId, loadCommentsDone]);
 
-const hasReduxComments = loadCommentsDone?.[postId];
-const effectiveComments =
-  comments[postId] && loadCommentsDone?.[postId]
-    ? comments[postId]
-    : initialComments || [];
+  const hasReduxComments = loadCommentsDone?.[postId];
+  const effectiveComments =
+    comments[postId] && loadCommentsDone?.[postId]
+      ? comments[postId]
+      : initialComments || [];
 
+  if (preview) {
+    if (!hasReduxComments) return null; // ✅ Redux 댓글 로드 완료됐을 때만 렌더링
 
-
-
-if (preview) {
-  if (!hasReduxComments) return null; // ✅ Redux 댓글 로드 완료됐을 때만 렌더링
-
-  const allComments = flattenComments(effectiveComments);
-  const sorted = [...allComments].sort((a, b) => b.id - a.id);
-  const previewComments = sorted.slice(0, previewCount);
+    const allComments = flattenComments(effectiveComments);
+    const sorted = [...allComments].sort((a, b) => b.id - a.id);
+    const previewComments = sorted.slice(0, previewCount);
 
     return (
       <div
@@ -61,7 +58,7 @@ if (preview) {
           fontSize: 15,
           color: '#333',
           boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-          cursor: onShowDetailModal ? "pointer" : "default", // 커서
+          cursor: onShowDetailModal ? "pointer" : "default",
         }}
         onClick={onShowDetailModal}
       >
@@ -97,11 +94,17 @@ if (preview) {
                   objectFit: "cover",
                   border: "1px solid #eee",
                   flexShrink: 0,
-                  cursor: "default",
+                  cursor: "pointer",
                 }}
+                onClick={() => onAvatarClick(c.User?.id)}
               />
               <div style={{ flex: 1 }}>
-                <b>{c.User?.nickname || "알 수 없음"}</b>
+                <span
+                  style={{ fontWeight: 'bold', cursor: 'pointer' }}
+                  onClick={() => onAvatarClick(c.User?.id)}
+                >
+                  {c.User?.nickname || "알 수 없음"}
+                </span>
                 <div
                   style={{
                     whiteSpace: "pre-wrap",
@@ -187,6 +190,8 @@ if (preview) {
     });
     setEditId(null);
     setEditValue("");
+    // ✅ 댓글 수정 후, 강제 리로드 필요하면 여기 추가:
+    // dispatch({ type: LOAD_COMMENTS_REQUEST, postId });  // <- 이 라인 활성화 해볼 것!
   };
   const onDelete = (comment) => {
     if (window.confirm("정말 삭제하시겠습니까?")) {
@@ -204,8 +209,8 @@ if (preview) {
       [id]: !prev[id],
     }));
   };
-  const onAvatarClick = (nickname) => {
-    if (nickname) router.push(`/profile/${nickname}`);
+  const onAvatarClick = (userId) => {
+    if (userId) router.push(`/profile/${userId}`);
   };
   const renderCommentContent = (content, parentNickname) => {
     if (!content) return null;
@@ -256,10 +261,15 @@ if (preview) {
                   flexShrink: 0,
                   cursor: "pointer",
                 }}
-                onClick={() => onAvatarClick(c.User?.nickname)}
+                onClick={() => onAvatarClick(c.User?.id)}
               />
               <div style={{ flex: 1 }}>
-                <b>{c.User?.nickname || "알 수 없음"}</b>
+                <span
+                  style={{ fontWeight: 'bold', cursor: 'pointer' }}
+                  onClick={() => onAvatarClick(c.User?.id)}
+                >
+                  {c.User?.nickname || "알 수 없음"}
+                </span>
                 <div
                   style={{
                     whiteSpace: "pre-wrap",
@@ -336,15 +346,14 @@ if (preview) {
                   {showInputMap[c.id] && !c.is_deleted && (
                     <div style={{ margin: "8px 0" }}>
                       <MentionTextArea
-  value={inputMap[c.id] || ""}
-  onChange={(e) =>
-    setInputMap((prev) => ({ ...prev, [c.id]: e.target.value }))
-  }
-  onMentionSelect={(user) => {
-    console.log('선택한 유저 (대댓글):', user);
-    setReceiverIdMap((prev) => ({ ...prev, [c.id]: user.id }));
-  }}
-/>
+                        value={inputMap[c.id] || ""}
+                        onChange={(e) =>
+                          setInputMap((prev) => ({ ...prev, [c.id]: e.target.value }))
+                        }
+                        onMentionSelect={(user) => {
+                          setReceiverIdMap((prev) => ({ ...prev, [c.id]: user.id }));
+                        }}
+                      />
                       <button
                         disabled={addCommentLoading}
                         onClick={() => onReplySubmit(c.id, c.User?.nickname)}
@@ -386,6 +395,7 @@ if (preview) {
                   onEditSubmit(c);
                 }}
                 style={{ marginLeft: 8, padding: "6px 12px", cursor: "pointer" }}
+                disabled={editCommentLoading}
               >
                 수정완료
               </button>
@@ -419,22 +429,21 @@ if (preview) {
     >
       <div style={{ marginBottom: 20 }}>
         <MentionTextArea
-  value={inputMap[0] || ""}
-  onChange={(e) => setInputMap((prev) => ({ ...prev, 0: e.target.value }))}
-  onMentionSelect={(user) => {
-    console.log('선택한 유저 (댓글):', user);
-    setReceiverIdMap((prev) => ({ ...prev, 0: user.id }));
-  }}
-/>
+          value={inputMap[0] || ""}
+          onChange={(e) => setInputMap((prev) => ({ ...prev, 0: e.target.value }))}
+          onMentionSelect={(user) => {
+            setReceiverIdMap((prev) => ({ ...prev, 0: user.id }));
+          }}
+        />
         <button
           disabled={addCommentLoading}
           onClick={() => {
             if (!inputMap[0]?.trim()) return;
             dispatch({
               type: ADD_COMMENT_REQUEST,
-              data: { postId, content: inputMap[0], parentId: null,receiver_id: receiverIdMap[0], },
+              data: { postId, content: inputMap[0], parentId: null, receiver_id: receiverIdMap[0], },
             });
-            setInputMap((prev) => ({ ...prev, 0: "" }));
+                        setInputMap((prev) => ({ ...prev, 0: "" }));
           }}
           style={{ padding: "8px 16px", cursor: "pointer" }}
         >
@@ -500,3 +509,4 @@ const replyButtonStyle = {
 };
 
 export default Comment;
+

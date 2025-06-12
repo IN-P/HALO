@@ -47,6 +47,45 @@ const PostDetailModal = ({
       )
       : null;
 
+  // ⭐ 리그램 정보
+  const isRegram = !!post.regram_id;
+  const RegramInfo = isRegram && origin && origin.User && (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      marginBottom: 10,
+      fontSize: 15,
+      color: '#444'
+    }}>
+      <img
+        src={origin.User.profile_img ? `http://localhost:3065${origin.User.profile_img}` : 'http://localhost:3065/img/profile/default.jpg'}
+        alt="프로필"
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: '50%',
+          objectFit: 'cover',
+          marginRight: 7,
+          border: '1.5px solid #bbb',
+          cursor: 'pointer'
+        }}
+        onClick={() => window.location.href = `/profile/${origin.User.id}`}
+      />
+      <span
+        style={{
+          fontWeight: 700,
+          marginRight: 5,
+          cursor: 'pointer',
+          color: '#0055ff'
+        }}
+        onClick={() => window.location.href = `/profile/${origin.User.id}`}
+      >
+        {origin.User.nickname}
+      </span>
+      님의 게시글을 리그램했습니다
+    </div>
+  );
+
   return !show ? null : (
     <div style={modalStyle} onClick={onClose}>
       <div style={detailBoxStyle} onClick={e => e.stopPropagation()}>
@@ -83,11 +122,24 @@ const PostDetailModal = ({
           padding: '20px 24px',
           overflowX: 'hidden',
         }}>
+          {isRegram && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              color: '#0088ff',
+              fontWeight: 600,
+              fontSize: 15,
+              marginBottom: 4,
+              gap: 5
+            }}>
+              <FaRetweet />재게시했습니다
+            </div>
+          )}          
           {/* 작성자/프로필 */}
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8, minHeight: 54 }}>
             <img
               src={post.User?.profile_img ? `http://localhost:3065${post.User.profile_img}` : 'http://localhost:3065/img/profile/default.jpg'}
-              alt="프로필"
+              alt="프로필" onClick={() => window.location.href = `/profile/${post.User.id}`}
               style={{ width: 54, height: 54, borderRadius: '50%', objectFit: 'cover', marginRight: 16, border: '2px solid #bbb' }}
             />
             <div>
@@ -112,6 +164,8 @@ const PostDetailModal = ({
               {post.location}
             </div>
           )}
+          {/* ⭐ 리그램정보 */}
+          {RegramInfo}
           {/* 본문/리그램 */}
           <div style={{
             fontSize: 17,

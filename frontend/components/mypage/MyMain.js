@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { BulbFilled, SafetyOutlined } from "@ant-design/icons";
-import { Button, Tooltip, Card } from "antd";
+import { Tooltip } from "antd";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
 import useToggle from "../../hooks/useToggle";
@@ -11,25 +11,26 @@ import FollowingsModal from '../../components/FollowingsModal';
 import FollowersModal from '../../components/FollowersModal';
 
 
-const MyMain = ({ data, isMyProfile, loginUser, onRefetch }) => {
+const MyMain = ({ data, isMyProfile, onRefetch }) => {
   const dispatch = useDispatch();
   const router = useRouter();
-  const { nickname } = router.query;
+  const { userId } = router.query;
 
   // toggle 등 custom hook
   const [checked, toggleChecked, setChecked] = useToggle(true);
   const [disabled, toggleDisabled] = useToggle(false);
 
   const [refetchTrigger, setRefetchTrigger] = useState(0);
+  
 
   useEffect(() => {
-    if (nickname) {
+    if (userId) {
       dispatch({
         type: "LOAD_USER_INFO_REQUEST",
-        data: nickname,
+        data: userId,
       });
     }
-  }, [nickname, refetchTrigger]);
+  }, [userId, refetchTrigger]);
 
   //윫추가
   const refetchUserInfo = () => {
@@ -70,11 +71,16 @@ const MyMain = ({ data, isMyProfile, loginUser, onRefetch }) => {
       </div>
     );
   }
-
+  const nickname = data?.nickname;
   //
+  const showBadge = data?.Badges.find(badge => badge.UserBadge && badge.UserBadge.isSelected === true) || null;
+
   return (
     <div style={{ width: '25%' }}>
       <div style={{ paddingBottom: "10px", display: 'flex', alignItems: 'center', marginTop: '5%' }}>
+        { showBadge &&
+        <Tooltip title={showBadge.name}><img style={{maxHeight: "40px", maxWidth: "40px", marginRight: "3%" }} src={`http://localhost:3065${showBadge.img}`} /></Tooltip>
+        }
         <span
           style={{
             fontSize: "24px",
@@ -84,9 +90,9 @@ const MyMain = ({ data, isMyProfile, loginUser, onRefetch }) => {
             textOverflow: "ellipsis",
             maxWidth: "70%"
           }}
-          title={data?.nickname}
+          title={nickname}
         >
-          {data?.nickname}
+          {nickname}
         </span>
         <span
           style={{

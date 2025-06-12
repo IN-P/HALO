@@ -16,6 +16,8 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 
+const { registerBadge } = require('../services/badge/registerbadge');
+
 // 현재 로그인한 유저 정보를 반환하는 라우터
 router.get('/me', isLoggedIn, async (req, res) => {
   try {
@@ -60,7 +62,7 @@ router.post('/', async (req, res, next) => {
     }
     const ip = rawIp === '::1' ? '127.0.0.1' : rawIp.trim();
 
-    await User.create({
+    const newUser = await User.create({
       email,
       nickname,
       password: hashedPassword,
@@ -76,6 +78,8 @@ router.post('/', async (req, res, next) => {
       ip,   //ip저장
     });
 
+    await registerBadge(newUser.id);
+    
     res.status(201).send('회원가입 성공');
   } catch (err) {
     console.error(err);

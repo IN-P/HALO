@@ -31,19 +31,30 @@ module.exports = (passport) => {
           //  카카오에서 받은 이메일 (필수 동의로 설정되어 있다고 가정)
           const email = profile._json.kakao_account.email;
           const kakaoId = profile.id;
-
-          //  기존 사용자 존재 여부 확인
+          const ip = getRealIp(req);
+          
           const exUser = await User.findOne({ where: { email } });
           if (exUser) {
-            //  기존 유저: 마지막 접속 업데이트
-            await exUser.update({ last_active: new Date() });
+            // 🔐 상태 확인
+            if (exUser.user_status_id === 2) {
+              return done(null, false, { message: '탈퇴한 계정입니다.' });
+            }
+            if (exUser.user_status_id === 3) {
+              return done(null, false, { message: '정지된 계정입니다.' });
+            }
+            if (exUser.user_status_id === 4) {
+              return done(null, false, { message: '휴면 계정입니다. 복구 후 로그인 가능합니다.' });
+            }
+
+            // 정상 사용자라면 로그인 허용
+            await exUser.update({ last_active: new Date(), ip });
             return done(null, exUser);
           }
 
           //  새 유저 생성
           const randomPassword = uuidv4().slice(0, 12);
           const hashedPassword = await bcrypt.hash(randomPassword, 12);
-          const ip = getRealIp(req);
+          
 
           const newUser = await User.create({
             email,
