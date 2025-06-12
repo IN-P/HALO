@@ -66,7 +66,7 @@ const MySettingMain = ({ data, onClose, reload, reloadLogInUser }) => {
           </div>
 
           {selectedTab === "profile" && <MySettingProfile data={data} reload={reload} reloadLogInUser={reloadLogInUser} />}
-          {selectedTab === "balance" && <MySettingBalance user={user} />}
+          {selectedTab === "balance" && <MySettingBalance user={user} data={data} />}
           {selectedTab === "password" && <MySettingPassword data={data} />}
           {selectedTab === "block" && <MySettingBlock data={data} />}
           {selectedTab === "achievement" && <MySettingAchievement data={data} />}

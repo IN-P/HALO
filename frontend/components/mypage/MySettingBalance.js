@@ -57,11 +57,16 @@ const InfoGroup = styled.div`
 
 const DateText = styled.div`
   font-weight: 600;
-  color: #334155;
+  color: #a0aec0;  // 연한 색
+  font-size: 12px;
+  margin-bottom: 4px;
 `;
 
 const TypeText = styled.div`
-  margin-top: 4px;
+  margin-top: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
 `;
 
 const AmountText = styled.div`
@@ -85,16 +90,55 @@ const EmptyMessage = styled.div`
   font-size: 16px;
 `;
 
-const MySettingBalance = ({ user }) => {
-  
-  const balance = user?.balance;
+const MySettingBalance = ({ user, data }) => {
+  const balance = user?.balance || 0;
   const formattedBalance = balance.toLocaleString();
 
-  const history = [
-    { id: 1, date: '2025-06-10', type: '충전', amount: 5000, balance: 6000 },
-    { id: 2, date: '2025-06-09', type: '사용', amount: -2000, balance: 1000 },
-    { id: 3, date: '2025-06-08', type: '충전', amount: 3000, balance: 3000 },
-  ];
+  const paymentHistory = data?.UserPayments || [];
+
+  const renderType = (status) => {
+    switch (status) {
+      case 1: return '충전';
+      case 2: return '실패';
+      case 3: return '취소';
+      default: return '알 수 없음';
+    }
+  };
+
+  // 1. 날짜 오름차순 정렬 (누적 계산용)
+  const historyAsc = [...paymentHistory].sort((a, b) =>
+    new Date(a.paid_at) - new Date(b.paid_at)
+  );
+
+  // 2. 누적 잔액 계산
+  let cumulative = 0;
+  const withBalanceAsc = historyAsc.map(item => {
+    if (item.status === 1) {
+      cumulative += item.amount;
+    }
+    return { ...item, calculatedBalance: item.status === 1 ? cumulative : null };
+  });
+
+  // 3. 날짜 내림차순 정렬 (출력용)
+  const withBalanceDesc = [...withBalanceAsc].sort((a, b) =>
+    new Date(b.paid_at) - new Date(a.paid_at)
+  );
+
+  // 날짜 포맷팅 함수
+  const formatDateTime = (dateString) => {
+    const date = new Date(dateString);
+    const pad = (num) => num.toString().padStart(2, '0');
+
+    const year = date.getFullYear();
+    const month = pad(date.getMonth() + 1);
+    const day = pad(date.getDate());
+
+    const hours = pad(date.getHours());
+    const minutes = pad(date.getMinutes());
+    const seconds = pad(date.getSeconds());
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  };
 
   return (
     <BalanceWrapper>
@@ -102,21 +146,23 @@ const MySettingBalance = ({ user }) => {
       <BalanceAmount>{formattedBalance}원</BalanceAmount>
 
       <HistoryTitle>거래 내역</HistoryTitle>
-      {history.length === 0 ? (
+      {withBalanceDesc.length === 0 ? (
         <EmptyMessage>거래 내역이 없습니다.</EmptyMessage>
       ) : (
         <HistoryList>
-          {history.map(item => (
+          {withBalanceDesc.map((item) => (
             <HistoryItem key={item.id}>
               <InfoGroup>
-                <DateText>{item.date}</DateText>
-                <TypeText>{item.type}</TypeText>
+                <TypeText>{renderType(item.status)}</TypeText>
+                <DateText>{item.paid_at ? formatDateTime(item.paid_at) : ''}</DateText>
               </InfoGroup>
-              <AmountText type={item.amount > 0 ? 'plus' : 'minus'}>
-                {item.amount > 0 ? '+' : ''}
+              <AmountText type={item.status === 1 ? 'plus' : 'minus'}>
+                {item.status === 1 ? '+' : ''}
                 {item.amount.toLocaleString()}원
               </AmountText>
-              <BalanceText>{item.balance.toLocaleString()}원</BalanceText>
+              <BalanceText>
+                {item.status === 1 ? `${item.calculatedBalance.toLocaleString()}원` : '–'}
+              </BalanceText>
             </HistoryItem>
           ))}
         </HistoryList>
@@ -126,6 +172,3 @@ const MySettingBalance = ({ user }) => {
 };
 
 export default MySettingBalance;
-
-
-// 1 성공 2 실패 3 취소

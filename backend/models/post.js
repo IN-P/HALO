@@ -23,6 +23,9 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       defaultValue: false,
     },
+    location: { type: DataTypes.STRING(255), allowNull: true },
+    latitude: { type: DataTypes.DECIMAL(10,7), allowNull: true },
+    longitude: { type: DataTypes.DECIMAL(10,7), allowNull: true },
   }, {
     charset: 'utf8mb4',
     collate: 'utf8mb4_general_ci'

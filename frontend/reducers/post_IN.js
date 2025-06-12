@@ -43,9 +43,9 @@ export const ADD_POST_SUCCESS = 'ADD_POST_SUCCESS';
 export const ADD_POST_FAILURE = 'ADD_POST_FAILURE';
 export const ADD_POST_RESET = 'ADD_POST_RESET';
 
-export const UPLOAD_IMAGES_REQUEST = 'UPLOAD_IMAGES_REQUEST';
-export const UPLOAD_IMAGES_SUCCESS = 'UPLOAD_IMAGES_SUCCESS';
-export const UPLOAD_IMAGES_FAILURE = 'UPLOAD_IMAGES_FAILURE';
+export const UPLOAD_POST_IMAGES_REQUEST = 'UPLOAD_POST_IMAGES_REQUEST';
+export const UPLOAD_POST_IMAGES_SUCCESS = 'UPLOAD_POST_IMAGES_SUCCESS';
+export const UPLOAD_POST_IMAGES_FAILURE = 'UPLOAD_POST_IMAGES_FAILURE';
 
 export const LIKE_POST_REQUEST = 'LIKE_POST_REQUEST';
 export const LIKE_POST_SUCCESS = 'LIKE_POST_SUCCESS';
@@ -125,17 +125,17 @@ const postINReducer = (state = initialState, action) =>
         draft.addPostDone = false;
         break;
 
-      case UPLOAD_IMAGES_REQUEST:
+      case UPLOAD_POST_IMAGES_REQUEST:
         draft.uploadImagesLoading = true;
         draft.uploadImagesError = null;
         draft.uploadImagesDone = false;
         break;
-      case UPLOAD_IMAGES_SUCCESS:
+      case UPLOAD_POST_IMAGES_SUCCESS:
         draft.uploadImagesLoading = false;
         draft.uploadImagesDone = true;
         draft.imagePaths = Array.from(new Set(draft.imagePaths.concat(action.data)));
         break;
-      case UPLOAD_IMAGES_FAILURE:
+      case UPLOAD_POST_IMAGES_FAILURE:
         draft.uploadImagesLoading = false;
         draft.uploadImagesError = action.error;
         break;

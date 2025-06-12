@@ -22,6 +22,7 @@ import adminPlayer from '../reducers/adminPlayer_GM';
 import playerDraw from '../reducers/playerDraw_GM'; 
 import activeLog_JH from '../reducers/activeLog_JH';
 import reportResult_YB  from '../reducers/reportResult_YB';
+import badge_JH from '../reducers/badge_JH';
 
 const rootReducer = combineReducers({
   post_IN,
@@ -42,6 +43,7 @@ const rootReducer = combineReducers({
   playerDraw,
   activeLog_JH, //준혁
   reportResult_YB,
+  badge_JH, //준혁
 
 });
 

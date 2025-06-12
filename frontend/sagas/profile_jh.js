@@ -1,27 +1,27 @@
-import { all, fork, put, takeLatest, call } from 'redux-saga/effects';
-import axios from 'axios';
+import { all, fork, put, takeLatest, call } from "redux-saga/effects";
+import axios from "axios";
 
 import {
-  LOAD_USER_INFO_REQUEST, LOAD_USER_INFO_SUCCESS, LOAD_USER_INFO_FAILURE,
+  LOAD_USER_INFO_REQUEST,
+  LOAD_USER_INFO_SUCCESS,
+  LOAD_USER_INFO_FAILURE,
 } from "../reducers/profile_jh";
 
-function loadUserInfoAPI(data) {
-  return axios.get(`/profile/${data}`);
+function loadUserInfoAPI(userId) {
+  return axios.get(`/profile/${userId}`);
 }
 
 function* loadUserInfo(action) {
   try {
-    const result = yield call(loadUserInfoAPI, action.data);
-    console.log("result.data:", result.data);
+    const res = yield call(loadUserInfoAPI, action.data);
     yield put({
       type: LOAD_USER_INFO_SUCCESS,
-      data: result.data,
+      data: res.data,
     });
   } catch (error) {
-    console.error(error);
     yield put({
       type: LOAD_USER_INFO_FAILURE,
-      data: error.response.data,
+      error: error.response?.data || error.message,
     });
   }
 }
@@ -31,7 +31,5 @@ function* watchLoadUserInfo() {
 }
 
 export default function* profile_jh() {
-  yield all([
-    fork(watchLoadUserInfo),
-  ]);
+  yield all([fork(watchLoadUserInfo)]);
 }
