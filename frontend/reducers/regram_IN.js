@@ -5,6 +5,10 @@ export const REGRAM_SUCCESS = 'REGRAM_IN/REGRAM_SUCCESS';
 export const REGRAM_FAILURE = 'REGRAM_IN/REGRAM_FAILURE';
 export const REGRAM_RESET   = 'REGRAM_IN/REGRAM_RESET';
 
+export const UNREGRAM_REQUEST = 'REGRAM_IN/UNREGRAM_REQUEST';
+export const UNREGRAM_SUCCESS = 'REGRAM_IN/UNREGRAM_SUCCESS';
+export const UNREGRAM_FAILURE = 'REGRAM_IN/UNREGRAM_FAILURE';
+
 export const initialState = {
   regramLoading: false,
   regramDone: false,
@@ -34,6 +38,22 @@ const regramINReducer = (state = initialState, action) =>
         draft.regramError = null;
         draft.regramPost = null;
         break;
+
+      case UNREGRAM_REQUEST:
+        draft.regramLoading = true;
+        draft.regramDone = false;
+        draft.regramError = null;
+        break;
+      case UNREGRAM_SUCCESS:
+        draft.regramLoading = false;
+        draft.regramDone = true;
+        draft.regramPost = null;
+        break;
+      case UNREGRAM_FAILURE:
+        draft.regramLoading = false;
+        draft.regramError = action.error;
+        break;        
+        
       default:
         break;
     }

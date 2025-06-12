@@ -29,14 +29,14 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Post.associate = (db) => {
-    db.Post.hasMany(db.Image, { foreignKey: 'post_id' });
-    db.Post.hasMany(db.Comment, { foreignKey: 'post_id' });
-    db.Post.belongsTo(db.User, { foreignKey: 'user_id' });
-    db.Post.hasMany(db.Post, { as: 'Regrams', foreignKey: 'regram_id' });
-    db.Post.belongsTo(db.Post, { as: 'Regram', foreignKey: 'regram_id' });
-    db.Post.belongsToMany(db.Hashtag, { through: 'PostHashtag' });
-    db.Post.belongsToMany(db.User, { through: 'Like', as: 'Likers' });
-    db.Post.belongsToMany(db.User, { through: 'Bookmark', as: 'Bookmarkers' });
+    db.Post.hasMany(db.Image, { foreignKey: 'post_id',  onDelete: 'CASCADE',onUpdate: 'CASCADE', });
+    db.Post.hasMany(db.Comment, { foreignKey: 'post_id',  onDelete: 'CASCADE',onUpdate: 'CASCADE', });
+    db.Post.belongsTo(db.User, { foreignKey: 'user_id',  onDelete: 'CASCADE',onUpdate: 'CASCADE', });
+    db.Post.hasMany(db.Post, { as: 'Regrams', foreignKey: 'regram_id', onDelete: 'SET NULL', onUpdate: 'CASCADE' });
+    db.Post.belongsTo(db.Post, { as: 'Regram', foreignKey: 'regram_id', onDelete: 'SET NULL', onUpdate: 'CASCADE' });
+    db.Post.belongsToMany(db.Hashtag, { through: 'PostHashtag',  onDelete: 'CASCADE',onUpdate: 'CASCADE', });
+    db.Post.belongsToMany(db.User, { through: 'Like', as: 'Likers',  onDelete: 'CASCADE',onUpdate: 'CASCADE', });
+    db.Post.belongsToMany(db.User, { through: 'Bookmark', as: 'Bookmarkers',  onDelete: 'CASCADE',onUpdate: 'CASCADE', });
   };
 
   return Post;

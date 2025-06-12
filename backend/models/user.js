@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     nickname: {
       type: DataTypes.STRING(100),
-      unique: true,
+      allowNull : false,
     },
     password: {
       type: DataTypes.STRING(100),
@@ -59,8 +59,8 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   User.associate = (db) => {
-    db.User.hasMany(db.Post, { foreignKey: 'user_id' });
-    db.User.hasMany(db.Comment, { foreignKey: 'user_id' });
+    db.User.hasMany(db.Post, { foreignKey: 'user_id', onDelete: 'CASCADE' });
+    db.User.hasMany(db.Comment, { foreignKey: 'user_id', onDelete: 'CASCADE' });
     db.User.belongsToMany(db.Post,{through:'Like', as:'Liked'});
     db.User.belongsToMany(db.Post,{through:'Bookmark', as:'BookmarkedPosts'});
 
@@ -69,9 +69,9 @@ module.exports = (sequelize, DataTypes) => {
     db.User.belongsTo(db.Membership, { foreignKey: 'membership_id' });
     db.User.belongsTo(db.Social, { foreignKey: 'social_id' });
 
-    db.User.hasOne(db.UserInfo, { foreignKey: 'users_id' });
-    db.User.hasOne(db.DeleteUser, { foreignKey: 'users_id' });
-    db.User.hasMany(db.UserPayment, { foreignKey: 'users_id' });
+    db.User.hasOne(db.UserInfo, { foreignKey: 'users_id', onDelete: 'CASCADE' });
+    db.User.hasOne(db.DeleteUser, { foreignKey: 'users_id', onDelete: 'CASCADE' });
+    db.User.hasMany(db.UserPayment, { foreignKey: 'users_id', onDelete: 'CASCADE' });
 
     db.User.belongsToMany(db.Achievement, {
       through: 'user_achievements',
@@ -83,60 +83,67 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: true,
     });
 
-    db.User.hasMany(db.Notification, { foreignKey: 'users_id' });
-    db.User.hasMany(db.ActiveLog, { foreignKey: 'users_id' });
+    db.User.hasMany(db.Notification, { foreignKey: 'users_id', onDelete: 'CASCADE' });
+    db.User.hasMany(db.ActiveLog, { foreignKey: 'users_id', onDelete: 'CASCADE' });
 
-    db.User.hasMany(db.Report, { foreignKey: 'users_id' });
-    db.User.hasMany(db.Inquiry, { foreignKey: 'users_id' });
+    db.User.hasMany(db.Report, { foreignKey: 'users_id', onDelete: 'CASCADE' });
+    db.User.hasMany(db.Inquiry, { foreignKey: 'users_id', onDelete: 'CASCADE' });
 
     db.User.hasMany(db.Block, {
       as: 'Blockeds', 
       foreignKey: 'from_user_id',
+      onDelete: 'CASCADE',
     });
 
     db.User.hasMany(db.Block, {
       as: 'Blockers', 
       foreignKey: 'to_user_id',
+      onDelete: 'CASCADE',
     });
 
     db.User.hasMany(db.Follow, {
       as: 'Followings',
       foreignKey: 'from_user_id',
+      onDelete: 'CASCADE',
     });
 
     db.User.hasMany(db.Follow, {
       as: 'Followers',
       foreignKey: 'to_user_id',
+      onDelete: 'CASCADE',
     });  
         
     db.User.hasMany(db.Mention, { 
       foreignKey: 'senders_id', 
-      as: 'SentMentions' 
+      as: 'SentMentions',
+      onDelete: 'CASCADE',
     });
     
     db.User.hasMany(db.Mention, { 
       foreignKey: 'receiver_id', 
-      as: 'ReceivedMentions' 
+      as: 'ReceivedMentions',
+      onDelete: 'CASCADE',
     });
 
-    db.User.hasMany(db.ChatMessage, { foreignKey: 'sender_id', });
+    db.User.hasMany(db.ChatMessage, { foreignKey: 'sender_id', onDelete: 'CASCADE' });
 
     db.User.hasMany(db.ChatRoom, { 
       foreignKey: 'user1_id', 
-      as: 'User1Rooms' 
+      as: 'User1Rooms',
+      onDelete: 'CASCADE' 
     });
     db.User.hasMany(db.ChatRoom, { 
       foreignKey: 'user2_id', 
-      as: 'User2Rooms' 
+      as: 'User2Rooms',
+      onDelete: 'CASCADE' 
     });    
 
-    db.User.hasMany(db.Checkin, { foreignKey: 'users_id' });
-    db.User.hasMany(db.Roulette, { foreignKey: 'users_id' });
-    db.User.hasOne(db.UserPoint, { foreignKey: 'users_id' });
-    db.User.hasMany(db.PointLogs, { foreignKey: 'users_id' });
-    db.User.hasMany(db.PlayerDraw, { foreignKey: 'users_id' });
-    db.User.hasMany(db.UsersQuiz, { foreignKey: 'users_id' });    
-    
+    db.User.hasMany(db.Checkin, { foreignKey: 'users_id', onDelete: 'CASCADE' });
+    db.User.hasMany(db.Roulette, { foreignKey: 'users_id', onDelete: 'CASCADE' });
+    db.User.hasOne(db.UserPoint, { foreignKey: 'users_id', onDelete: 'CASCADE' });
+    db.User.hasMany(db.PointLogs, { foreignKey: 'users_id', onDelete: 'CASCADE' });
+    db.User.hasMany(db.PlayerDraw, { foreignKey: 'users_id', onDelete: 'CASCADE' });
+    db.User.hasMany(db.UsersQuiz, { foreignKey: 'users_id', onDelete: 'CASCADE' });    
   
   };
   return User;

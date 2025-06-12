@@ -8,6 +8,7 @@ import {
   REMOVE_IMAGE, RESET_IMAGE_PATHS
 } from '../reducers/post_IN';
 import { useRouter } from 'next/router';
+import MentionInput from '../components/MentionInput';
 
 const PostForm = ({ editMode = false, originPost }) => {
   const dispatch = useDispatch();

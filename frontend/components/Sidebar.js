@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
-import { Button } from 'antd';
+import { Button,Switch } from 'antd';
 import Link from 'next/link';
 import {
   HomeOutlined,
@@ -68,7 +68,7 @@ const SidebarButton = ({ icon, children, onClick }) => {
 };
 
 // 준혁 추가 : 알림창 토글 상태 showNotification, onToggleNotification, notificationCount
-const Sidebar = ({ showNotification, onToggleNotification, notificationCount }) => {
+const Sidebar = ({ showNotification, onToggleNotification, notificationCount, themeMode, onToggleTheme }) => {
   const router = useRouter();
   const dispatch = useDispatch(); //  윤기 추가: 로그아웃 디스패치
 
@@ -128,9 +128,24 @@ const Sidebar = ({ showNotification, onToggleNotification, notificationCount }) 
       {/* 하단 버튼 */}
       <div style={{ padding: '0 16px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         <SidebarButton icon={<LogoutOutlined />} onClick={() => dispatch({ type: LOG_OUT_REQUEST })}>Logout</SidebarButton>
-        <SidebarButton icon={<BulbOutlined />}>Light mode</SidebarButton>
-      </div>
+        <div style={{
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '12px 12px',
+  borderRadius: '6px',
+}}>
+  <div style={{ display: 'flex', alignItems: 'center' }}>
+    <BulbOutlined />
+    <span style={{ marginLeft: 8 }}>{themeMode === 'light' ? 'Light' : 'Dark'}</span>
     </div>
+    <Switch
+    checked={themeMode === 'dark'}
+    onChange={onToggleTheme} // Switch 자체에 onChange 달기
+    />
+    </div>
+  </div>
+</div>
   );
 };
 

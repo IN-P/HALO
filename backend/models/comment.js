@@ -33,19 +33,21 @@ module.exports = (sequelize,DataTypes)=>{
   }); 
 
   Comment.associate = (db)=>{
-    db.Comment.belongsTo(db.Post, { foreignKey: 'post_id' });
-    db.Comment.belongsTo(db.User, { foreignKey: 'user_id' });
-    db.Comment.belongsTo(db.Comment, { as: 'Parent', foreignKey: 'parent_id' });
-    db.Comment.hasMany(db.Comment, { as: 'Replies', foreignKey: 'parent_id' });    
+    db.Comment.belongsTo(db.Post, { foreignKey: 'post_id',  onDelete: 'CASCADE',onUpdate: 'CASCADE', });
+    db.Comment.belongsTo(db.User, { foreignKey: 'user_id',  onDelete: 'CASCADE',onUpdate: 'CASCADE', });
+    db.Comment.belongsTo(db.Comment, { as: 'Parent', foreignKey: 'parent_id',  onDelete: 'CASCADE',onUpdate: 'CASCADE', });
+    db.Comment.hasMany(db.Comment, { as: 'Replies', foreignKey: 'parent_id',  onDelete: 'CASCADE',onUpdate: 'CASCADE', });    
 
     db.Comment.hasMany(db.CommentPath, {
       foreignKey: 'lower_id',
       as: 'Ancestors',
+        onDelete: 'CASCADE',onUpdate: 'CASCADE',
     });
 
     db.Comment.hasMany(db.CommentPath, {
       foreignKey: 'upper_id',
       as: 'Descendants',
+        onDelete: 'CASCADE',onUpdate: 'CASCADE',
     });   
   };
   return Comment;

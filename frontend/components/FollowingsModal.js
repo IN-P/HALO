@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal } from 'antd';
 import FollowList from './FollowList';
 
-const FollowingsModal = ({ open, onClose, onUpdate }) => {
+const FollowingsModal = ({ open, onClose, onUpdate, nickname }) => {
   return (
     <Modal
       title="👤 팔로잉 목록"
@@ -12,7 +12,7 @@ const FollowingsModal = ({ open, onClose, onUpdate }) => {
       centered
       bodyStyle={{ padding: '20px', maxHeight: '400px', overflowY: 'auto' }}
     >
-      <FollowList type="followings" onUpdate={onUpdate} />
+      <FollowList type="followings" nickname={nickname} onUpdate={onUpdate} />
     </Modal>
   );
 };
