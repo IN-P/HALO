@@ -16,18 +16,18 @@ router.post('/spin', isLoggedIn, async (req, res, next) => {
     todayEnd.setHours(23, 59, 59, 999);
 
     // ✅ 오늘 이미 돌렸는지 확인
-    const alreadySpun = await Roulette.findOne({
-      where: {
-        users_id: userId,
-        createdAt: {
-          [Op.between]: [todayStart, todayEnd],
-        },
-      },
-    });
+    // const alreadySpun = await Roulette.findOne({
+    //   where: {
+    //     users_id: userId,
+    //     createdAt: {
+    //       [Op.between]: [todayStart, todayEnd],
+    //     },
+    //   },
+    // });
 
-    if (alreadySpun) {
-      return res.status(400).json({ message: '오늘은 이미 룰렛을 돌렸습니다.' });
-    }
+    // if (alreadySpun) {
+    //   return res.status(400).json({ message: '오늘은 이미 룰렛을 돌렸습니다.' });
+    // }
 
     // 1. 랜덤 보상 포인트
     const rewards = [10, 20, 50, 100];
