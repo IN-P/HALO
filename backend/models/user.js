@@ -155,6 +155,9 @@ module.exports = (sequelize, DataTypes) => {
     db.User.hasMany(db.PointLogs, { foreignKey: 'users_id', onDelete: 'CASCADE' });
     db.User.hasMany(db.PlayerDraw, { foreignKey: 'users_id', onDelete: 'CASCADE' });
     db.User.hasMany(db.UsersQuiz, { foreignKey: 'users_id', onDelete: 'CASCADE' });    
+    db.User.hasMany(db.Log, { foreignKey: 'user_id', as: 'logs' });
+    db.User.hasMany(db.Log, { foreignKey: 'target_user_id', as: 'targetLogs' });
+
   
   };
   return User;
