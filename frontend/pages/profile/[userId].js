@@ -121,6 +121,7 @@ const ProfilePage = () => {
             <MyMain
               key={refetchTrigger}
               data={data}
+              reload={fetchUserInfo}
               isMyProfile={isMyProfile}
               loginUser={user}
               onRefetch={() => setRefetchTrigger((prev) => prev + 1)}

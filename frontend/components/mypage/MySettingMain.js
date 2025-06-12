@@ -61,7 +61,7 @@ const MySettingMain = ({ data, onClose, reload, reloadLogInUser }) => {
               style={{ fontSize: "20px", cursor: "pointer", marginLeft: "12px" }}
               onClick={onClose}
             >
-              <CloseOutlined />
+              <CloseOutlined onClick={reload} />
             </span>
           </div>
 
