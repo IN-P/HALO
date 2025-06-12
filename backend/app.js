@@ -50,6 +50,7 @@ const mentionRouter = require('./routes/mention'); // 재원
 const rouletteRouter = require('./routes/roulette');//율비
 const adminAnalyticsRouter = require('./routes/adminAnalytics');
 const adminPostsRouter = require('./routes/adminPosts');
+const logRouter = require('./routes/log'); //윤기추가
 
 // .env 적용
 dotenv.config();
@@ -115,6 +116,7 @@ app.use("/log", activeLog); //## 준혁
 app.use("/achievements", achievements) // ## 준혁
 app.use("/badges", badges) // ## 준혁
 
+app.use('/img/player', express.static(path.join(__dirname, 'uploads/player')));
 app.use('/event/quizzes', quizRouter);  //## 경미
 app.use('/event/admin', adminQuizRouter);  //## 경미
 app.use('/store/draw', playerDrawRouter);   //## 경미
@@ -135,6 +137,7 @@ app.use('/mention', mentionRouter); //재원
 app.use('/api/roulette', rouletteRouter);//율비
 app.use('/admin/analytics', adminAnalyticsRouter);
 app.use('/api/admin', adminPostsRouter); 
+app.use('/admin', logRouter); //윤기
 
 module.exports = app;
 

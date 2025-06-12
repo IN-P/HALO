@@ -210,7 +210,7 @@ const PostCard = ({ post }) => {
             src={userInfo?.profile_img ? `http://localhost:3065${userInfo.profile_img}` : 'http://localhost:3065/img/profile/default.jpg'}
             alt="프로필"
             style={{ width: 54, height: 54, borderRadius: '50%', objectFit: 'cover', marginRight: 16, border: '2px solid #bbb' }}
-            onClick={() => window.location.href = `/profile/${userInfo?.nickname}`}
+            onClick={() => window.location.href = `/profile/${userInfo?.id}`}
           />
           <div>
             <div style={{ fontWeight: 'bold', fontSize: 20, display: 'flex', alignItems: 'center', gap: 6 }}>

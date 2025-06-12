@@ -63,16 +63,24 @@ router.post('/', isLoggedIn, async (req, res, next) => {
     const user = await User.findByPk(req.user.id);
     const teamId = user.myteam_id || 1;
 
-    if (!req.body.images || req.body.images.length === 0) {
-      // 첨부 이미지가 하나도 없을 때: 팀로고 더미 연결
+    let images = req.body.images;
+    if (typeof images === 'string') {
+      try {
+        images = JSON.parse(images);
+      } catch {
+        images = [images];
+      }
+    }
+    if (!images || (Array.isArray(images) && images.length === 0)) {
       const dummySrc = `team_logo_${teamId}.png`;
       await Image.create({ src: dummySrc, post_id: post.id });
     } else {
-      // 기존대로 첨부 이미지 등록
-      const images = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
-      for (const src of images) {
-        await Image.create({ src, post_id: post.id });
-      }
+      const imgArr = Array.isArray(images) ? images : [images];
+      for (const src of imgArr) {
+        if (src && src.trim() !== '') {
+          await Image.create({ src, post_id: post.id });
+        }
+      }s
     }
  
     if (req.body.receiver_id) {

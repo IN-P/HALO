@@ -31,7 +31,8 @@ module.exports = (passport) => {
           //  카카오에서 받은 이메일 (필수 동의로 설정되어 있다고 가정)
           const email = profile._json.kakao_account.email;
           const kakaoId = profile.id;
-
+          const ip = getRealIp(req);
+          
           const exUser = await User.findOne({ where: { email } });
           if (exUser) {
             // 🔐 상태 확인
@@ -53,7 +54,7 @@ module.exports = (passport) => {
           //  새 유저 생성
           const randomPassword = uuidv4().slice(0, 12);
           const hashedPassword = await bcrypt.hash(randomPassword, 12);
-          const ip = getRealIp(req);
+          
 
           const newUser = await User.create({
             email,

@@ -31,7 +31,7 @@ const AdminQuizListPage = () => {
         <AppLayout>
             <div style={{ padding: "2rem" }}>
                 <h2>📋 등록된 퀴즈 목록(관리자 페이지)</h2>
-                <Link href={'/adminQuiz'}><Button>퀴즈 등록하기</Button></Link>
+                <Link href={'/admin/quiz/register'}><Button>퀴즈 등록하기</Button></Link>
                 {quizList && (
                     <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "1rem" }}>
                         <thead>
@@ -51,7 +51,7 @@ const AdminQuizListPage = () => {
                                     <td style={tdStyle}>{item.point_reward}</td>
                                     <td style={tdStyle}>{new Date(item.createdAt).toLocaleDateString()}</td>
                                     <td style={tdStyle}>
-                                        <Link href={`/adminQuiz/${item.id}`} legacyBehavior>
+                                        <Link href={`/admin/quiz/${item.id}`} legacyBehavior>
                                             <a><Button type="link">수정</Button></a>
                                         </Link>
                                     </td>

@@ -1,5 +1,5 @@
-// 유저 뽑기 이력 조회
-import { useState, useEffect } from 'react';
+// pages/playerHistoryPage.js
+import { useEffect, useState } from 'react';
 import DrawHistoryList from '../components/DrawHistoryList';
 
 const PlayerHistoryPage = () => {
@@ -7,17 +7,25 @@ const PlayerHistoryPage = () => {
 
   useEffect(() => {
     const fetchHistory = async () => {
-      const res = await fetch('/api/player-draw/history/1');  // 테스트용 userId
-      const data = await res.json();
-      setHistory(data);
+      try {
+        const res = await fetch('/store/draw/player-draw/history', {
+          credentials: 'include',
+        });
+        const data = await res.json();
+        setHistory(data);
+        console.log('📜 뽑기 이력:', data); // 여기에 찍으면 API 응답 확인 가능
+      } catch (err) {
+        console.error('이력 불러오기 실패', err);
+      }
     };
 
     fetchHistory();
   }, []);
 
+
   return (
     <>
-      <h2>나의 뽑기 이력</h2>
+      <h2>📜 나의 뽑기 이력</h2>
       <DrawHistoryList history={history} />
     </>
   );

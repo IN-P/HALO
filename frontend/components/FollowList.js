@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useSelector } from "react-redux";
 
 const FollowList = ({ data, type, onUpdate }) => {
   const [users, setUsers] = useState([]);
+  const me = useSelector((state) => state.user_YG?.user);
 
   const load = async () => {
     try {
@@ -56,19 +58,21 @@ const FollowList = ({ data, type, onUpdate }) => {
               >
                 {user.nickname}
               </a>
-              <button
-                onClick={() => handleRemove(user.id)}
-                style={{
-                  background: '#ff4d4f',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 5,
-                  padding: '5px 10px',
-                  cursor: 'pointer'
-                }}
-              >
-                {type === 'followers' ? '삭제' : '언팔로우'}
-              </button>
+              {me?.nickname === nickname && (
+                <button
+                  onClick={() => handleRemove(user.id)}
+                  style={{
+                    background: '#ff4d4f',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 5,
+                    padding: '5px 10px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {type === 'followers' ? '삭제' : '언팔로우'}
+                </button>
+              )}
             </li>
           ))
         )}

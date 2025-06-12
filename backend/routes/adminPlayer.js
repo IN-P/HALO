@@ -3,11 +3,19 @@ const multer = require('multer');
 const path = require('path');
 const router = express.Router();
 const { Player } = require('../models');
+const fs = require('fs');
+
+try {
+  fs.accessSync('uploads/player');
+} catch (error) {
+  console.log('uploads/player 폴더가 없어서 생성합니다.');
+  fs.mkdirSync('uploads/player', { recursive: true });
+}
 
 // multer 설정
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../uploads')); // 백엔드 uploads 경로
+    cb(null, path.join(__dirname, '../uploads/player')); // 백엔드 uploads 경로
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
@@ -24,8 +32,8 @@ router.post("/players/upload", upload.single("image"), (req, res) => {
     return res.status(400).json({ error: "이미지를 업로드해주세요." });
   }
 
-  const filePath = `/uploads/${req.file.filename}`;  // ##
-  res.status(200).json([filePath]);  // 배열 형태로 반환
+  const fileName = req.file.filename; 
+  res.status(200).json([fileName]);  // 배열 형태로 반환
 });
 
 // 2. 선수 등록
