@@ -69,7 +69,7 @@ const PostDetailModal = ({
           border: '1.5px solid #bbb',
           cursor: 'pointer'
         }}
-        onClick={() => window.location.href = `/profile/${origin.User.nickname}`}
+        onClick={() => window.location.href = `/profile/${origin.User.id}`}
       />
       <span
         style={{
@@ -78,7 +78,7 @@ const PostDetailModal = ({
           cursor: 'pointer',
           color: '#0055ff'
         }}
-        onClick={() => window.location.href = `/profile/${origin.User.nickname}`}
+        onClick={() => window.location.href = `/profile/${origin.User.id}`}
       >
         {origin.User.nickname}
       </span>
@@ -139,7 +139,7 @@ const PostDetailModal = ({
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8, minHeight: 54 }}>
             <img
               src={post.User?.profile_img ? `http://localhost:3065${post.User.profile_img}` : 'http://localhost:3065/img/profile/default.jpg'}
-              alt="프로필"
+              alt="프로필" onClick={() => window.location.href = `/profile/${post.User.id}`}
               style={{ width: 54, height: 54, borderRadius: '50%', objectFit: 'cover', marginRight: 16, border: '2px solid #bbb' }}
             />
             <div>
