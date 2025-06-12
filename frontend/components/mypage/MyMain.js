@@ -9,6 +9,7 @@ import FollowButton from "../../components/FollowButton";
 
 import FollowingsModal from '../../components/FollowingsModal';
 import FollowersModal from '../../components/FollowersModal';
+import { isLoggedIn } from "../../../backend/routes/middlewares";
 
 
 const MyMain = ({ data, isMyProfile, onRefetch }) => {
@@ -115,6 +116,7 @@ const MyMain = ({ data, isMyProfile, onRefetch }) => {
                 }}
               />
             )}
+            { isLoggedIn && (
             <BlockButton
               toUserId={data?.id}
               isBlocked={data?.isBlocked}
@@ -123,6 +125,7 @@ const MyMain = ({ data, isMyProfile, onRefetch }) => {
                 onRefetch?.();
               }}
             />
+            )}
           </span>
         )}
       </div>
@@ -207,13 +210,13 @@ const MyMain = ({ data, isMyProfile, onRefetch }) => {
         open={isFollowerModalOpen}
         onClose={() => setIsFollowerModalOpen(false)}
         onUpdate={refetchUserInfo}
-        nickname={nickname}
+        data={data}
       />
       <FollowingsModal
         open={isFollowingModalOpen}
         onClose={() => setIsFollowingModalOpen(false)}
         onUpdate={refetchUserInfo}
-        nickname={nickname}
+        data={data}
       />
 
     </div>

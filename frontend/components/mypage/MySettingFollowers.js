@@ -2,12 +2,7 @@ import React, { useState } from 'react';
 import Searchbar from './Searchbar';
 
 const MySettingFollowers = ({ data }) => {
-
-  const followers = data?.Followers || [];
-
-    const userList = followers
-    .map((f) => f?.Followers || f?.Followings)
-    .filter(Boolean);
+  const userList = data?.Followers?.map(follower => follower.Followings).filter(Boolean) || [];
 
   const [filteredUsers, setFilteredUsers] = useState(userList);
 
@@ -22,7 +17,6 @@ const MySettingFollowers = ({ data }) => {
       <hr style={{ borderTop: '1px solid #ddd', margin: '24px 0' }} />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '0 24px' }}>
-        {/* 필터링 가능한 검색창 */}
         <Searchbar data={userList} onResultChange={setFilteredUsers} />
 
         {filteredUsers.length === 0 ? (
@@ -31,7 +25,7 @@ const MySettingFollowers = ({ data }) => {
           filteredUsers.map((user) => (
             <a
               key={user.id}
-              href={`http://localhost:3000/profile/${user.nickname}`}
+              href={`/profile/${user.id}`}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -51,7 +45,11 @@ const MySettingFollowers = ({ data }) => {
               title={user.nickname}
             >
               <img
-                src={`http://localhost:3065${user.profile_img}` || '/default-profile.png'}
+                src={
+                  user.profile_img
+                    ? `http://localhost:3065${data?.profile_img}`
+                    : `http://localhost:3065/uploads/profile/default.jpg`
+                }
                 alt={user?.nickname || 'profile'}
                 style={{
                   width: 48,
@@ -81,5 +79,4 @@ const MySettingFollowers = ({ data }) => {
     </>
   );
 };
-
 export default MySettingFollowers;

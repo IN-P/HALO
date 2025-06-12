@@ -3,7 +3,8 @@ const express = require('express');
 const router = express.Router();
 const { Comment, CommentPath, User, Post, ActiveLog, Notification, Mention  } = require('../models'); // ActiveLog 준혁 추가 mention추가
 const { isLoggedIn } = require('./middlewares');
-const { sendNotification } = require('../notificationSocket'); // 준혁추가 실시간 알림   
+const { sendNotification } = require('../notificationSocket'); // 준혁추가 실시간 알림  
+const { checkAndAssignCommentAchievements } = require('../services/achievement/comment');
 
 // 1. 기본 댓글 등록: POST /comment/post/:postId
 router.post('/post/:postId', isLoggedIn, async (req, res, next) => {
@@ -67,6 +68,8 @@ router.post('/post/:postId', isLoggedIn, async (req, res, next) => {
       //
     }
     //
+    // 업적 부여 함수
+    await checkAndAssignCommentAchievements(req.user.id);
 
     res.status(201).json({
       comment: fullComment,

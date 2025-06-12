@@ -8,6 +8,9 @@ const { isLoggedIn } = require('./middlewares');
 const { Op } = require('sequelize');
 const { sendNotification } = require('../notificationSocket');
 
+const { checkAndAssignPostAchievements } = require('../services/achievement/post') //준혁
+const { checkAndAssignLikeAchievements } = require('../services/achievement/like'); // 준혁
+
 // uploads 폴더 생성
 try {
   fs.accessSync('uploads/post');
@@ -114,6 +117,9 @@ router.post('/', isLoggedIn, async (req, res, next) => {
       users_id: req.user.id,
       target_type_id: 1,
     })
+
+    const postCount = await Post.count({ where: { user_id: req.user.id } });
+    await checkAndAssignPostAchievements(req.user.id, postCount); // 준혁
 
     if (req.user) {
       const myId = req.user.id;
@@ -343,6 +349,8 @@ router.patch('/:postId/like', isLoggedIn, async (req, res, next) => {
       });
     }
     //
+    // 업적 부여
+    await checkAndAssignLikeAchievements(req.user.id);
 
     res.status(200).json({ basePost: fullOrigin });
   } catch (error) {
