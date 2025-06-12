@@ -62,6 +62,7 @@ const MySave = ({ data }) => {
       {savedPosts.map((post, idx) => (
         <PostCard key={post.id || idx}>
           <StyledImage
+            as="img"
             src={
               post.Images?.[0]?.src
                 ? `http://localhost:3065/uploads/post/${post.Images[0].src}`

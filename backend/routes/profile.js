@@ -9,12 +9,11 @@ router.get("/:userId", async (req, res, next) => {
   try {
     const { userId } = req.params;
 
-    if (isNaN(userId)) { return res.status(400).json({ message: "유효하지 않은 사용자 ID입니다." }); }
-
-    const userIdNum = parseInt(userId, 10);
+    const existUser = await User.findByPk(userId);
+    if (!existUser) { return res.status(404).json("존재하지 않는 계정입니다") }
 
     const fullUser = await User.findOne({
-      where: { id: userIdNum },
+      where: { id: userId },
       attributes: ["id", "nickname", "profile_img", "theme_mode", "is_private", "myteam_id", "role", "email"],
       include: [
         { model: UserInfo },

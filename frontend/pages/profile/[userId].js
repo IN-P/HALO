@@ -12,6 +12,25 @@ import { LOAD_MY_INFO_REQUEST } from "../../reducers/user_YG";
 import wrapper from "../../store/configureStore";
 import { END } from "redux-saga";
 import axios from "axios";
+import styled from "styled-components";
+import { LoadingOutlined } from "@ant-design/icons"
+
+const ERROR = styled.div`
+  display: flex;
+  height: 100vh;
+  width: 70vw;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+`;
+
+const ErrorMessage = styled.span`
+  font-weight: 200;
+  font-size: 32px;
+  color: #999;
+`;
+
+
 
 const ProfilePage = () => {
   const router = useRouter();
@@ -49,6 +68,28 @@ const ProfilePage = () => {
       dispatch({ type: LOAD_USER_INFO_REQUEST, data: data.id });
     }
   };
+
+  const { statusCode, data: profileData } = useSelector((state) => state.profile_jh);
+
+  if (statusCode === 404) {
+    return (
+      <AppLayout>
+        <ERROR>
+          <ErrorMessage>404 | 존재하지 않는 계정입니다</ErrorMessage>
+        </ERROR>
+      </AppLayout>
+    );
+  }
+
+  if (!profileData && statusCode !== 404) {
+  return (
+    <AppLayout>
+      <ERROR>
+        <ErrorMessage><LoadingOutlined />로딩 중...</ErrorMessage>
+      </ERROR>
+    </AppLayout>
+  );
+}
 
   return (
     <AppLayout>
