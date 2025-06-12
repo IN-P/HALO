@@ -95,4 +95,30 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+// 특정 유저와의 차단 관계 확인: GET /block/status/:targetUserId
+router.get('/status/:targetUserId', async (req, res, next) => {
+  try {
+    const myId = req.user.id;
+    const targetUserId = parseInt(req.params.targetUserId, 10);
+
+    // 내가 그 사람 차단했는지
+    const isBlockedByMe = await Block.findOne({
+      where: { from_user_id: myId, to_user_id: targetUserId },
+    });
+
+    // 그 사람이 나를 차단했는지
+    const isBlockingMe = await Block.findOne({
+      where: { from_user_id: targetUserId, to_user_id: myId },
+    });
+
+    res.status(200).json({
+      isBlockedByMe: !!isBlockedByMe,
+      isBlockingMe: !!isBlockingMe,
+    });
+  } catch (err) {
+    console.error(err);
+    next(err);
+  }
+});
+
 module.exports = router;

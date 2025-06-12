@@ -240,7 +240,19 @@ const skipAutoSelect = useRef(false);
         unreadCountDelta: -9999,
       }));
 
-      dispatch(setSelectedUser(user));
+    // ✅ 차단 상태 요청 후
+    const blockRes = await axios.get(`http://localhost:3065/block/status/${user.id}`, {
+      withCredentials: true,
+    });
+
+    // ✅ 완전한 새 객체로 강제 설정
+    const userCopy = JSON.parse(JSON.stringify(user));
+    userCopy.isBlockedByMe = blockRes.data.isBlockedByMe;
+    userCopy.isBlockingMe = blockRes.data.isBlockingMe;
+
+    dispatch(setSelectedUser(userCopy)); // ✅ React가 감지할 수 있게
+
+    
       dispatch(toggleSearchModal(false));
     } catch (error) {
       console.error('❌ 채팅방 생성 실패:', error);
@@ -377,6 +389,7 @@ useEffect(() => {
           {selectedUser && roomId ? (  // 🚩 여기 selectedUser && roomId 조건!
             <div style={{ width: 600, margin: '80px auto 0' }}>
               <ChatRoom
+              key={selectedUser.id}
                 me={me}
                 selectedUser={selectedUser}
                 roomId={roomId}
