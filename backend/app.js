@@ -50,6 +50,7 @@ const mentionRouter = require('./routes/mention'); // 재원
 const rouletteRouter = require('./routes/roulette');//율비
 const adminAnalyticsRouter = require('./routes/adminAnalytics');
 const adminPostsRouter = require('./routes/adminPosts');
+const logRouter = require('./routes/log'); //윤기추가
 
 // .env 적용
 dotenv.config();
@@ -135,6 +136,7 @@ app.use('/mention', mentionRouter); //재원
 app.use('/api/roulette', rouletteRouter);//율비
 app.use('/admin/analytics', adminAnalyticsRouter);
 app.use('/api/admin', adminPostsRouter); 
+app.use('/admin', logRouter); //윤기
 
 module.exports = app;
 
