@@ -7,8 +7,10 @@ const useRequireLogin = () => {
   const { isLogin } = useSelector((state) => state.user_YG);
   const router = useRouter();
 
+
   useEffect(() => {
-    if (!isLogin) {
+    // 로그인 여부가 아직 판별되지 않은 경우는 아무 것도 하지 않음
+    if (isLogin === false) {
       router.replace('/login');
     }
   }, [isLogin]);

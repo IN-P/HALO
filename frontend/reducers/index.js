@@ -18,6 +18,7 @@ import playerDraw from './playerDraw_GM';
 import activeLog_JH from './activeLog_JH';
 import reportResult_YB from './reportResult_YB';
 import badge_JH from './badge_JH';
+import achievement_JH from './achievement_JH';
 
 const rootReducer = combineReducers({
   index: (state = {}, action) => {
@@ -47,6 +48,7 @@ const rootReducer = combineReducers({
   activeLog_JH,
   reportResult_YB,
   badge_JH,
+  achievement_JH,
 
 });
 

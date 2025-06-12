@@ -28,6 +28,7 @@ const profile_jh = (state = initialState, action) =>
       case LOAD_USER_INFO_FAILURE:
         draft.loadUserInfoLoading = false;
         draft.statusCode = action.statusCode || null;
+        draft.loadUserInfoError = action.error || null;
         break;
       default:
         break;

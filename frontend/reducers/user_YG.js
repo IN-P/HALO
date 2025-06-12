@@ -21,7 +21,7 @@ export const LOAD_MY_INFO_FAILURE = 'LOAD_MY_INFO_FAILURE';
 //  초기 상태
 export const initialState = {
   user: null,
-  isLogin: false,
+  isLogin: null,
 
   logInLoading: false,
   logInDone: false,
@@ -57,6 +57,7 @@ const reducer = (state = initialState, action) => produce(state, (draft) => {
       break;
     case LOG_IN_FAILURE:
       draft.logInLoading = false;
+      draft.isLogin = false;
       draft.logInError = action.error;
       break;
 

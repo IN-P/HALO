@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
 
-const FollowList = ({ nickname, type, onUpdate }) => {
+const FollowList = ({ data, type, onUpdate }) => {
   const [users, setUsers] = useState([]);
   const me = useSelector((state) => state.user_YG?.user);
 
   const load = async () => {
     try {
-      const endpoint = `http://localhost:3065/follow/${type}/nickname/${nickname}`;
+      const endpoint = `http://localhost:3065/follow/${type}/nickname/${data?.nickname}`;
       const res = await axios.get(endpoint, { withCredentials: true });
       setUsers(res.data);
     } catch (err) {
@@ -17,8 +17,8 @@ const FollowList = ({ nickname, type, onUpdate }) => {
   };
 
   useEffect(() => {
-    if (nickname) load();
-  }, [nickname, type]);
+    if (data?.nickname) load();
+  }, [data?.nickname, type]);
 
   const handleRemove = async (targetUserId) => {
     try {

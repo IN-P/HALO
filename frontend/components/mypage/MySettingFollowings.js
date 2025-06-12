@@ -31,7 +31,7 @@ const MySettingFollowings = ({ data }) => {
           filteredUsers.map((user) => (
             <a
               key={user.id}
-              href={`http://localhost:3000/profile/${user.nickname}`}
+              href={`http://localhost:3000/profile/${user.id}`}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -53,7 +53,7 @@ const MySettingFollowings = ({ data }) => {
               <img
                 src={
                   user.profile_img
-                    ? `http://localhost:3065${user.profile_img}`
+                    ? `http://localhost:3065${data?.profile_img}`
                     : `http://localhost:3065/uploads/profile/default.jpg`
                 }
                 alt={user.nickname || 'profile'}

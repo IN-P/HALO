@@ -5,6 +5,7 @@ const { where } = require('sequelize');
 const { isLoggedIn } = require('./middlewares');
 
 const { sendNotification } = require('../notificationSocket'); // 준혁추가 실시간 알림
+const { checkAndAssignFollowAchievements } = require('../services/achievement/follow'); // 준혁
 
 // 팔로우하기 http://localhost:3065/follow
 router.post('/',isLoggedIn, async (req, res, next) => {
@@ -59,6 +60,9 @@ router.post('/',isLoggedIn, async (req, res, next) => {
       message: '팔로워가 생겼습니다',
     });
     //
+    // 업적 함수
+    await checkAndAssignFollowAchievements(fromUserId);
+    await checkAndAssignFollowAchievements(toUserId);
 
     res.status(201).json(follow);
   } catch (err) {

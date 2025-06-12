@@ -13,7 +13,7 @@ import wrapper from "../../store/configureStore";
 import { END } from "redux-saga";
 import axios from "axios";
 import styled from "styled-components";
-import { LoadingOutlined } from "@ant-design/icons"
+import useRequireLogin from '../../hooks/useRequireLogin';
 
 const ERROR = styled.div`
   display: flex;
@@ -30,33 +30,47 @@ const ErrorMessage = styled.span`
   color: #999;
 `;
 
+export const getServerSideProps = wrapper.getServerSideProps(async (context) => {
+  const cookie = context.req?.headers.cookie || "";
+  axios.defaults.headers.Cookie = "";
+  if (context.req && cookie) { axios.defaults.headers.Cookie = cookie; }
+
+  // 로그인 정보
+  context.store.dispatch({ type: LOAD_MY_INFO_REQUEST });
+
+  // 프로필 유저 정보도 서버사이드에서 미리 요청
+  const userId = context.params?.userId;
+  if (userId) {
+    context.store.dispatch({ type: LOAD_USER_INFO_REQUEST, data: userId });
+  }
+
+  context.store.dispatch(END);
+  await context.store.sagaTask.toPromise();
+
+  axios.defaults.headers.Cookie = "";
+
+  return { props: {} };
+});
 
 
 const ProfilePage = () => {
+  useRequireLogin();
+  const dispatch = useDispatch();
   const router = useRouter();
   const { userId } = router.query;
-  const dispatch = useDispatch();
 
   const [showSetting, setShowSetting] = useState(false);
   const [refetchTrigger, setRefetchTrigger] = useState(0);
 
+  const { user, loadMyInfoLoading, loadMyInfoError } = useSelector((state) => state.user_YG);
   const data = useSelector((state) => state.profile_jh?.data);
-  const { user } = useSelector((state) => state.user_YG);
-  const isMyProfile = user && data && user.id === data.id;
+  const { statusCode } = useSelector((state) => state.profile_jh);
 
-  // 기본 프로필 정보 로드 (userId 기반으로 이미 SSR에서 호출됨)
-  useEffect(() => {
-    if (!data && userId) {
-      // data가 없으면 (SSR 실패 시) 다시 요청 (optional)
-      dispatch({ type: LOAD_USER_INFO_REQUEST, data: userId });
-    }
-  }, [data, dispatch]);
+  const isMyProfile = user && data && user.id === data.id;
 
   useEffect(() => {
     const removePadding = document.getElementById("mainContents");
-    if (removePadding) {
-      removePadding.style.padding = "0";
-    }
+    if (removePadding) removePadding.style.padding = "0";
   }, []);
 
   const reloadLogInUser = useCallback(() => {
@@ -69,7 +83,18 @@ const ProfilePage = () => {
     }
   };
 
-  const { statusCode, data: profileData } = useSelector((state) => state.profile_jh);
+  useEffect(() => {
+    if (!loadMyInfoLoading && loadMyInfoError) {
+      router.push('/');
+    }
+  }, [loadMyInfoLoading, loadMyInfoError]);
+
+  // ✅ 로그인 확인 전에는 아무것도 렌더링하지 않음
+  if (loadMyInfoLoading || typeof loadMyInfoLoading === "undefined") {
+    return null; // 또는 로딩 스피너 등
+  }
+
+  
 
   if (statusCode === 404) {
     return (
@@ -80,16 +105,6 @@ const ProfilePage = () => {
       </AppLayout>
     );
   }
-
-  if (!profileData && statusCode !== 404) {
-  return (
-    <AppLayout>
-      <ERROR>
-        <ErrorMessage><LoadingOutlined />로딩 중...</ErrorMessage>
-      </ERROR>
-    </AppLayout>
-  );
-}
 
   return (
     <AppLayout>
@@ -102,13 +117,7 @@ const ProfilePage = () => {
         />
       ) : (
         <div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "end",
-              padding: "1% 1% 0 0",
-            }}
-          >
+          <div style={{ display: "flex", justifyContent: "end", padding: "1% 1% 0 0" }}>
             <MyHeader
               data={data}
               onClickSetting={() => setShowSetting(true)}
@@ -137,22 +146,6 @@ const ProfilePage = () => {
     </AppLayout>
   );
 };
-
-export const getServerSideProps = wrapper.getServerSideProps(async (context) => {
-  const cookie = context.req?.headers.cookie || "";
-  axios.defaults.headers.Cookie = "";
-  if (context.req && cookie) {
-    axios.defaults.headers.Cookie = cookie;
-  }
-
-  const userId = context.params.userId;
-
-  context.store.dispatch({ type: LOAD_USER_INFO_REQUEST, data: userId });
-  context.store.dispatch(END);
-  await context.store.sagaTask.toPromise();
-
-  return { props: {} };
-});
 
 
 export default ProfilePage;
