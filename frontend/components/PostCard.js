@@ -8,8 +8,7 @@ import PostDetailModal from './PostDetailModal';
 import ReportModal from './ReportModal';
 import MapModal from './MapModal';
 import { getTotalCommentCount } from '../utils/comment';
-import Comment from './Comment';
-
+import CommentPreview from './CommentPreview'; // ← 미리보기용
 const IMAGE_SIZE = { width: 540, height: 640 };
 
 function getRelativeTime(date) {
@@ -26,18 +25,15 @@ function getRelativeTime(date) {
 }
 
 const PostCard = ({ post }) => {
-  console.log('......1번- post',post);
-  
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user_YG);
 
   const userMap = {};
-if (post.Mentions) {
-  post.Mentions.forEach((mention) => {
-    console.log('......2번- mention',mention);
-    userMap[mention.nickname] = mention.user_id;
-  });
-}
+  if (post.Mentions) {
+    post.Mentions.forEach((mention) => {
+      userMap[mention.nickname] = mention.user_id;
+    });
+  }
 
   // ------ 리그램/원본글 구분 ------
   const isRegram = !!post.regram_id;
@@ -56,7 +52,6 @@ if (post.Mentions) {
   const [showReportModal, setShowReportModal] = useState(false);
   const [showMapModal, setShowMapModal] = useState(false);
   const menuRef = useRef(null);
-
   const [showCopyToast, setShowCopyToast] = useState(false);
   const handleCopyLink = () => {
     const postUrl = `${window.location.origin}/post/${post.id}`;
@@ -66,8 +61,7 @@ if (post.Mentions) {
   };
 
   const isMine = post.User?.id === user?.id;
-
-  // 리그램 여부/아이콘/툴팁 분기
+  // 리그램 관련
   let myRegramPost = null;
   if (!isRegram && post.Regrams) {
     myRegramPost = post.Regrams.find(rg => rg.User?.id === user?.id);
@@ -98,7 +92,6 @@ if (post.Mentions) {
   const images = basePost.Images || [];
   const [currentImages, setCurrentImages] = useState(images || []);
   useEffect(() => { setCurrentImages(images || []); }, [images]);
-
   const prevImage = () => setImageIndex(i => (i > 0 ? i - 1 : currentImages.length - 1));
   const nextImage = () => setImageIndex(i => (i < currentImages.length - 1 ? i + 1 : 0));
 
@@ -130,36 +123,35 @@ if (post.Mentions) {
   const onBookmark = () => dispatch({ type: BOOKMARK_POST_REQUEST, data: basePost.id });
   const onUnbookmark = () => dispatch({ type: UNBOOKMARK_POST_REQUEST, data: basePost.id });
 
-const renderContent = (content, userMap = {}) =>
-  content
-    ? content
-        .split(/(#[^\s#]+|@[^\s@]+)/g)
-        .filter(Boolean) // 빈 문자열 제거!
-        .map((part, i) => {
-          if (part.startsWith('#')) {
-            return (
-              <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: '#007bff', textDecoration: 'none' }}>
-                {part}
-              </a>
-            );
-          }
-          if (part.startsWith('@')) {
-            const nickname = part.slice(1);
-            const userId = userMap[nickname];
-            console.log(`@${nickname} → userId=${userId}`);
-            return userId ? (
-              <a key={i} href={`/profile/${userId}`} style={{ color: '#28a745', textDecoration: 'none' }}>
-                {part}
-              </a>
-            ) : (
-              <span key={i} style={{ color: '#28a745' }}>{part}</span> // fallback: span 처리
-            );
-          }
-          return <span key={i}>{part}</span>; // 일반 텍스트는 span으로 감싸주는게 안정적임
-        })
-    : null;
+  const renderContent = (content, userMap = {}) =>
+    content
+      ? content
+          .split(/(#[^\s#]+|@[^\s@]+)/g)
+          .filter(Boolean)
+          .map((part, i) => {
+            if (part.startsWith('#')) {
+              return (
+                <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: '#007bff', textDecoration: 'none' }}>
+                  {part}
+                </a>
+              );
+            }
+            if (part.startsWith('@')) {
+              const nickname = part.slice(1);
+              const userId = userMap[nickname];
+              return userId ? (
+                <a key={i} href={`/profile/${userId}`} style={{ color: '#28a745', textDecoration: 'none' }}>
+                  {part}
+                </a>
+              ) : (
+                <span key={i} style={{ color: '#28a745' }}>{part}</span>
+              );
+            }
+            return <span key={i}>{part}</span>;
+          })
+      : null;
 
-  // ⭐ 리그램 표시문구: 위치-내용 사이
+  // 리그램 표시문구
   const RegramInfo = isRegram && origin && origin.User && (
     <div style={{
       display: 'flex',
@@ -197,10 +189,31 @@ const renderContent = (content, userMap = {}) =>
     </div>
   );
 
+  // ⭐ 레이아웃 변경: 6:4 그리드(왼쪽이미지, 오른쪽정보)
   return (
-    <div style={cardStyle}>
-      {/* 오른쪽 상단 리그램 오버레이 */}
-      <div style={{ ...IMAGE_SIZE, position: 'relative', background: '#eee', flexShrink: 0 }}>
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: '3fr 2fr', // 6:4 비율
+      gap: 0,
+      background: '#fff',
+      borderRadius: 20,
+      boxShadow: '0 3px 16px rgba(0,0,0,0.12)',
+      margin: '32px 0',
+      padding: 0,
+      overflow: 'hidden',
+      position: 'relative'
+    }}>
+      {/* 왼쪽 이미지 */}
+      <div style={{
+        width: IMAGE_SIZE.width,
+        height: IMAGE_SIZE.height,
+        position: 'relative',
+        background: '#eee',
+        flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
         {currentImages.length > 0 ? (
           <img
             src={`http://localhost:3065/uploads/post/${currentImages[imageIndex]?.src}`}
@@ -218,10 +231,12 @@ const renderContent = (content, userMap = {}) =>
           </>
         )}
       </div>
+      {/* 오른쪽 정보 */}
       <div style={{
-        flex: 1, height: IMAGE_SIZE.height, display: 'flex', flexDirection: 'column',
-        background: '#fff', minWidth: 390, boxSizing: 'border-box', padding: '20px 24px', overflowX: 'hidden'
+        display: 'flex', flexDirection: 'column', justifyContent: 'flex-start',
+        minWidth: 340, maxWidth: 430, padding: '22px 28px 18px 28px', height: IMAGE_SIZE.height, boxSizing: 'border-box', overflow: 'hidden',
       }}>
+        {/* 리그램 오버레이 */}
         {isRegram && (
           <div style={{
             display: 'flex',
@@ -234,9 +249,9 @@ const renderContent = (content, userMap = {}) =>
           }}>
             <FaRetweet />재게시했습니다
           </div>
-        )}        
-        {/* 작성자 정보 */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8, minHeight: 54 }}>
+        )}
+        {/* 작성자 정보+메뉴 */}
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12, minHeight: 54 }}>
           <img
             src={userInfo?.profile_img ? `http://localhost:3065${userInfo.profile_img}` : 'http://localhost:3065/img/profile/default.jpg'}
             alt="프로필"
@@ -295,24 +310,26 @@ const renderContent = (content, userMap = {}) =>
             hour: '2-digit', minute: '2-digit'
           }) : ''}
         </div>
-        {/* 위치(주소) */}
         {location && (
-          <div style={{ fontSize: 15, color: '#1558d6', marginBottom: 10, cursor: 'pointer', fontWeight: 500, textDecoration: 'underline' }}
+          <div style={{
+            fontSize: 15, color: '#1558d6', marginBottom: 10,
+            cursor: 'pointer', fontWeight: 500, textDecoration: 'underline'
+          }}
             onClick={() => setShowMapModal(true)}>
             {location}
           </div>
         )}
-        {/* ⭐ 리그램정보 */}
+        {/* 리그램정보 */}
         {RegramInfo}
         {/* 본문 내용 */}
         <div style={{
-          fontSize: 17, lineHeight: 1.6, marginBottom: 12,
-          minHeight: 60, maxHeight: 130, overflowY: 'auto', overflowX: 'hidden', wordBreak: 'break-all',
+          fontSize: 17, lineHeight: 1.6, marginBottom: 8, minHeight: 42, maxHeight: 75, overflowY: 'auto', overflowX: 'hidden', wordBreak: 'break-all',
         }}>
           {renderContent(post.content, userMap)}
         </div>
+        {/* 아이콘 */}
         <div style={{
-          display: 'flex', alignItems: 'center', gap: 22, fontSize: 26, margin: '12px 0 0 0',
+          display: 'flex', alignItems: 'center', gap: 22, fontSize: 25, margin: '12px 0 0 0',
           borderTop: '1.5px solid #f2f2f2', paddingTop: 10
         }}>
           <button style={iconBtnStyle} onClick={() => setShowDetailModal(true)}>
@@ -336,14 +353,14 @@ const renderContent = (content, userMap = {}) =>
             <span style={{ fontSize: 16, marginLeft: 2, fontWeight: 500 }}>공유</span>
           </button>
         </div>
-        <Comment
-          postId={post.id}
-          currentUserId={user?.id}
-          preview={true}
-          initialComments={post.Comments}
-          previewCount={3}
-          onShowDetailModal={() => setShowDetailModal(true)}
-        />
+        {/* 댓글 프리뷰(3개만, 더보기) */}
+        <div style={{ margin: '20px 0 0 0', flex: 1, minHeight: 0 }}>
+          <CommentPreview
+            comments={post.Comments || []}
+            previewCount={3}
+            onShowDetailModal={() => setShowDetailModal(true)}
+          />
+        </div>
         {showReportModal && (
           <ReportModal
             visible={showReportModal}
@@ -399,16 +416,6 @@ const renderContent = (content, userMap = {}) =>
   );
 };
 
-const cardStyle = {
-  display: 'flex',
-  background: '#fff',
-  borderRadius: 20,
-  boxShadow: '0 3px 16px rgba(0,0,0,0.12)',
-  margin: '28px 0',
-  padding: 0,
-  overflow: 'hidden',
-  position: 'relative', // ⭐ 리그램오버레이위치!
-};
 const arrowBtnStyle = {
   position: 'absolute',
   top: '50%',
