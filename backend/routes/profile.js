@@ -17,20 +17,26 @@ router.get("/:userId", async (req, res, next) => {
       attributes: ["id", "nickname", "profile_img", "theme_mode", "is_private", "myteam_id", "role", "email"],
       include: [
         { model: UserInfo },
-        { model: Post, include: [ Image, { model: Post, as: 'Regram', include: [Image], }, ], separate: true, order: [['id', 'DESC']], },
-        { model: Post, as: 'BookmarkedPosts', include: [Image],  through: { attributes: [] }, },
+        { model: Post, include: [Image, { model: Post, as: 'Regram', include: [Image], },], separate: true, order: [['id', 'DESC']], },
+        { model: Post, as: 'BookmarkedPosts', include: [Image], through: { attributes: [] }, },
         { model: Post, as: 'Liked', include: [Image], through: { attributes: [] } },
-        { model: Follow, as: 'Followings', include: [
-          { model: User, as: 'Followers', attributes: ['id', 'nickname', 'profile_img'], }
-        ], },
-        { model: Follow, as: 'Followers', include: [
-          { model: User, as: 'Followings', attributes: ['id', 'nickname', 'profile_img'], },
-        ], },
+        {
+          model: Follow, as: 'Followings', include: [
+            { model: User, as: 'Followers', attributes: ['id', 'nickname', 'profile_img'], }
+          ],
+        },
+        {
+          model: Follow, as: 'Followers', include: [
+            { model: User, as: 'Followings', attributes: ['id', 'nickname', 'profile_img'], },
+          ],
+        },
         { model: Achievement, attributes: ['id', 'name', 'description'], through: { attributes: ['createdAt', 'updatedAt'], }, },
-        { model: Badge, attributes: ['id', 'name', 'img', 'description'], through: {   }, },
+        { model: Badge, attributes: ['id', 'name', 'img', 'description'], through: {}, },
         { model: Myteam, attributes: ['id', 'teamname', 'teamcolor', 'region'], },
-        { model: Block, as: 'Blockeds', include: [
-          { model: User, as: 'Blocked', attributes: ['id', 'nickname', 'profile_img'], } ] },
+        {
+          model: Block, as: 'Blockeds', include: [
+            { model: User, as: 'Blocked', attributes: ['id', 'nickname', 'profile_img'], }]
+        },
         { model: ActiveLog },
         { model: UserPoint },
         { model: UserPayment },
@@ -70,33 +76,67 @@ router.get("/:userId", async (req, res, next) => {
       //////////////////////////////
 
       // ------------------- [리그램/원본 숨김 연동 추가] -------------------
-      // helper: 원본글 리턴 (리그램이면 원본, 아니면 자기자신)
-      function getBasePost(post) {
-        return post.Regram || post;
-      }
+      //const myId = req.user?.id;
       const myId = req.user?.id;
+      // helper: 리그램 원본이 존재하고 내가 작성자가 아닌 경우 비공개거나 차단이면 제외
+      const filterPostsWithRegram = async (arr) => {
+        if (!Array.isArray(arr)) return [];
 
-      // 1. 내가 쓴글(리그램 포함)에서 원본 비공개/삭제된 리그램글 제거
-      if (Array.isArray(data.Posts)) {
-        data.Posts = data.Posts.filter(post => {
-          if (post.regram_id && post.Regram) {
-            if (post.Regram.private_post && post.Regram.user_id !== myId) return false;
-            if (!post.Regram) return false;
+        const result = [];
+
+        for (const post of arr) {
+          let skip = false;
+
+          const baseUserId = post.regram_id && post.Regram ? post.Regram.user_id : post.user_id;
+
+          // ✅ 리그램이든 아니든 무조건 차단 검사
+          if (baseUserId !== myId) {
+            const [isBlockedByMe, hasBlockedMe] = await Promise.all([
+              Block.findOne({ where: { from_user_id: myId, to_user_id: baseUserId } }),
+              Block.findOne({ where: { from_user_id: baseUserId, to_user_id: myId } }),
+            ]);
+            if (isBlockedByMe || hasBlockedMe) {
+              skip = true;
+            }
           }
-          return true;
-        });
-      }
-      // 2. 북마크/좋아요 리스트에서도 원본글 숨김/삭제 적용
-      const postSetFilter = (arr) => Array.isArray(arr) ? arr.filter(post => {
-        if (post.regram_id && post.Regram) {
-          if (post.Regram.private_post && post.Regram.user_id !== myId) return false;
-          if (!post.Regram) return false;
-        }
-        return true;
-      }) : [];
 
-      if (Array.isArray(data.BookmarkedPosts)) data.BookmarkedPosts = postSetFilter(data.BookmarkedPosts);
-      if (Array.isArray(data.Liked)) data.Liked = postSetFilter(data.Liked);
+          // ✅ 리그램 비공개 + 내가 작성자가 아님
+          if (
+            post.regram_id &&
+            post.Regram &&
+            post.Regram.private_post &&
+            post.Regram.user_id !== myId
+          ) {
+            skip = true;
+          }
+
+          // ✅ 리그램인데 원본이 없으면 (삭제/차단)
+          if (post.regram_id && !post.Regram) {
+            skip = true;
+          }
+
+          if (!skip) result.push(post);
+        }
+
+        return result;
+      };
+
+
+      // 1. 내가 쓴 글
+      if (Array.isArray(data.Posts)) {
+        data.Posts = await filterPostsWithRegram(data.Posts);
+      }
+
+      // 2. 북마크 글
+      if (Array.isArray(data.BookmarkedPosts)) {
+        data.BookmarkedPosts = await filterPostsWithRegram(data.BookmarkedPosts);
+      }
+
+      // 3. 좋아요 누른 글
+      if (Array.isArray(data.Liked)) {
+        data.Liked = await filterPostsWithRegram(data.Liked);
+      }
+
 
       // 3. 각 post에서 원본글 데이터 병합(이미지/내용/북마크/좋아요 등)
       const patchWithBasePost = (post) => {
@@ -146,11 +186,12 @@ router.patch("/update", isLoggedIn, async (req, res, next) => {
       await User.update(userFields, { where: { id: userId } });
     }
 
-  const userInfoFields = {};
-  if (introduce !== undefined) { userInfoFields.introduce = introduce === "" ? null : introduce; }
-  if (phone !== undefined) { userInfoFields.phone = phone === "" ? null : phone; }
-  if (Object.keys(userInfoFields).length > 0) {
-    await UserInfo.update(userInfoFields, { where: { users_id: userId } }); }
+    const userInfoFields = {};
+    if (introduce !== undefined) { userInfoFields.introduce = introduce === "" ? null : introduce; }
+    if (phone !== undefined) { userInfoFields.phone = phone === "" ? null : phone; }
+    if (Object.keys(userInfoFields).length > 0) {
+      await UserInfo.update(userInfoFields, { where: { users_id: userId } });
+    }
 
 
     // 응원팀 변경 시 뱃지 재부여

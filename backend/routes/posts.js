@@ -52,7 +52,7 @@ router.get('/', async (req, res, next) => {
         [Comment, 'createdAt', 'DESC'],
       ],
       include: [
-        { model: User, attributes: ['id', 'nickname', 'profile_img', 'last_active'] }, 
+        { model: User, attributes: ['id', 'nickname', 'profile_img', 'last_active'] },
         { model: Image },
         {
           model: Comment,
@@ -113,14 +113,20 @@ router.get('/', async (req, res, next) => {
       }
     }
     posts = posts.filter(post => {
-      // 차단된 유저의 리그램글 제외 (기존 로직)
       const regramUserId = post?.Regram?.User?.id;
-      if (regramUserId && blockedUserIds.includes(regramUserId) && post.user_id !== myId) {
+
+      // 리그램 원본 유저가 차단 대상이면 무조건 필터 (내가 썼든 남이 썼든 상관없이)
+      if (regramUserId && blockedUserIds.includes(regramUserId)) {
         return false;
       }
 
-      // [추가] 리그램글인데, 원본글이 나만보기(비공개)고 내가 원본 주인이 아니면 숨김
-      if (post.regram_id && post.Regram && post.Regram.private_post && post.Regram.user_id !== myId) {
+      // 원본글이 나만보기 + 내가 작성자 아님
+      if (post.regram_id && post.Regram?.private_post && post.Regram.user_id !== myId) {
+        return false;
+      }
+
+      // 게시글 작성자 자체도 차단된 경우 
+      if (blockedUserIds.includes(post.user_id)) {
         return false;
       }
 
