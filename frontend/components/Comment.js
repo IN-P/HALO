@@ -23,9 +23,16 @@ const Comment = ({
   initialComments, // SSR/post.Comments
 }) => {
   const dispatch = useDispatch();
+  const mentionUserMap = useSelector((state) => state.mentionUser_JW?.mentionUserMap || {});
   const router = useRouter();
   const { comments, addCommentLoading, loadCommentsDone, editCommentLoading } = useSelector((state) => state.comment_IN);
   const [receiverIdMap, setReceiverIdMap] = useState({});
+
+  useEffect(() => {
+  dispatch({
+    type: 'LOAD_MENTION_USERS_REQUEST',
+    });
+  }, [dispatch]);
 
   useEffect(() => {
     if (!loadCommentsDone?.[postId]) {
@@ -245,7 +252,7 @@ const Comment = ({
           }
           if (part.startsWith('@')) {
             const nickname = part.slice(1).toLowerCase();
-            const userId = userMap[nickname];
+            const userId = userMap[nickname] || mentionUserMap[nickname];
             return userId ? (
               <a key={i} href={`/profile/${userId}`} style={{ color: '#28a745', textDecoration: 'none' }}>
                 {part}

@@ -20,13 +20,20 @@ import reportResult_YB from './reportResult_YB';
 import badge_JH from './badge_JH';
 import achievement_JH from './achievement_JH';
 import userPoint_JH from './userPoint_JH'; //준혁
+import mentionUser_JW from './mentionUser_JW';
+
 
 const rootReducer = combineReducers({
   index: (state = {}, action) => {
     switch (action.type) {
       case HYDRATE:
         console.log('HYDRATE', action);
-        return { ...state, ...action.payload };
+        return { ...state, ...action.payload,
+          mentionUser_JW: {
+          ...state.mentionUser_JW,
+          ...action.payload.mentionUser_JW,
+        }, 
+      };
       default:
         return state;
     }
@@ -51,6 +58,7 @@ const rootReducer = combineReducers({
   badge_JH,
   achievement_JH,
   userPoint_JH, //준혁
+  mentionUser_JW,
 
 });
 
