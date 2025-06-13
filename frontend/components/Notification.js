@@ -1,11 +1,13 @@
 import React from 'react';
 import styled from 'styled-components';
 import {
-  BellOutlined,
+  BellTwoTone,
   UsergroupAddOutlined,
   CommentOutlined,
   HeartOutlined,
   MessageOutlined,
+  ExclamationCircleOutlined,
+  CloseCircleOutlined,
 } from '@ant-design/icons';
 
 const NotificationWrapper = styled.div`
@@ -61,9 +63,11 @@ const IconStyle = `
   font-size: 20px;
 `;
 
-const StyledBellOutlined = styled(BellOutlined)`
-  ${IconStyle}
-  color: #1890ff;
+
+const StyledBell = styled(BellTwoTone).attrs({
+  twoToneColor: ['#faad14', '#ffd666'], // 두 가지 색상 지정
+})`
+  font-size: 24px;
 `;
 
 const StyledUsergroupAddOutlined = styled(UsergroupAddOutlined)`
@@ -71,20 +75,35 @@ const StyledUsergroupAddOutlined = styled(UsergroupAddOutlined)`
   color: #52c41a;
 `;
 
-const StyledCommentOutlined = styled(CommentOutlined)`
+const StyledCommentOutlined = styled(MessageOutlined)`
   ${IconStyle}
-  color: #fa8c16;
+  color: #1890ff	;
 `;
+
+const StyledReply = styled(CommentOutlined)`
+  ${IconStyle}
+  color: purple;
+`
 
 const StyledHeartOutlined = styled(HeartOutlined)`
   ${IconStyle}
   color: #eb2f96;
 `;
 
-const StyledMention = styled(MessageOutlined)`
+const StyledMention = styled(CommentOutlined)`
   ${IconStyle}
   color: #595959;
 `;
+
+const StyledWarn = styled(ExclamationCircleOutlined)`
+  ${IconStyle}
+  color: #fa8c16 ;
+`;
+
+const StyledRestrict = styled(CloseCircleOutlined)`
+  ${IconStyle}
+  color: #d4380d;
+`
 
 const NotificationText = styled.div`
   flex: 1;
@@ -125,13 +144,18 @@ const getIconAndExtraText = (target_type_id) => {
     case 3:
       return { icon: <StyledUsergroupAddOutlined />, extra: '님이 팔로우했습니다.' }; 
     case 4:
-      return { icon: <StyledBellOutlined />, extra: '답장이 달렸습니다' };
+      return { icon: <StyledReply />, extra: '답장이 달렸습니다' };
     case 5:
       return { icon: <StyledHeartOutlined />, extra: '좋아요를 받았습니다.' };
     case 8:
       return { icon: <StyledMention />, extra: '님이 당신을 멘션했습니다'}
+    case 9:
+      return { icon: <StyledWarn />, extra: '게시물에 대해 관리자가 경고를 보냈습니다'}
+    case 10:
+      return { icon: <StyledRestrict />, extra: '정책을 위반하여 관리자가 삭제했습니다'}
+
     default:
-      return { icon: <StyledBellOutlined />, extra: '' };
+      return { icon: <StyledBell />, extra: '' };
   }
 };
 
@@ -152,11 +176,26 @@ const Notification = ({ notification, onDeleteNotification, onDeleteAllNotificat
     return `${diffDay}일 전`;
   };
 
+// notification이 배열이 아니면 빈 배열로 대체
+  const sortedNotification = Array.isArray(notification)
+    ? [...notification].sort((a, b) => {
+        const important = [9, 10];
+        const aIsImportant = important.includes(a.target_type_id);
+        const bIsImportant = important.includes(b.target_type_id);
+
+        if (aIsImportant && !bIsImportant) return -1;
+        if (!aIsImportant && bIsImportant) return 1;
+
+        // 중요도가 같으면 최신순 정렬
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      })
+    : [];
+
   return (
     <NotificationWrapper>
       <Header>
         <Title>
-          <BellOutlined /> 알림
+          <StyledBell /> 알림
         </Title>
         {Array.isArray(notification) && notification.length > 0 && (
           <DeleteAllButton onClick={onDeleteAllNotification}>모두 삭제</DeleteAllButton>
@@ -166,7 +205,7 @@ const Notification = ({ notification, onDeleteNotification, onDeleteAllNotificat
         {!Array.isArray(notification) || notification.length === 0 ? (
           <NotificationItem>알림이 없습니다.</NotificationItem>
         ) : (
-          notification.map(({ id, content, createdAt, target_type_id }) => {
+          sortedNotification.map(({ id, content, createdAt, target_type_id }) => {
             const { icon, extra } = getIconAndExtraText(target_type_id);
             return (
               <NotificationItem

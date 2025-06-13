@@ -65,9 +65,14 @@ const AppLayout = ({ children }) => {
   useEffect(() => {
   if (userId) { dispatch({ type: LOAD_USER_NOTIFICATION_REQUEST, data: userId }); } }, [dispatch, userId]);
   // 미확인 알림 개수 카운트
+  // 중요핮 않은 미확인 알림 개수 카운트
   const notificationCount = Array.isArray(notification)
-  ? notification.filter(item => item.is_read === false).length
-  : 0;
+    ? notification.filter(item => item.is_read === false && item.target_type_id !== 9 && item.target_type_id !== 10).length
+    : 0;
+  // 중요한 알림 개수 카운트
+  const importantCount = Array.isArray(notification)
+    ? notification.filter(item => item.target_type_id === 9 || item.target_type_id === 10).length
+    : 0;
   console.log("읽지 않은 알림 개수:", notificationCount);
   // 알림 삭제
   const onDeleteNotification = (notificationId) => { if (!userId) return;
@@ -184,10 +189,11 @@ useEffect(() => {
       {/* 좌측 고정 사이드바 */}
       <Sidebar
         showNotification={showNotification}
-  onToggleNotification={onToggleNotification}
-  notificationCount={notificationCount}
-  themeMode={themeMode}
-  onToggleTheme={handleToggleTheme}
+        onToggleNotification={onToggleNotification}
+        notificationCount={notificationCount}
+        importantCount={importantCount}
+        themeMode={themeMode}
+        onToggleTheme={handleToggleTheme}
       />
 
       {/* 알림창 팝업 */}

@@ -38,9 +38,26 @@ export default function AdminPostDetail() {
     });
   };
 
-  // 수정권고: 실제로 알림은 안 보냄
+  // 수정권고: 실제로 알림을 보냄
   const handleWarn = () => {
-    message.info("수정 권고 알림 기능은 추후 연결 예정입니다.");
+    Modal.confirm({
+      title: "수정 권고를 보냅니다",
+      icon: <ExclamationCircleOutlined />,
+      content: "이 게시물에 대해 수정 권고 알림을 보냅니다. 진행하시겠습니까?",
+      okText: "경고 전송",
+      okType: "danger",
+      cancelText: "취소",
+      onOk: async () => {
+        try {
+          await axios.post(`/api/admin/post/${id}/warn`);
+          message.success("경고 완료!");
+          router.push("/admin/post/posts");
+        } catch (err) {
+          message.error("경고 전송 실패");
+          console.error(err);
+        }
+      },
+    });
   };
 
   return (
