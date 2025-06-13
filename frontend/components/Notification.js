@@ -8,6 +8,7 @@ import {
   MessageOutlined,
   ExclamationCircleOutlined,
   CloseCircleOutlined,
+  MenuUnfoldOutlined
 } from '@ant-design/icons';
 
 const NotificationWrapper = styled.div`
@@ -90,7 +91,7 @@ const StyledHeartOutlined = styled(HeartOutlined)`
   color: #eb2f96;
 `;
 
-const StyledMention = styled(CommentOutlined)`
+const StyledMention = styled(MenuUnfoldOutlined)`
   ${IconStyle}
   color: #595959;
 `;

@@ -11,6 +11,18 @@ import FollowingsModal from '../../components/FollowingsModal';
 import FollowersModal from '../../components/FollowersModal';
 import { isLoggedIn } from "../../../backend/routes/middlewares";
 
+const UserRoleNames = {
+  1: "마스터관리자",
+  2: "광고 관리자",
+  3: "신고 관리자",
+  4: "문의 관리자",
+  5: "유저 관리자",
+  6: "보안 관리자",
+  7: "커스텀 관리자",
+  8: "업적 관리자",
+  9: "채팅 관리자",
+  10: "포스트 관리자",
+};
 
 const MyMain = ({ data, isMyProfile, onRefetch }) => {
   const dispatch = useDispatch();
@@ -103,7 +115,7 @@ const MyMain = ({ data, isMyProfile, onRefetch }) => {
             whiteSpace: "nowrap"
           }}
         >
-          {data?.role || ""}
+          {UserRoleNames[data?.role] || ""}
         </span>
         {!isMyProfile && (
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginLeft: 'auto', verticalAlign: 'middle' }}>

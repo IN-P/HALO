@@ -41,9 +41,9 @@ module.exports = (sequelize, DataTypes) => {
       { id: 3000002, name: '손에 손 잡고', description: '누적 팔로우 수 10명에 달하다'},
       { id: 3000003, name: '소문난 사람', description: '누적 팔로우 수 50명에 달하다'},
 
-      { id: 5000001, name: '좋아요 1개', description: '처음으로 좋아요를 누름'},
-      { id: 5000002, name: '좋아요 10개', description: '좋아요 표시한 게시글이 10개'},
-      { id: 5000003, name: '좋아요 100개', description: '좋아요 표시한 게시글이 20개'},
+      { id: 5000001, name: '첫사랑', description: '최초로 좋아요를 누르다'},
+      { id: 5000002, name: '좋아요가 좋아요', description: '좋아요 표시한 게시글이 누적 10개가 되다'},
+      { id: 5000003, name: '사랑꾼', description: '좋아요 표시한 게시글이 누적 100개가 되다'},
     ], {
       ignoreDuplicates: true, // 중복 데이터 무시
     });

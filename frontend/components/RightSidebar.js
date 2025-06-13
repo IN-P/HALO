@@ -86,7 +86,7 @@ const RightSidebar = () => {
         4: { label: '문의 관리', path: '/admin/inquiry/inquiry' },
         5: { label: '유저 관리', path: '/admin/users' },
         6: { label: '보안 로그', path: '/admin/logs' },
-        7: { label: '커스텀 관리', path: '/admin/custom' },
+        7: { label: '커스텀 관리', path: '/admin/custom/badge' }, // 뱃지 연결
         8: { label: '업적 관리', path: '/admin/achievements' },
         9: { label: '채팅 관리', path: '/admin/chat' },
         10: { label: '포스트 관리', path: '/admin/post/posts' },
