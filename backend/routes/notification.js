@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { Notification, User, TargetType } = require("../models");
 const { isLoggedIn } = require("./middlewares");
+const { Op } = require('sequelize');
 
 // userId(users의 id)로 알림 불러오기
 router.get('/:userId', isLoggedIn, async (req, res, next) => {
@@ -62,9 +63,14 @@ router.delete('/delete/:userId/:notificationId', async (req, res) => {
 
   try {
     if (notificationId === 'all') {
-      // 전체 삭제
+      // 전체 삭제 (단, target_type_id 9, 10 제외)
       await Notification.destroy({
-        where: { users_id: userId },
+        where: {
+          users_id: userId,
+          target_type_id: {
+            [Op.notIn]: [9, 10],
+          },
+        },
       });
     } else {
       // 개별 삭제
