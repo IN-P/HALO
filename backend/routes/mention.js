@@ -46,9 +46,10 @@ router.post('/', isLoggedIn, async (req, res, next) => {
       ],
     });
 
-    // 알림 생성
+    // 준혁 : 알림 생성
+    const sender = await User.findOne({ where: { id: sender_id } })
     await Notification.create({
-      content: `${sender_id.nickname}`,
+      content: `${sender.nickname}`,
       users_id: receiver.id,
       target_type_id: 8,
     });
