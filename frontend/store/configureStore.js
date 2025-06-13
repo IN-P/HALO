@@ -23,6 +23,7 @@ import activeLog_JH from '../reducers/activeLog_JH';
 import reportResult_YB  from '../reducers/reportResult_YB';
 import badge_JH from '../reducers/badge_JH';
 import achievement_JH from '../reducers/achievement_JH';
+import mentionUser_JW from '../reducers/mentionUser_JW';
 
 const rootReducer = combineReducers({
   post_IN,
@@ -45,6 +46,7 @@ const rootReducer = combineReducers({
   reportResult_YB,
   badge_JH,
   achievement_JH,
+  mentionUser_JW,
 
 });
 

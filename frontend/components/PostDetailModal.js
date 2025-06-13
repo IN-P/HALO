@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState ,useEffect} from 'react';
+import { useDispatch, useSelector } from 'react-redux'; 
 import { FaHeart, FaRegHeart, FaRegComment, FaBookmark, FaRegBookmark, FaRetweet } from 'react-icons/fa';
 import Comment from './Comment';
 import ReportModal from './ReportModal';
@@ -16,23 +17,24 @@ const PostDetailModal = ({
   onRegram, regramIconColor, regramDisabled, regramTooltip,
   showReportModal, setShowReportModal,
 }) => {
+  const dispatch = useDispatch();
+  const mentionUserMap = useSelector((state) => state.mentionUser_JW?.mentionUserMap || {});
+
+  useEffect(() => {
+    dispatch({
+      type: 'LOAD_MENTION_USERS_REQUEST',
+    });
+  }, [dispatch]);
+
   const images = basePost.Images || [];
   const prevImage = () => setImageIndex(i => (i > 0 ? i - 1 : images.length - 1));
   const nextImage = () => setImageIndex(i => (i < images.length - 1 ? i + 1 : 0));
-console.log('1번',post);
-console.log('2번',post.Mentions);
   // 지도 모달용 state
   const [showMapModal, setShowMapModal] = useState(false);
 
   // 작성일/접속시간
   const baseDate = post.User?.last_active ? new Date(post.User.last_active) : new Date(post.createdAt);
   const minutesAgo = Math.floor((Date.now() - baseDate.getTime()) / 60000);
-
-const userMap = {};
-post.Mentions?.forEach(m => {
-  userMap[m.nickname.toLowerCase()] = m.user_id; // 지금은 undefined, 나중에 user_id 넣으면 됨
-  console.log('3번', m.nickname.toLowerCase(), userMap[m.nickname.toLowerCase()]);
-});
 
   // 작성일 텍스트
   const writtenAt = post.createdAt ? new Date(post.createdAt).toLocaleString('ko-KR', {
@@ -42,33 +44,32 @@ post.Mentions?.forEach(m => {
 
   // 본문 내용 렌더링
   const renderContent = (content, userMap = {}) =>
-  content
-    ? content
-        .split(/(#[^\s#]+|@[^\s@]+)/g)
-        .filter(Boolean) // 빈 문자열 제거!
-        .map((part, i) => {
-          if (part.startsWith('#')) {
-            return (
-              <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: '#007bff', textDecoration: 'none' }}>
-                {part}
-              </a>
-            );
-          }
-          if (part.startsWith('@')) {
-            const nickname = part.slice(1).toLowerCase();
-            const userId = userMap[nickname];
-            console.log('......4번',userId, nickname);
-            return userId ? (
-              <a key={i} href={`/profile/${userId}`} style={{ color: '#28a745'}}>
-                {part}
-              </a>
-            ) : (
-              <span key={i} style={{ color: '#28a745' }}>{part}</span> // fallback: span 처리
-            );
-          }
-          return <span key={i}>{part}</span>; // 일반 텍스트는 span으로 감싸주는게 안정적임
-        })
-    : null;
+    content
+      ? content
+          .split(/(#[^\s#]+|@[^\s@]+)/g)
+          .filter(Boolean)
+          .map((part, i) => {
+            if (part.startsWith('#')) {
+              return (
+                <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: '#007bff', textDecoration: 'none' }}>
+                  {part}
+                </a>
+              );
+            }
+            if (part.startsWith('@')) {
+              const nickname = part.slice(1).toLowerCase();
+              const userId = userMap[nickname];
+              return userId ? (
+                <a key={i} href={`/profile/${userId}`} style={{ color: '#28a745' }}>
+                  {part}
+                </a>
+              ) : (
+                <span key={i} style={{ color: '#28a745' }}>{part}</span>
+              );
+            }
+            return <span key={i}>{part}</span>;
+          })
+      : null;
 
   // ⭐ 리그램 정보
   const isRegram = !!post.regram_id;
@@ -200,7 +201,7 @@ post.Mentions?.forEach(m => {
             overflowX: 'hidden',
             wordBreak: 'break-all',
           }}>
-            {renderContent(post.content, userMap)}
+            {renderContent(post.content, mentionUserMap)}
           </div>
           {/* 아이콘/카운트 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 22, fontSize: 26, marginBottom: 8 }}>

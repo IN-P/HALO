@@ -30,14 +30,11 @@ const PostCard = ({ post }) => {
   
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user_YG);
+  const mentionUserMap = useSelector((state) => state.mentionUser_JW?.mentionUserMap || {});
 
-  const userMap = {};
-if (post.Mentions) {
-  post.Mentions.forEach((mention) => {
-    console.log('......2번- mention',mention);
-    userMap[mention.nickname] = mention.user_id;
-  });
-}
+  console.log('mentionUserMap:', mentionUserMap);
+
+
 
   // ------ 리그램/원본글 구분 ------
   const isRegram = !!post.regram_id;
@@ -112,6 +109,12 @@ if (post.Mentions) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showMenu]);
 
+  useEffect(() => {
+  dispatch({
+    type: 'LOAD_MENTION_USERS_REQUEST',
+  });
+}, [dispatch]);
+
   const onRegram = () => {
     if (regramDisabled) return;
     if (myRegramPost) {
@@ -134,7 +137,7 @@ const renderContent = (content, userMap = {}) =>
   content
     ? content
         .split(/(#[^\s#]+|@[^\s@]+)/g)
-        .filter(Boolean) // 빈 문자열 제거!
+        .filter(Boolean)
         .map((part, i) => {
           if (part.startsWith('#')) {
             return (
@@ -143,19 +146,26 @@ const renderContent = (content, userMap = {}) =>
               </a>
             );
           }
+
+          console.log('@........1분:', content);
           if (part.startsWith('@')) {
+            console.log('@........2분:', part);
             const nickname = part.slice(1);
-            const userId = userMap[nickname];
+
+            console.log('@........3분:', nickname);
+            const userId = userMap[nickname]; // ✅ 여기만 수정! mentionUserMap[nickname] X
             console.log(`@${nickname} → userId=${userId}`);
+
             return userId ? (
               <a key={i} href={`/profile/${userId}`} style={{ color: '#28a745', textDecoration: 'none' }}>
                 {part}
               </a>
             ) : (
-              <span key={i} style={{ color: '#28a745' }}>{part}</span> // fallback: span 처리
+              <span key={i} style={{ color: '#28a745' }}>{part}</span>
             );
           }
-          return <span key={i}>{part}</span>; // 일반 텍스트는 span으로 감싸주는게 안정적임
+
+          return <span key={i}>{part}</span>;
         })
     : null;
 
@@ -309,7 +319,7 @@ const renderContent = (content, userMap = {}) =>
           fontSize: 17, lineHeight: 1.6, marginBottom: 12,
           minHeight: 60, maxHeight: 130, overflowY: 'auto', overflowX: 'hidden', wordBreak: 'break-all',
         }}>
-          {renderContent(post.content, userMap)}
+          {renderContent(post.content, mentionUserMap)}
         </div>
         <div style={{
           display: 'flex', alignItems: 'center', gap: 22, fontSize: 26, margin: '12px 0 0 0',
