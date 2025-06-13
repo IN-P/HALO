@@ -1,7 +1,34 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import socket from '../socket';
 
-const ChatList = ({ chatRooms, onSelectUser }) => {
+const ChatList = ({ chatRooms,setChatRooms,onSelectUser }) => {
   console.log('🔥 ChatList 렌더링됨 chatRooms:', chatRooms);
+
+  useEffect(() => {
+  const handleProfileUpdate = (data) => {
+    console.log('📢 profile_update 수신:', data);
+
+    setChatRooms((prevRooms) =>
+      prevRooms.map((room) =>
+        room.otherUser.id === data.userId
+          ? {
+              ...room,
+              otherUser: {
+                ...room.otherUser,
+                profileImage: data.profileImage,
+              },
+            }
+          : room
+      )
+    );
+  };
+
+  socket.on('profile_update', handleProfileUpdate);
+
+  return () => {
+    socket.off('profile_update', handleProfileUpdate);
+  };
+}, [setChatRooms]);
 
   const API_URL = 'http://localhost:3065';
 

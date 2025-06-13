@@ -85,6 +85,20 @@ function* loadComments(action) {
 
 
 // 댓글/대댓글 작성
+function addCommentAPI(data) {
+  if (data.parentId) {
+    return axios.post(
+      `http://localhost:3065/comment/${data.parentId}/reply`,
+      { content: data.content, receiver_id: data.receiver_id },
+      { withCredentials: true }
+    );
+  }
+  return axios.post(
+    `http://localhost:3065/comment/post/${data.postId}`,
+    { content: data.content, receiver_id: data.receiver_id },
+    { withCredentials: true }
+  );
+}
 function* addComment(action) {
   try {
     const res = yield call(addCommentAPI, action.data);
@@ -135,6 +149,13 @@ function* addComment(action) {
 
 
 // 댓글 수정
+function editCommentAPI(data) {
+  return axios.patch(
+    `http://localhost:3065/comment/${data.commentId}`,
+    { content: data.content },
+    { withCredentials: true }
+  );
+}
 function* editComment(action) {
   try {
     const res = yield call(editCommentAPI, action.data);
@@ -171,7 +192,7 @@ function* editComment(action) {
 
     // Mentions를 따로 관리하고 싶으면 res.data 에 Mentions 넣어줄 수 있음
     // res.data.Mentions = mentions; (지금은 사용 X)
-
+    
     // 수정 후 트리 새로고침
     yield put({ type: LOAD_COMMENTS_REQUEST, postId: action.data.postId });
     yield put({ type: EDIT_COMMENT_SUCCESS });

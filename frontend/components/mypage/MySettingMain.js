@@ -12,6 +12,8 @@ import MySettingPassword from "./MySettingPassword";
 import MySettingFollowers from "./MySettingFollowers";
 import MySettingFollowings from "./MySettingFollowings";
 import MySettingBalance from "./MySettingBalance";
+import MySettingDelete from "./MySettingDelete";
+import MySettingPoint from "./MySettingPoint";
 
 const MySettingMain = ({ data, onClose, reload, reloadLogInUser }) => {
 
@@ -68,12 +70,14 @@ const MySettingMain = ({ data, onClose, reload, reloadLogInUser }) => {
           {selectedTab === "profile" && <MySettingProfile data={data} reload={reload} reloadLogInUser={reloadLogInUser} />}
           {selectedTab === "balance" && <MySettingBalance user={user} data={data} />}
           {selectedTab === "password" && <MySettingPassword data={data} />}
-          {selectedTab === "block" && <MySettingBlock data={data} />}
+          {selectedTab === "block" && <MySettingBlock data={data} reload={reload} />}
           {selectedTab === "achievement" && <MySettingAchievement data={data} />}
           {selectedTab === "badge" && <MySettingBadges data={data} />}
           {selectedTab === "activeLog" && <MySettingActiveLog userId={userId} />}
           {selectedTab === "followers" && <MySettingFollowers data={data} />}
           {selectedTab === "followings" && <MySettingFollowings data={data} />}
+          {selectedTab === "delete" && <MySettingDelete />}
+          {selectedTab === "point" && <MySettingPoint />}
         </Col>
       </Row>
     </div>

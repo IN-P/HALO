@@ -13,6 +13,8 @@ import {
   LOAD_MY_INFO_REQUEST,
   LOAD_MY_INFO_SUCCESS,
   LOAD_MY_INFO_FAILURE,
+  // 준혁
+  DELETE_ACCOUNT_REQUEST, DELETE_ACCOUNT_SUCCESS, DELETE_ACCOUNT_FAILURE
 } from '../reducers/user_YG';
 
 import { setMe } from '../reducers/chatReducer_JW';
@@ -102,6 +104,30 @@ function* loadMyInfo() {
   }
 }
 
+// 준혁 회원탈퇴
+function deleteAccountAPI(data) {
+  return axios.request({
+    method: 'DELETE',
+    url: '/user/withdraw',
+    data,
+    withCredentials: true,
+  });
+}
+function* deleteAccount(action) {
+  try{
+    const result = yield call(deleteAccountAPI, action.data);
+    yield put({
+      type: DELETE_ACCOUNT_SUCCESS,
+    });
+  } catch (err) {
+    yield put({
+      type: DELETE_ACCOUNT_FAILURE,
+      error: err.response?.data || err.message,
+    });
+  }
+}
+//
+
 //  Watchers
 function* watchLogin() {
   yield takeLatest(LOG_IN_REQUEST, login);
@@ -119,6 +145,11 @@ function* watchLoadMyInfo() {
   yield takeLatest(LOAD_MY_INFO_REQUEST, loadMyInfo);
 }
 
+// 준혁
+function* watchDeleteAccount() {
+  yield takeLatest(DELETE_ACCOUNT_REQUEST, deleteAccount);
+}
+
 //  Root Saga
 export default function* userSaga() {
   yield all([
@@ -126,5 +157,6 @@ export default function* userSaga() {
     fork(watchLogout),
     fork(watchSignUp),
     fork(watchLoadMyInfo),
+    fork(watchDeleteAccount), // 준혁
   ]);
 }

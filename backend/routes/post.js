@@ -74,6 +74,21 @@ if (mentions) {
           context: req.body.content,
           createAt: new Date(),
         });
+        // 준혁 : 알림 생성
+        const sender = await User.findOne({
+          where: req.user.id,
+          attributes: ['nickname'] })
+        await Notification.create({
+          content: sender.nickname,
+          users_id:  receiver.id,
+          target_type_id: 8,
+        })
+        // 소켓 푸시
+        sendNotification(receiver.id, {
+          type: "MENTION",
+          message: '당신을 언급했습니다'
+        });
+        //
         console.log(`✅ Mention 저장 완료: @${nickname} → userId=${receiver.id}`);
       } else {
         console.log(`⚠️ Mention 대상 유저 없음: @${nickname}`);

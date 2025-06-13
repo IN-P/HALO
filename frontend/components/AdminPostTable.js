@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Table, Button, Image, Modal, Typography, Tooltip, Tag } from "antd";
+import { Table, Button, Image, Modal, Typography, Tooltip, Tag, message } from "antd";
 import { ExclamationCircleOutlined, MessageOutlined } from "@ant-design/icons";
 const { Text, Paragraph } = Typography;
 
@@ -147,7 +147,6 @@ function AdminPostTable({ posts, onDelete, onWarn }) {
         scroll={{ x: 900 }}
         style={{ margin: "32px 0" }}
       />
-
       {/* 이미지 프리뷰 모달 */}
       <Modal
         open={previewOpen}

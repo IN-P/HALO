@@ -26,7 +26,7 @@ const ActionText = styled.span`
     margin-left: 12px;
     font-weight: 600;
     font-size: 16px;
-    color: #1890ff;
+    color: #555;  /* 검정과 회색 중간톤 */
 `;
 
 const DateText = styled.span`
