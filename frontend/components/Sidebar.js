@@ -32,6 +32,19 @@ const NotificationCount = styled.span`
   margin-left: 12px;  /* 여기서 간격 조절 */
 `;
 //
+const ImportantNotificationCount = styled.span`
+  display: inline-block;
+  min-width: 24px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  background-color: #f5222d;  
+  border-radius: 12px;
+  text-align: center;
+  user-select: none;
+  margin-left: 12px;  /* 여기서 간격 조절 */
+`
 
 // 재사용 가능한 버튼 컴포넌트
 const SidebarButton = ({ icon, children, onClick }) => {
@@ -68,7 +81,7 @@ const SidebarButton = ({ icon, children, onClick }) => {
 };
 
 // 준혁 추가 : 알림창 토글 상태 showNotification, onToggleNotification, notificationCount
-const Sidebar = ({ showNotification, onToggleNotification, notificationCount, themeMode, onToggleTheme }) => {
+const Sidebar = ({ showNotification, onToggleNotification, notificationCount, themeMode, onToggleTheme, importantCount }) => {
   const router = useRouter();
   const dispatch = useDispatch(); //  윤기 추가: 로그아웃 디스패치
 
@@ -100,9 +113,9 @@ const Sidebar = ({ showNotification, onToggleNotification, notificationCount, th
           </Link>
           {/* 준혁 추가 : 알림창 토글 onClick={onToggleNotification} active={showNotification} */}
           <SidebarButton icon={<BellOutlined />} onClick={onToggleNotification} active={showNotification}>알림
-          {notificationCount > 0 && (
-            <NotificationCount>{notificationCount > 99 ? '99+' : notificationCount}</NotificationCount>
-          )}</SidebarButton>
+          {notificationCount > 0 && ( <NotificationCount>{notificationCount > 99 ? '99+' : notificationCount}</NotificationCount> )}
+          {importantCount > 0 && ( <ImportantNotificationCount>{importantCount > 99 ? '99+' : importantCount} !</ImportantNotificationCount> )}
+          </SidebarButton>         
           <Link href="/chat" passHref>
             <SidebarButton icon={<MessageOutlined />}>채팅 (DM)</SidebarButton>
           </Link>

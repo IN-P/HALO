@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { Post, User, Image, Comment, Hashtag } = require('../models');
+const { Post, User, Image, Comment, Hashtag, Notification } = require('../models'); // 준혁 : Notification
 const isAdmin = require('../middlewares/isAdmin');
+
+const { sendNotification } = require('../notificationSocket'); // 준혁 : 알림소켓
 
 // [1] 전체 포스트 리스트 (관리자 전용, 댓글수 포함)
 router.get('/posts', isAdmin, async (req, res, next) => {
@@ -57,6 +59,12 @@ router.get('/post/:id', isAdmin, async (req, res, next) => {
 router.delete('/post/:id', isAdmin, async (req, res, next) => {
   try {
     const postId = req.params.id;
+    // 준혁 : 알림 정보를 위해 미래 정보 추출
+    let originPost = await Post.findByPk(postId);
+    // 해당 포스트의 리그램 아이디가 NULL이 나올 때까지 반복
+    while (originPost.regram_id !== null) {
+    originPost = await Post.findOne({ where: { id: originPost.regram_id } });
+      if (!originPost) { throw new Error('원본 게시물을 찾을 수 없습니다.'); } }
     // 리그램글, 댓글, 이미지 먼저 삭제
     const regrams = await Post.findAll({ where: { regram_id: postId } });
     for (const rg of regrams) {
@@ -67,6 +75,18 @@ router.delete('/post/:id', isAdmin, async (req, res, next) => {
     await Comment.destroy({ where: { post_id: postId } });
     await Image.destroy({ where: { post_id: postId } });
     await Post.destroy({ where: { id: postId } });
+
+    // 준혁 알림 생성
+    await Notification.create({
+      content: originPost.content,
+      users_id: originPost.user_id,
+      target_type_id : 10,
+    })
+    sendNotification(originPost.user_id, {
+      type: "RESTRICT",
+      message: '관리자가 삭제했습니다'
+    });
+
     res.send('ok');
   } catch (error) {
     next(error);
@@ -76,7 +96,18 @@ router.delete('/post/:id', isAdmin, async (req, res, next) => {
 // [4] 포스트 수정 권고 (알림 미구현/추후 연결)
 router.post('/post/:id/warn', isAdmin, async (req, res, next) => {
   try {
-    // TODO: 알림 기능 팀원 구현 예정
+    // 준혁 알림 생성
+    const warnedPost = await Post.findByPk(req.params.id)
+    if (!warnedPost) { return res.status(404).send('해당 게시물을 찾을 수 없습니다.'); }
+    await Notification.create({
+      content: warnedPost.content,
+      users_id: warnedPost.user_id,
+      target_type_id : 9,
+    })
+    sendNotification(warnedPost.user_id, {
+      type: "WARN",
+      message: '관리자가 경고했습니다'
+    });
     res.send('ok');
   } catch (error) {
     next(error);

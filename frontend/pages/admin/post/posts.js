@@ -26,10 +26,14 @@ export default function AdminPostsPage() {
   // 수정권고: 실제로는 알림 안 보냄(임시)
   const handleWarn = useCallback(
     async (id) => {
-      // 실제 알림 로직은 구현 안 함!
-      message.info("수정 권고 알림 기능은 추후 연결 예정입니다.");
+      try {
+        await axios.post(`/api/admin/post/${id}/warn`);
+        message.success("경고 완료!");
+      } catch (e) {
+        message.error("경고 실패");
+      }
     },
-    []
+    [setPosts]
   );
 
   return (
