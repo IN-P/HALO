@@ -23,7 +23,7 @@ router.post('/post/:postId', isLoggedIn, async (req, res, next) => {
   await Promise.all(
     mentions.map(async tag => {
       const nickname = tag.slice(1);
-      const receiver = await User.findOne({ where: { user_id } });
+      const receiver = await User.findOne({ where: { nickname } });
       if (receiver) {
         await Mention.create({
           senders_id: req.user.id,
@@ -297,7 +297,7 @@ router.patch('/:commentId', isLoggedIn, async (req, res, next) => {
     // 활동 내역 생성
     await ActiveLog.create({
       action: "UPDATE",
-      target_id: reply.id,
+      target_id: comment.id,
       users_id: req.user.id,
       target_type_id: 2,
     } );
