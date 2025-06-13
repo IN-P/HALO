@@ -1,4 +1,3 @@
-// components/QuizModal.js
 import React, { useEffect, useState } from 'react';
 import { Modal, Radio, Button, message } from 'antd';
 import axios from 'axios';
@@ -9,9 +8,10 @@ const QuizModal = ({ visible, onClose, quiz }) => {
 
   useEffect(() => {
     if (quiz?.id) {
-      axios.get(`/event/quizzes/${quiz.id}/options`)
-        .then(res => setOptions(res.data))
-        .catch(err => {
+      axios
+        .get(`/event/quizzes/${quiz.id}/options`)
+        .then((res) => setOptions(res.data))
+        .catch((err) => {
           console.error('퀴즈 보기 로딩 실패', err);
           message.error('퀴즈 보기를 불러오지 못했습니다.');
         });
@@ -26,11 +26,19 @@ const QuizModal = ({ visible, onClose, quiz }) => {
         quizOption_id: selectedOption,
       });
 
+      // ✅ 도전한 퀴즈는 무조건 localStorage에 기록
+      const solved = JSON.parse(localStorage.getItem('solvedQuizIds') || '[]');
+      if (!solved.includes(quiz.id)) {
+        solved.push(quiz.id);
+        localStorage.setItem('solvedQuizIds', JSON.stringify(solved));
+      }
+
       if (res.data.is_correct) {
         message.success(`정답! ${res.data.point_earned}P 적립됨`);
       } else {
         message.info("오답입니다 😢");
       }
+
       onClose();
     } catch (err) {
       console.error('제출 오류', err);
@@ -44,7 +52,7 @@ const QuizModal = ({ visible, onClose, quiz }) => {
       open={visible}
       onCancel={onClose}
       footer={null}
-      width={800} // ✅ 너비 확장
+      width={800}
       bodyStyle={{
         maxHeight: '70vh',
         overflowY: 'auto',
@@ -56,12 +64,16 @@ const QuizModal = ({ visible, onClose, quiz }) => {
         value={selectedOption}
         style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
       >
-        {options.map(opt => (
-          <Radio key={opt.id} value={opt.id}>{opt.question_option}</Radio>
+        {options.map((opt) => (
+          <Radio key={opt.id} value={opt.id}>
+            {opt.question_option}
+          </Radio>
         ))}
       </Radio.Group>
       <div style={{ marginTop: '1rem', textAlign: 'right' }}>
-        <Button type="primary" onClick={handleSubmit}>제출</Button>
+        <Button type="primary" onClick={handleSubmit}>
+          제출
+        </Button>
       </div>
     </Modal>
   );

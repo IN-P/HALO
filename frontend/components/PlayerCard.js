@@ -10,13 +10,14 @@ const PlayerCard = ({ name, image_url, rarity }) => {
 
       <style jsx>{`
         .card {
-          border-radius: 16px;
-          padding: 1.5rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
           text-align: center;
-          background: #fff;
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-          margin-bottom: 24px;
+          padding: 1rem;
+          min-height: 200px; /* ✅ 전체 카드 높이 고정 또는 min-height 지정 */
+          border-radius: 12px;
+          transition: transform 0.2s;
         }
 
         .card:hover {
@@ -42,11 +43,12 @@ const PlayerCard = ({ name, image_url, rarity }) => {
         }
 
         img {
-          width: 120px;
-          height: 120px;
+          width: 90px;
+          height: 90px;
           object-fit: cover;
           border-radius: 50%;
           border: 3px solid #eee;
+          margin-top: 8px;
         }
 
         .badge {
@@ -77,9 +79,16 @@ const PlayerCard = ({ name, image_url, rarity }) => {
         }
 
         .name {
-          font-weight: 600;
-          font-size: 1.1rem;
-          margin-top: 1rem;
+          font-weight: bold;
+          margin-top: 0.75rem;
+        }
+
+        .rarity {
+          margin-top: 0.4rem;
+          padding: 4px 10px;
+          border-radius: 12px;
+          font-size: 0.75rem;
+          font-weight: bold;
         }
       `}</style>
     </div>
