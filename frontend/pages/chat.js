@@ -21,7 +21,7 @@ import {
 import useRequireLogin from '../hooks/useRequireLogin';
 import { wrapper } from '../store/configureStore';
 import socket from '../socket';
-
+//import ChatStart from '../components/lottie/ChatStart';
 
 export const getServerSideProps = wrapper.getServerSideProps(async (context) => {
   const cookie = context.req ? context.req.headers.cookie : '';
@@ -368,7 +368,6 @@ useEffect(() => {
       }}>
                 <ChatList
           chatRooms={chatRooms}
-          setChatRooms={setChatRooms}
           onSelectUser={handleUserSelect}
         />
 

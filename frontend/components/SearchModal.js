@@ -76,14 +76,24 @@ const SearchModal = ({ onClose, onUserSelect, userMap }) => {
               key={user.id}
               onClick={() => onUserSelect(user)}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                padding: '10px',
-                borderRadius: '16px',
-                marginBottom: '8px',
-                cursor: 'pointer',
-                background: 'linear-gradient(to bottom, #a8ddf7, #d0e8ff)',
-              }}
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '10px 15px',
+                  cursor: 'pointer',
+                  background: 'linear-gradient(to bottom, #a8ddf7, #d0e8ff)',
+                  borderRadius: '16px',
+                  marginBottom: '10px',
+                  boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+                }}
             >
               <img
                 src={user.profileImage ? `${API_URL}${user.profileImage}` : '/default.png'}
