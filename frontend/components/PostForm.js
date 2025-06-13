@@ -19,6 +19,16 @@ import ImageUploadCarousel from './ImageUploadCarousel';
 const { Title, Text } = Typography;
 const { Step } = Steps;
 
+const parseMentions = (text) => {
+  const mentionRegex = /@([^\s@]+)/g;
+  const mentions = [];
+  let match;
+  while ((match = mentionRegex.exec(text)) !== null) {
+    mentions.push(match[1]); // nickname만 뽑음
+  }
+  return mentions;
+};
+
 const PostForm = ({ editMode = false, originPost }) => {
   const dispatch = useDispatch();
   const router = useRouter();
@@ -89,9 +99,12 @@ const PostForm = ({ editMode = false, originPost }) => {
       return message.warning('위치를 선택해주세요!');
     }
 
+    const mentions = parseMentions(content);
+
     const payload = {
       ...(editMode && { postId: originPost.id }),
       content,
+      mentions,
       images: [...oldImages, ...imagePaths].filter((img, idx, arr) => arr.indexOf(img) === idx),
       private_post,
       location: showLocation ? location : null,

@@ -40,6 +40,7 @@ router.post('/', isLoggedIn, async (req, res, next) => {
   try {
     console.log('req.body.receiver_id:', req.body.receiver_id);
     const hashtags = req.body.content.match(/#[^\s#]+/g);
+    const mentions  = req.body.content.match(/@[^\s@]+/g);
     const post = await Post.create({
       content: req.body.content,
       user_id: req.user.id,
@@ -58,6 +59,43 @@ router.post('/', isLoggedIn, async (req, res, next) => {
       );
       await post.addHashtags(result.map(v => v[0]));
     }
+    // 멘션 등록
+if (mentions) {
+  const result = await Promise.all(
+    mentions.map(async tag => {
+      const nickname = tag.slice(1);
+      const receiver = await User.findOne({ where: { nickname } });
+      if (receiver) {
+        await Mention.create({
+          senders_id: req.user.id,
+          receiver_id: receiver.id,
+          target_type: 'POST',
+          target_id: post.id,
+          context: req.body.content,
+          createAt: new Date(),
+        });
+        // 준혁 : 알림 생성
+        const sender = await User.findOne({
+          where: req.user.id,
+          attributes: ['nickname'] })
+        await Notification.create({
+          content: sender.nickname,
+          users_id:  receiver.id,
+          target_type_id: 8,
+        })
+        // 소켓 푸시
+        sendNotification(receiver.id, {
+          type: "MENTION",
+          message: '당신을 언급했습니다'
+        });
+        //
+        console.log(`✅ Mention 저장 완료: @${nickname} → userId=${receiver.id}`);
+      } else {
+        console.log(`⚠️ Mention 대상 유저 없음: @${nickname}`);
+      }
+    })
+  );
+}
 
     // 이미지 등록
     const user = await User.findByPk(req.user.id);
@@ -81,30 +119,6 @@ router.post('/', isLoggedIn, async (req, res, next) => {
           await Image.create({ src, post_id: post.id });
         }
       }s
-    }
- 
-    if (req.body.receiver_id) {
-      await Mention.create({
-        senders_id: req.user.id,
-        receiver_id: req.body.receiver_id,
-        target_type: 'POST',
-        target_id: post.id,
-        context: req.body.content,
-        createAt: new Date(),
-      });
-      console.log('✅ Mention 저장 완료');
-
-      const fullPost = await Post.findOne({
-        where: { id: post.id },
-        include: [
-          { model: Image },
-          { model: User, attributes: ['id', 'nickname'] },
-          { model: Comment, include: [{ model: User, attributes: ['id', 'nickname'] }] },
-          { model: User, as: 'Likers', attributes: ['id'] },
-          { model: User, as: 'Bookmarkers', attributes: ['id'] },
-          { model: Hashtag, attributes: ['id', 'name'] },
-        ],
-      });
     }
 
     const fullPost = await Post.findOne({
@@ -221,6 +235,7 @@ router.delete('/:postId', isLoggedIn, async (req, res, next) => {
 // 게시글 수정
 router.patch('/:postId', isLoggedIn, async (req, res, next) => {
   const hashtags = req.body.content.match(/#[^\s#]+/g);
+  const mentions = req.body.content.match(/@[^\s@]+/g);
   try {
     await Post.update(
       { 
@@ -246,6 +261,34 @@ router.patch('/:postId', isLoggedIn, async (req, res, next) => {
     } else {
       await post.setHashtags([]);
     }
+    // 맨션 동기화
+      await Mention.destroy({
+    where: {
+    target_type: 'POST',
+    target_id: post.id,
+    },
+  });
+    if (mentions) {
+  await Promise.all(
+    mentions.map(async tag => {
+      const nickname = tag.slice(1);
+      const receiver = await User.findOne({ where: { nickname } });
+      if (receiver) {
+        await Mention.create({
+          senders_id: req.user.id,
+          receiver_id: receiver.id,
+          target_type: 'POST',
+          target_id: post.id,
+          context: req.body.content,
+          createAt: new Date(),
+        });
+        console.log(`✅ Mention 저장 완료 (patch): @${nickname} → userId=${receiver.id}`);
+      } else {
+        console.log(`⚠️ Mention 대상 유저 없음 (patch): @${nickname}`);
+      }
+    })
+  );
+}
 
     // 이미지 동기화
     if (req.body.images) {
@@ -553,6 +596,17 @@ router.get('/:postId', async (req, res, next) => {
         { model: User, as: 'Bookmarkers', attributes: ['id'] },
         { model: Hashtag, attributes: ['id', 'name'] },
         {
+          model: Mention,
+          include: [
+        {
+          model: User,
+          as: 'Receiver',
+          attributes: ['id', 'nickname'],
+          },
+        ],
+      },
+    
+        {
           model: Post,
           as: 'Regram',
           include: [
@@ -565,6 +619,24 @@ router.get('/:postId', async (req, res, next) => {
     if (!post) return res.status(404).send('존재하지 않는 게시글입니다.');
 
     const me = req.user; // 로그인 안했으면 undefined
+
+    const postData = post.toJSON();
+
+    // 멘션 정보를 가공하여 nickname과 user_id 필드를 직접 추가
+    if (postData.Mentions && postData.Mentions.length > 0) {
+      postData.Mentions = postData.Mentions.map(mention => {
+        // mention.Receiver 객체 안에 닉네임과 ID가 있으므로,
+        // 이를 mention 객체 자체의 속성으로 복사
+        return {
+          ...mention, // 기존 멘션 정보 유지
+          nickname: mention.Receiver ? mention.Receiver.nickname : null,
+          user_id: mention.Receiver ? mention.Receiver.id : null,
+        };
+      });
+    }
+
+    // 가공된 게시물 데이터를 프론트엔드로 응답
+    res.status(200).json(postData);
 
     // [1] 리그램글: 원본글이 나만보기/비공개/팔로워만 필터
     if (post.regram_id && post.Regram) {

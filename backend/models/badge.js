@@ -35,7 +35,7 @@ module.exports = (sequelize, DataTypes) => {
   // 응원팀 뱃지 이름은 응원팀 테이블을 기준으로 함
   Badge.sync().then(() => {
     return Badge.bulkCreate([
-      { id: 1, name: '이제 시작', description: 'HALO를 처음 시작한 날', img: '/img/badges/HALO.svg' },
+      { id: 1, name: '헬로우', description: 'HaLo를 처음 시작한 날', img: '/img/badges/HALO.svg' },
       { id: 2, name: '기아 타이거즈', description: '기아 타이거즈 응원팀 소속', img: '/img/badges/KIA_Emblem.svg' },
       { id: 3, name: '삼성 라이온즈', description: '삼성 라이온즈 응원팀 소속', img: '/img/badges/SAMSUNG_Emblem.svg' },
       { id: 4, name: 'LG 트윈스', description: 'LG 트윈스 응원팀 소속', img: '/img/badges/LG_Emblem.svg' },

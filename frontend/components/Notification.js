@@ -5,6 +5,7 @@ import {
   UsergroupAddOutlined,
   CommentOutlined,
   HeartOutlined,
+  MessageOutlined,
 } from '@ant-design/icons';
 
 const NotificationWrapper = styled.div`
@@ -80,6 +81,11 @@ const StyledHeartOutlined = styled(HeartOutlined)`
   color: #eb2f96;
 `;
 
+const StyledMention = styled(MessageOutlined)`
+  ${IconStyle}
+  color: #595959;
+`;
+
 const NotificationText = styled.div`
   flex: 1;
   white-space: normal;
@@ -122,6 +128,8 @@ const getIconAndExtraText = (target_type_id) => {
       return { icon: <StyledBellOutlined />, extra: '답장이 달렸습니다' };
     case 5:
       return { icon: <StyledHeartOutlined />, extra: '좋아요를 받았습니다.' };
+    case 8:
+      return { icon: <StyledMention />, extra: '님이 당신을 멘션했습니다'}
     default:
       return { icon: <StyledBellOutlined />, extra: '' };
   }

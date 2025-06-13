@@ -26,8 +26,18 @@ function getRelativeTime(date) {
 }
 
 const PostCard = ({ post }) => {
+  console.log('......1번- post',post);
+  
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user_YG);
+
+  const userMap = {};
+if (post.Mentions) {
+  post.Mentions.forEach((mention) => {
+    console.log('......2번- mention',mention);
+    userMap[mention.nickname] = mention.user_id;
+  });
+}
 
   // ------ 리그램/원본글 구분 ------
   const isRegram = !!post.regram_id;
@@ -120,13 +130,34 @@ const PostCard = ({ post }) => {
   const onBookmark = () => dispatch({ type: BOOKMARK_POST_REQUEST, data: basePost.id });
   const onUnbookmark = () => dispatch({ type: UNBOOKMARK_POST_REQUEST, data: basePost.id });
 
-  const renderContent = (content) =>
-    content
-      ? content.split(/(#[^\s#]+)/g).map((part, i) =>
-        part.startsWith('#')
-          ? <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: '#007bff' }}>{part}</a>
-          : part)
-      : null;
+const renderContent = (content, userMap = {}) =>
+  content
+    ? content
+        .split(/(#[^\s#]+|@[^\s@]+)/g)
+        .filter(Boolean) // 빈 문자열 제거!
+        .map((part, i) => {
+          if (part.startsWith('#')) {
+            return (
+              <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: '#007bff', textDecoration: 'none' }}>
+                {part}
+              </a>
+            );
+          }
+          if (part.startsWith('@')) {
+            const nickname = part.slice(1);
+            const userId = userMap[nickname];
+            console.log(`@${nickname} → userId=${userId}`);
+            return userId ? (
+              <a key={i} href={`/profile/${userId}`} style={{ color: '#28a745', textDecoration: 'none' }}>
+                {part}
+              </a>
+            ) : (
+              <span key={i} style={{ color: '#28a745' }}>{part}</span> // fallback: span 처리
+            );
+          }
+          return <span key={i}>{part}</span>; // 일반 텍스트는 span으로 감싸주는게 안정적임
+        })
+    : null;
 
   // ⭐ 리그램 표시문구: 위치-내용 사이
   const RegramInfo = isRegram && origin && origin.User && (
@@ -278,7 +309,7 @@ const PostCard = ({ post }) => {
           fontSize: 17, lineHeight: 1.6, marginBottom: 12,
           minHeight: 60, maxHeight: 130, overflowY: 'auto', overflowX: 'hidden', wordBreak: 'break-all',
         }}>
-          {renderContent(post.content)}
+          {renderContent(post.content, userMap)}
         </div>
         <div style={{
           display: 'flex', alignItems: 'center', gap: 22, fontSize: 26, margin: '12px 0 0 0',
