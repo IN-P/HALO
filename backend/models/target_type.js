@@ -41,6 +41,7 @@ module.exports = (sequelize, DataTypes) => {
       { code: 'like' },
       { code: 'retweet' },
       { code: 'chat' },
+      { code: 'mention' }
       //
     ], {
       ignoreDuplicates: true, // 중복 데이터 무시

@@ -35,6 +35,20 @@ const ListItem = styled.li`
   }
 `;
 
+const ListItem_2 = styled.li`
+  font-size: 16px;
+  padding: 5px 0;
+  cursor: pointer;
+  color: ${({ selected }) => (selected ? "#f55a5a" : "#555")};
+  font-weight: ${({ selected }) => (selected ? "700" : "normal")};
+  transition: color 0.2s ease-in-out;
+
+  &:hover {
+    color: #f55a5a;
+  }
+`;
+
+
 const MySettingSidebar = ({ selectedTab, onSelectTab }) => {
   return (
     <SidebarWrapper>
@@ -104,12 +118,12 @@ const MySettingSidebar = ({ selectedTab, onSelectTab }) => {
         >
           팔로워 목록
         </ListItem>
-        <ListItem
-          selected={selectedTab === "xxx"}
-          onClick={() => onSelectTab("xxx")}
+        <ListItem_2
+          selected={selectedTab === "delete"}
+          onClick={() => onSelectTab("delete")}
         >
           회원탈퇴
-        </ListItem>
+        </ListItem_2>
       </List>
     </SidebarWrapper>
   );
