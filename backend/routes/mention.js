@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 
-const { Mention, User } = require('../models'); // User 모델도 함께 불러와야 해
+const { Mention, User, } = require('../models'); // User 모델도 함께 불러와야 해
 const { isLoggedIn } = require('./middlewares');
 const { Op } = require('sequelize');
+
 
 // 1. 멘션 생성 (POST /mention)
 

@@ -17,6 +17,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 
 const { registerBadge } = require('../services/badge/registerbadge');
+const { assignTeamBadge } = require('../services/badge/teambadge');
 
 // 현재 로그인한 유저 정보를 반환하는 라우터
 router.get('/me', isLoggedIn, async (req, res) => {
@@ -79,6 +80,7 @@ router.post('/', async (req, res, next) => {
     });
 
     await registerBadge(newUser.id);
+    await assignTeamBadge(newUser.id);
     
     res.status(201).send('회원가입 성공');
   } catch (err) {
@@ -349,6 +351,14 @@ router.patch('/', isLoggedIn, async (req, res, next) => {
 */
 router.delete('/withdraw', isLoggedIn, async (req, res, next) => {
   try {
+    // 준혁 : 비밀번호 확인
+    const { password } = req.body;
+    if (!password) { return res.status(400).send('비밀번호를 입력해주세요.'); }
+    const user = await User.findOne({ where: { id: req.user.id } });
+    if (!user) { return res.status(404).send('사용자를 찾을 수 없습니다.'); }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) { return res.status(403).send('비밀번호가 일치하지 않습니다.'); }
+
     await userService.deactivateUser(req.user.id);
 
     // 로그아웃 처리 + 세션 정리
