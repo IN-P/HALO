@@ -92,6 +92,7 @@ const RightSidebar = () => {
         10: { label: '포스트 관리', path: '/admin/post/posts' },
         11: { label: '분석 리포트', path: '/admin/analytics/analytics' },
         12: { label: '이벤트 관리', path: '/admin/event/roulette' },
+        13: { label: '상점 관리', path: '/admin/player'},
     };
 
     return (
