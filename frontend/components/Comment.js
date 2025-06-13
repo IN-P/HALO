@@ -1,186 +1,58 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useRouter } from "next/router";
 import {
   LOAD_COMMENTS_REQUEST,
   ADD_COMMENT_REQUEST,
   EDIT_COMMENT_REQUEST,
   REMOVE_COMMENT_REQUEST,
 } from "../reducers/comment_IN";
-import ReportButton from "./ReportButton";
-import ReportModal from "./ReportModal";
-import { getTotalCommentCount, flattenComments } from "../utils/comment";
 import MentionTextArea from '../components/MentionTextArea';
 
-// 스타일 정의 생략(아래쪽에 있음)
-
-const Comment = ({
-  postId,
-  currentUserId,
-  preview = false,
-  previewCount = 3,
-  onShowDetailModal,
-  initialComments, // SSR/post.Comments
-}) => {
+const Comment = ({ postId, currentUserId, initialComments = [] }) => {
   const dispatch = useDispatch();
-  const router = useRouter();
-  const { comments, addCommentLoading, loadCommentsDone, editCommentLoading } = useSelector((state) => state.comment_IN);
-  const [receiverIdMap, setReceiverIdMap] = useState({});
+  const { comments, loadCommentsDone, addCommentLoading, editCommentLoading } = useSelector((state) => state.comment_IN);
 
-  useEffect(() => {
-    if (!loadCommentsDone?.[postId]) {
-      dispatch({ type: LOAD_COMMENTS_REQUEST, postId });
-    }
-  }, [dispatch, postId, loadCommentsDone]);
+  // 댓글 트리: 1depth(댓글), 2depth(대댓글)까지만
+  const effectiveComments = comments[postId] && loadCommentsDone?.[postId]
+    ? comments[postId]
+    : initialComments;
 
-  const hasReduxComments = loadCommentsDone?.[postId];
-  const effectiveComments =
-    comments[postId] && loadCommentsDone?.[postId]
-      ? comments[postId]
-      : initialComments || [];
-
-  if (preview) {
-    if (!hasReduxComments) return null; // ✅ Redux 댓글 로드 완료됐을 때만 렌더링
-
-    const allComments = flattenComments(effectiveComments);
-    const sorted = [...allComments].sort((a, b) => b.id - a.id);
-    const previewComments = sorted.slice(0, previewCount);
-
-    return (
-      <div
-        style={{
-          margin: '8px 0 0 0',
-          background: '#fafbfc',
-          borderRadius: 10,
-          minHeight: 40,
-          padding: '10px 14px 8px 14px',
-          border: '1px solid #f2f2f2',
-          fontSize: 15,
-          color: '#333',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-          cursor: onShowDetailModal ? "pointer" : "default",
-        }}
-        onClick={onShowDetailModal}
-      >
-        {previewComments.length === 0 && (
-          <div style={{ color: '#b0b0b0', margin: '6px 2px', fontStyle: 'italic', fontSize: 15 }}>
-            아직 댓글이 없습니다 🙃
-          </div>
-        )}
-        {previewComments.map((c) =>
-          c && c.User ? (
-            <div
-              key={c.id}
-              style={{
-                display: "flex",
-                gap: 10,
-                alignItems: "center",
-                padding: "12px 0 0 0",
-                borderBottom: "1px solid #f1f1f1",
-                background: "none",
-              }}
-            >
-              <img
-                src={
-                  c.User?.profile_img
-                    ? `http://localhost:3065${c.User.profile_img}`
-                    : "http://localhost:3065/img/profile/default.jpg"
-                }
-                alt="avatar"
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                  border: "1px solid #eee",
-                  flexShrink: 0,
-                  cursor: "pointer",
-                }}
-                onClick={() => onAvatarClick(c.User?.id)}
-              />
-              <div style={{ flex: 1 }}>
-                <span
-                  style={{ fontWeight: 'bold', cursor: 'pointer' }}
-                  onClick={() => onAvatarClick(c.User?.id)}
-                >
-                  {c.User?.nickname || "알 수 없음"}
-                </span>
-                <div
-                  style={{
-                    whiteSpace: "pre-wrap",
-                    fontSize: 15,
-                    color: c.is_deleted ? "#721c24" : "#222",
-                  }}
-                >
-                  {c.is_deleted
-                    ? "삭제된 댓글입니다."
-                    : c.content}
-                </div>
-              </div>
-            </div>
-          ) : null
-        )}
-        {allComments.length > previewCount && (
-          <div
-            style={{
-              color: "#2995f4",
-              fontSize: 15,
-              fontWeight: 500,
-              marginTop: 3,
-              userSelect: "none",
-            }}
-          >
-            댓글 더보기
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // [코멘트 입력 등 상태]
-  const [openMap, setOpenMap] = useState({});
-  const [inputMap, setInputMap] = useState({});
-  const [showInputMap, setShowInputMap] = useState({});
-  const [menuOpenMap, setMenuOpenMap] = useState({});
+  // 댓글 입력
+  const [commentInput, setCommentInput] = useState("");
+  const [replyInputMap, setReplyInputMap] = useState({});
   const [editId, setEditId] = useState(null);
   const [editValue, setEditValue] = useState("");
-  const menuRefs = useRef({});
-  const [reportModalOpen, setReportModalOpen] = useState(false);
-  const [reportTargetId, setReportTargetId] = useState(null);
+  const [showReplyInput, setShowReplyInput] = useState({});
 
-  const onReplyShow = (id) => {
-    setOpenMap((prev) => ({ ...prev, [id]: true }));
-    setShowInputMap((prev) => ({ ...prev, [id]: true }));
+  // 댓글 등록
+  const onAddComment = () => {
+    if (!commentInput.trim()) return;
+    dispatch({
+      type: ADD_COMMENT_REQUEST,
+      data: { postId, content: commentInput, parentId: null },
+    });
+    setCommentInput("");
   };
-  const onReplyHide = (id) => {
-    setOpenMap((prev) => ({ ...prev, [id]: false }));
-    setShowInputMap((prev) => ({ ...prev, [id]: false }));
-    setInputMap((prev) => ({ ...prev, [id]: "" }));
-  };
-  const onReplyInputShow = (id) => {
-    setShowInputMap((prev) => ({ ...prev, [id]: true }));
-  };
-  const onReplySubmit = (parentId, nickname) => {
-    if (!inputMap[parentId]?.trim()) return;
+
+  // 대댓글 등록
+  const onAddReply = (parentId, nickname) => {
+    if (!replyInputMap[parentId]?.trim()) return;
     dispatch({
       type: ADD_COMMENT_REQUEST,
       data: {
         postId,
-        content: inputMap[parentId].startsWith(`@${nickname}`)
-          ? inputMap[parentId]
-          : `@${nickname} ${inputMap[parentId]}`,
+        content: replyInputMap[parentId].startsWith(`@${nickname}`) ? replyInputMap[parentId] : `@${nickname} ${replyInputMap[parentId]}`,
         parentId,
-        receiver_id: receiverIdMap[parentId],
       },
     });
-    setInputMap((prev) => ({ ...prev, [parentId]: "" }));
-    setShowInputMap((prev) => ({ ...prev, [parentId]: false }));
+    setReplyInputMap((prev) => ({ ...prev, [parentId]: "" }));
+    setShowReplyInput((prev) => ({ ...prev, [parentId]: false }));
   };
 
-  const onEditBtn = (comment) => {
+  // 댓글 수정
+  const onEdit = (comment) => {
     setEditId(comment.id);
     setEditValue(comment.content);
-    setMenuOpenMap({});
   };
   const onEditSubmit = (comment) => {
     if (!editValue.trim()) return;
@@ -190,52 +62,32 @@ const Comment = ({
     });
     setEditId(null);
     setEditValue("");
-    // ✅ 댓글 수정 후, 강제 리로드 필요하면 여기 추가:
-    // dispatch({ type: LOAD_COMMENTS_REQUEST, postId });  // <- 이 라인 활성화 해볼 것!
   };
+
+  // 댓글 삭제
   const onDelete = (comment) => {
     if (window.confirm("정말 삭제하시겠습니까?")) {
       dispatch({ type: REMOVE_COMMENT_REQUEST, data: { commentId: comment.id, postId } });
-      setMenuOpenMap({});
     }
   };
-  const onOpenReportModal = (commentId) => {
-    setReportTargetId(commentId);
-    setReportModalOpen(true);
-  };
-  const toggleMenu = (id) => {
-    setMenuOpenMap((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
-  const onAvatarClick = (userId) => {
-    if (userId) router.push(`/profile/${userId}`);
-  };
- const renderCommentContent = (content, mentions = [], parentNickname) => {
-  if (!content) return null;
 
-  // userMap 구성
-  const userMap = {};
-  mentions.forEach(m => {
-    userMap[m.nickname.toLowerCase()] = m.user_id;
-  });
-
-  // parentNickname 제거 후 나머지 텍스트 처리
-  let text = content;
-  let showParentNickname = false;
-  if (parentNickname && content.startsWith(`@${parentNickname}`)) {
-    text = content.slice(parentNickname.length + 1).trimStart();
-    showParentNickname = true;
-  }
-
-  return (
-    <>
-      {showParentNickname && <b>@{parentNickname} </b>}
-      {text
-        .split(/(#[^\s#]+|@[^\s@]+)/g)
-        .filter(Boolean)
-        .map((part, i) => {
+  // 댓글, 대댓글 content 표시 (멘션/해시태그 자동 링크)
+  const renderContent = (content, mentions = [], parentNickname) => {
+    if (!content) return null;
+    const userMap = {};
+    mentions.forEach(m => {
+      userMap[m.nickname?.toLowerCase()] = m.user_id;
+    });
+    let text = content;
+    let showParentNickname = false;
+    if (parentNickname && content.startsWith(`@${parentNickname}`)) {
+      text = content.slice(parentNickname.length + 1).trimStart();
+      showParentNickname = true;
+    }
+    return (
+      <>
+        {showParentNickname && <b>@{parentNickname} </b>}
+        {text.split(/(#[^\s#]+|@[^\s@]+)/g).filter(Boolean).map((part, i) => {
           if (part.startsWith('#')) {
             return (
               <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: '#007bff', textDecoration: 'none' }}>
@@ -256,292 +108,116 @@ const Comment = ({
           }
           return <span key={i}>{part}</span>;
         })}
-    </>
-  );
-};
-
-  const renderTree = (list, level = 0) => {
-    if (!Array.isArray(list)) return null;
-    return list.map((c) => {
-      if (!c || typeof c.id === "undefined") return null;
-      const replyList = c.replies || [];
-      const replyCount = replyList.length;
-      const isAuthor = currentUserId === c.User?.id;
-      const isReply = level > 0;
-
-      return (
-        <React.Fragment key={c.id}>
-          <div
-            style={{
-              display: "block",
-              padding: "12px 0 0 0",
-              borderBottom: "1px solid #f1f1f1",
-              background: "none",
-            }}
-          >
-            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-              <img
-                src={
-                  c.User?.profile_img
-                    ? `http://localhost:3065${c.User.profile_img}`
-                    : "http://localhost:3065/img/profile/default.jpg"
-                }
-                alt="avatar"
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                  border: "1px solid #eee",
-                  flexShrink: 0,
-                  cursor: "pointer",
-                }}
-                onClick={() => onAvatarClick(c.User?.id)}
-              />
-              <div style={{ flex: 1 }}>
-                <span
-                  style={{ fontWeight: 'bold', cursor: 'pointer' }}
-                  onClick={() => onAvatarClick(c.User?.id)}
-                >
-                  {c.User?.nickname || "알 수 없음"}
-                </span>
-                <div
-                  style={{
-                    whiteSpace: "pre-wrap",
-                    fontSize: 15,
-                    color: c.is_deleted ? "#721c24" : "#222",
-                  }}
-                >
-                  {c.is_deleted
-                    ? "삭제된 댓글입니다."
-                    : renderCommentContent(c.content, c.Mentions, c.Parent?.User?.nickname)}
-                </div>
-              </div>
-              {!c.is_deleted && (
-                <div style={{ position: "relative" }} ref={(el) => (menuRefs.current[c.id] = el)}>
-                  <button
-                    onClick={() => toggleMenu(c.id)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      fontSize: 20,
-                      color: "#666",
-                      padding: "2px 6px",
-                      outline: "none",
-                    }}
-                  >
-                    ⋯
-                  </button>
-                  {menuOpenMap[c.id] && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        right: 0,
-                        top: 28,
-                        background: "#fff",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                        borderRadius: 8,
-                        zIndex: 100,
-                        minWidth: 100,
-                      }}
-                    >
-                      {isAuthor ? (
-                        <>
-                          <button onClick={() => onEditBtn(c)} style={menuItemStyle}>
-                            수정
-                          </button>
-                          <button
-                            onClick={() => onDelete(c)}
-                            style={{ ...menuItemStyle, color: "red" }}
-                          >
-                            삭제
-                          </button>
-                        </>
-                      ) : (
-                        <div style={{ padding: "4px 16px" }}>
-                          <ReportButton
-                            postId={c.id}
-                            onClick={() => onOpenReportModal(c.id)}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-            <div style={{ marginTop: 2 }}>
-              {!openMap[c.id] ? (
-                <button style={replyButtonStyle} onClick={() => onReplyShow(c.id)}>
-                  답글보기 [{replyCount}]
-                </button>
-              ) : (
-                <>
-                  {showInputMap[c.id] && !c.is_deleted && (
-                    <div style={{ margin: "8px 0" }}>
-                      <MentionTextArea
-                        value={inputMap[c.id] || ""}
-                        onChange={(e) =>
-                          setInputMap((prev) => ({ ...prev, [c.id]: e.target.value }))
-                        }
-                        onMentionSelect={(user) => {
-                          setReceiverIdMap((prev) => ({ ...prev, [c.id]: user.id }));
-                        }}
-                      />
-                      <button
-                        disabled={addCommentLoading}
-                        onClick={() => onReplySubmit(c.id, c.User?.nickname)}
-                        style={{ padding: "6px 12px", cursor: "pointer" }}
-                      >
-                        등록
-                      </button>
-                    </div>
-                  )}
-                  <div style={{ display: "inline-flex", gap: 6, marginBottom: 2 }}>
-                    {!c.is_deleted && (
-                      <button style={replyButtonStyle} onClick={() => onReplyInputShow(c.id)}>
-                        답글 달기
-                      </button>
-                    )}
-                    <button style={replyButtonStyle} onClick={() => onReplyHide(c.id)}>
-                      답글 숨기기
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-          {editId === c.id && !c.is_deleted && (
-            <div style={{ marginTop: 6 }}>
-              <input
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: 6,
-                  borderRadius: 4,
-                  border: "1px solid #ccc",
-                  marginTop: 6,
-                }}
-              />
-              <button
-                onClick={() => {
-                  onEditSubmit(c);
-                }}
-                style={{ marginLeft: 8, padding: "6px 12px", cursor: "pointer" }}
-                disabled={editCommentLoading}
-              >
-                수정완료
-              </button>
-              <button
-                onClick={() => setEditId(null)}
-                style={{ marginLeft: 4, padding: "6px 12px", cursor: "pointer" }}
-              >
-                취소
-              </button>
-            </div>
-          )}
-          {openMap[c.id] && replyList.length > 0 && (
-            <div style={BASKET_STYLE[level + 1] || BASKET_STYLE[BASKET_STYLE.length - 1]}>
-              {renderTree(replyList, level + 1)}
-            </div>
-          )}
-        </React.Fragment>
-      );
-    });
+      </>
+    );
   };
 
+  // 댓글/대댓글 렌더링
+  const renderComments = (list) =>
+    list?.map((c) => {
+      if (!c || typeof c.id === "undefined") return null;
+      const isAuthor = currentUserId === c.User?.id;
+      const replies = c.replies || [];
+      return (
+        <div key={c.id} style={{ borderBottom: "1px solid #eee", marginBottom: 8, paddingBottom: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <img
+              src={c.User?.profile_img ? `http://localhost:3065${c.User.profile_img}` : "/img/profile/default.jpg"}
+              alt="avatar"
+              style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }}
+            />
+            <span style={{ fontWeight: "bold" }}>{c.User?.nickname || "알 수 없음"}</span>
+            <span style={{ marginLeft: 6, color: "#aaa", fontSize: 12 }}>{c.createdAt?.slice(0, 10)}</span>
+            {isAuthor && !c.is_deleted && (
+              <>
+                <button style={btnStyle} onClick={() => onEdit(c)}>수정</button>
+                <button style={btnStyle} onClick={() => onDelete(c)}>삭제</button>
+              </>
+            )}
+          </div>
+          <div style={{ marginLeft: 38, color: c.is_deleted ? "#721c24" : "#222" }}>
+            {c.is_deleted
+              ? "삭제된 댓글입니다."
+              : editId === c.id
+              ? (
+                <span>
+                  <input
+                    value={editValue}
+                    onChange={e => setEditValue(e.target.value)}
+                    style={{ width: "70%" }}
+                  />
+                  <button style={btnStyle} onClick={() => onEditSubmit(c)} disabled={editCommentLoading}>수정완료</button>
+                  <button style={btnStyle} onClick={() => setEditId(null)}>취소</button>
+                </span>
+              )
+              : renderContent(c.content, c.Mentions, c.Parent?.User?.nickname)
+            }
+          </div>
+          {/* 답글(대댓글) 달기 버튼은 1depth(댓글)에만 노출 */}
+          {!c.is_deleted && replies.length >= 0 && c.parent_id === null && (
+            <div style={{ marginLeft: 38, marginTop: 3 }}>
+              {showReplyInput[c.id] ? (
+                <span>
+                  <MentionTextArea
+                    value={replyInputMap[c.id] || ""}
+                    onChange={(e) => setReplyInputMap((prev) => ({ ...prev, [c.id]: e.target.value }))}
+                  />
+                  <button
+                    style={btnStyle}
+                    disabled={addCommentLoading}
+                    onClick={() => onAddReply(c.id, c.User?.nickname)}
+                  >등록</button>
+                  <button style={btnStyle} onClick={() => setShowReplyInput((prev) => ({ ...prev, [c.id]: false }))}>취소</button>
+                </span>
+              ) : (
+                <button style={btnStyle} onClick={() => setShowReplyInput((prev) => ({ ...prev, [c.id]: true }))}>
+                  답글 달기
+                </button>
+              )}
+            </div>
+          )}
+          {/* 대댓글(2depth) 렌더링 */}
+          {replies.length > 0 && (
+            <div style={{ marginLeft: 48, borderLeft: "2px solid #e9e9e9", paddingLeft: 8, marginTop: 6 }}>
+              {renderComments(replies)}
+            </div>
+          )}
+        </div>
+      );
+    });
+
   return (
-    <div
-      style={{
-        marginTop: 20,
-        background: "#fafbfc",
-        borderRadius: 14,
-        padding: "5px 10px 10px 10px",
-        overflowX: "hidden",
-      }}
-    >
-      <div style={{ marginBottom: 20 }}>
+    <div style={{ background: "#fafbfc", borderRadius: 12, padding: 10, marginTop: 10 }}>
+      {/* 댓글 입력창 */}
+      <div style={{ marginBottom: 16 }}>
         <MentionTextArea
-          value={inputMap[0] || ""}
-          onChange={(e) => setInputMap((prev) => ({ ...prev, 0: e.target.value }))}
-          onMentionSelect={(user) => {
-            setReceiverIdMap((prev) => ({ ...prev, 0: user.id }));
-          }}
+          value={commentInput}
+          onChange={(e) => setCommentInput(e.target.value)}
         />
         <button
+          style={btnStyle}
           disabled={addCommentLoading}
-          onClick={() => {
-            if (!inputMap[0]?.trim()) return;
-            dispatch({
-              type: ADD_COMMENT_REQUEST,
-              data: { postId, content: inputMap[0], parentId: null, receiver_id: receiverIdMap[0], },
-            });
-                        setInputMap((prev) => ({ ...prev, 0: "" }));
-          }}
-          style={{ padding: "8px 16px", cursor: "pointer" }}
-        >
-          등록
-        </button>
+          onClick={onAddComment}
+        >댓글 등록</button>
       </div>
-      {Array.isArray(effectiveComments) && effectiveComments.length === 0 && (
-        <div style={{ color: "#aaa", marginLeft: 8 }}>아직 댓글이 없습니다.</div>
+      {/* 댓글/대댓글 트리 */}
+      {(!effectiveComments || effectiveComments.length === 0) && (
+        <div style={{ color: "#aaa" }}>아직 댓글이 없습니다.</div>
       )}
-      {Array.isArray(effectiveComments) && renderTree(effectiveComments, 0)}
-      <ReportModal
-        visible={reportModalOpen}
-        onClose={() => setReportModalOpen(false)}
-        postId={reportTargetId}
-        targetType={2}
-      />
+      {Array.isArray(effectiveComments) && renderComments(effectiveComments)}
     </div>
   );
 };
 
-const BASKET_STYLE = [
-  {},
-  {
-    borderLeft: '2px solid #ffd2d2',
-    borderRight: '2px solid #ffd2d2',
-    borderBottom: '2px solid #ffd2d2',
-    borderTop: 'none',
-    borderRadius: '0 0 12px 12px',
-    margin: '10px 0 10px 0',
-    padding: '2px 0 2px 0',
-    background: 'none',
-  },
-  {
-    borderLeft: '2px solid #70b3ff',
-    borderRight: '2px solid #70b3ff',
-    borderBottom: '2px solid #70b3ff',
-    borderTop: 'none',
-    borderRadius: '0 0 12px 12px',
-    margin: '10px 0 10px 0',
-    padding: '2px 0 2px 0',
-    background: 'none',
-  },
-];
-const menuItemStyle = {
-  display: "block",
-  width: "100%",
-  padding: "8px 16px",
+const btnStyle = {
+  background: "#eee",
   border: "none",
-  background: "none",
-  textAlign: "left",
+  borderRadius: 6,
+  fontSize: 13,
+  color: "#222",
+  padding: "3px 10px",
+  marginLeft: 5,
   cursor: "pointer",
-  fontSize: 15,
-  color: "#444",
-};
-const replyButtonStyle = {
-  marginTop: 2,
-  background: "none",
-  border: "none",
-  color: "#555",
-  cursor: "pointer",
-  fontSize: 14,
-  padding: 0,
 };
 
 export default Comment;
-

@@ -103,7 +103,7 @@ if (mentions) {
         if (src && src.trim() !== '') {
           await Image.create({ src, post_id: post.id });
         }
-      }s
+      }
     }
 
     const fullPost = await Post.findOne({
