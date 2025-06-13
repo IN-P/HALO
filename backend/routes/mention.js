@@ -1,11 +1,10 @@
 const express = require('express');
 const router = express.Router();
 
-const { Mention, User, Notification } = require('../models'); // User 모델도 함께 불러와야 해 // 준혁 : Notification
+const { Mention, User, } = require('../models'); // User 모델도 함께 불러와야 해
 const { isLoggedIn } = require('./middlewares');
 const { Op } = require('sequelize');
 
-const { sendNotification } = require('../notificationSocket'); // 준혁 : 알림소켓
 
 // 1. 멘션 생성 (POST /mention)
 
@@ -45,20 +44,6 @@ router.post('/', isLoggedIn, async (req, res, next) => {
         },
       ],
     });
-
-    // 준혁 : 알림 생성
-    const sender = await User.findOne({ where: { id: sender_id } })
-    await Notification.create({
-      content: `${sender.nickname}`,
-      users_id: receiver.id,
-      target_type_id: 8,
-    });
-    // 소켓 푸시
-    sendNotification(receiver.id, {
-      type: 'MENTION',
-      message: '당신을 언급했습니다',
-    });
-    //
 
     res.status(201).json(fullMention);
   } catch (error) {
