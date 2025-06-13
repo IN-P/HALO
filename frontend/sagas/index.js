@@ -19,7 +19,9 @@ import activeLog_JH from './activeLog_JH';
 import reportResultSaga from './reportResult_YB';
 import badge_JH from './badge_JH';
 import achievement_JH from './achievement_JH';
+import userPoint_JH from './userPoint_JH'; //준혁
 import mentionUserSaga from './mentionUser_JW';
+
 
 export default function* rootSaga() {
   yield all([
@@ -44,6 +46,8 @@ export default function* rootSaga() {
     fork(reportResultSaga),
     fork(badge_JH),
     fork(achievement_JH),
+    fork(userPoint_JH), //준혁
     fork(mentionUserSaga),
+
   ]);
 }

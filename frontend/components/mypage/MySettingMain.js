@@ -77,7 +77,7 @@ const MySettingMain = ({ data, onClose, reload, reloadLogInUser }) => {
           {selectedTab === "followers" && <MySettingFollowers data={data} />}
           {selectedTab === "followings" && <MySettingFollowings data={data} />}
           {selectedTab === "delete" && <MySettingDelete />}
-          {selectedTab === "point" && <MySettingPoint />}
+          {selectedTab === "point" && <MySettingPoint userId={userId} />}
         </Col>
       </Row>
     </div>
