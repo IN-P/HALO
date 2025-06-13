@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import useDebounce from '../hooks/useDebounce'; 
 
-const MentionTextArea = ({ value, onChange, onMentionSelect }) => {
+//
+const MentionTextArea = ({ value, onChange}) => {
   const [mentionQuery, setMentionQuery] = useState('');
   const [mentionResults, setMentionResults] = useState([]);
   const [showMentionList, setShowMentionList] = useState(false);
@@ -77,7 +78,7 @@ const MentionTextArea = ({ value, onChange, onMentionSelect }) => {
         <ul
           style={{
             position: 'absolute',
-            top: '100%', // textarea 바로 아래에 위치
+            top: '100%', 
             left: 0,
             width: '100%',
             background: 'white',
@@ -93,7 +94,7 @@ const MentionTextArea = ({ value, onChange, onMentionSelect }) => {
           {mentionResults.map((user) => (
             <li
               key={user.id}
-              onClick={() => handleMentionClick(user)} // <li> 클릭 시 자동 완성만 처리
+              onClick={() => handleMentionClick(user)}
               style={{ padding: '5px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
             >
               <img

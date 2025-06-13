@@ -2,24 +2,26 @@ import React, { useState, useEffect, useCallback } from 'react';
 import useSearch from '../hooks/useSearch';
 
 const SearchModal = ({ onClose, onUserSelect, userMap }) => {
+  const API_URL = 'http://localhost:3065';
+
   const dataForSearch = userMap && typeof userMap === 'object' ? Object.values(userMap) : [];
-  
+
   const [localTerm, setLocalTerm] = useState('');
 
   const { searchTerm, handleSearchChange, filteredData: searchedUsers } = useSearch(
-  '', // 초기 검색어는 빈 문자열
-  dataForSearch,
-  'nickname'
-);
+    '', // 초기 검색어는 빈 문자열
+    dataForSearch,
+    'nickname'
+  );
 
   return (
     <div style={{
-      position: 'absolute', 
-      top: '400px', 
-      left: '50%', 
-      transform: 'translateX(-50%)', 
-      width: '400px', 
-      maxHeight: '60%', 
+      position: 'absolute',
+      top: '400px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      width: '400px',
+      maxHeight: '60%',
       backgroundColor: 'white',
       border: '1px solid #ccc',
       borderRadius: '8px',
@@ -30,11 +32,22 @@ const SearchModal = ({ onClose, onUserSelect, userMap }) => {
       padding: '20px',
     }}>
       {/* 팝업창 상단 (제목 및 닫기 버튼) */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '15px'
+      }}>
         <h3 style={{ margin: 0 }}>새로운 채팅 시작</h3>
         <button
           onClick={onClose}
-          style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#555' }}
+          style={{
+            background: 'none',
+            border: 'none',
+            fontSize: '24px',
+            cursor: 'pointer',
+            color: '#555'
+          }}
         >
           &times;
         </button>
@@ -63,14 +76,24 @@ const SearchModal = ({ onClose, onUserSelect, userMap }) => {
               key={user.id}
               onClick={() => onUserSelect(user)}
               style={{
-                display: 'flex', alignItems: 'center',
+                display: 'flex',
+                alignItems: 'center',
                 padding: '10px',
                 borderBottom: '1px solid #eee',
                 cursor: 'pointer',
                 backgroundColor: 'white',
               }}
             >
-              <img src={user.profileImage} alt={user.nickname} style={{ width: 40, height: 40, borderRadius: '50%', marginRight: 15 }} />
+              <img
+                src={user.profileImage ? `${API_URL}${user.profileImage}` : '/default.png'}
+                alt={user.nickname}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  marginRight: 15
+                }}
+              />
               <span style={{ fontWeight: 'bold' }}>{user.nickname}</span>
             </div>
           ))
