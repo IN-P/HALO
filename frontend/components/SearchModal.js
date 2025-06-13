@@ -79,9 +79,10 @@ const SearchModal = ({ onClose, onUserSelect, userMap }) => {
                 display: 'flex',
                 alignItems: 'center',
                 padding: '10px',
-                borderBottom: '1px solid #eee',
+                borderRadius: '16px',
+                marginBottom: '8px',
                 cursor: 'pointer',
-                backgroundColor: 'white',
+                background: 'linear-gradient(to bottom, #a8ddf7, #d0e8ff)',
               }}
             >
               <img
@@ -98,10 +99,11 @@ const SearchModal = ({ onClose, onUserSelect, userMap }) => {
             </div>
           ))
         ) : (
-          <p style={{ textAlign: 'center', color: '#999' }}>
-            {searchTerm ? '검색 결과가 없습니다.' : '다른 유저를 검색해보세요.'}
-          </p>
-        )}
+           <p style={{ textAlign: 'center', color: '#999' }}>
+             {searchTerm ? '검색 결과가 없습니다.' : '다른 유저를 검색해보세요.'}
+           </p>
+        )
+        }
       </div>
     </div>
   );
