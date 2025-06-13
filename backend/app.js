@@ -56,7 +56,7 @@ const logRouter = require('./routes/log'); //윤기추가
 dotenv.config();
 
 app.use('/img', express.static(path.join(__dirname, 'uploads'))); //##윤기 추가
-app.use('/advertisement_uploads', express.static(path.join(__dirname, 'advertisement_uploads'))); // 재원 광고 이미지
+
 
 
 

@@ -368,6 +368,7 @@ useEffect(() => {
       }}>
                 <ChatList
           chatRooms={chatRooms}
+          setChatRooms={setChatRooms}
           onSelectUser={handleUserSelect}
         />
 
