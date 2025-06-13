@@ -6,8 +6,6 @@ const { Quiz, QuizOption } = require('../models');
 router.post('/quizzes', async(req, res) => {
     const { question, type, point_reward, options } = req.body;
 
-    console.log("받은 options: ", options);
-
     try {
         const quiz = await Quiz.create({
             question,
@@ -23,9 +21,7 @@ router.post('/quizzes', async(req, res) => {
                 answer: opt.answer
             }));
 
-            console.log("저장할 보기: ", quizOptions);
             await QuizOption.bulkCreate(quizOptions);
-            console.log("보기 저장 완료");
         }
         res.status(201).json({id: quiz.id});
     } catch (err) {

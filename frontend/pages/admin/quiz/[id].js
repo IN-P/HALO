@@ -62,7 +62,9 @@ const AdminQuizEditPage = () => {
 
             await axios.put(`/event/admin/quizzes/${id}`, payload);
             message.success("퀴즈 수정 완료");
-            router.push("/adminQuizList");
+            setTimeout(() => {
+                router.push("/admin/quiz");
+            }, 500);  // 0.5초 후 이동
         } catch (err) {
             message.error("수정 실패");
         }

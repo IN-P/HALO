@@ -3,6 +3,7 @@ import { Form, Input, Button, Select } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
 import { UPLOAD_IMAGES_REQUEST, REMOVE_IMAGE } from '../reducers/adminPlayer_GM';
 import useInput from '../hooks/useInput';
+import { message } from 'antd';
 
 const { Option } = Select;
 
@@ -15,13 +16,13 @@ const PlayerForm = ({ onSubmit }) => {
 
   const onSubmitForm = useCallback(() => {
     if (!name.trim()) {
-      return alert('선수 이름을 입력하세요.');
+      return message.success('선수 이름을 입력하세요.');
     }
     if (!rarity) {
-      return alert('등급을 선택하세요.');
+      return message.success('등급을 선택하세요.');
     }
     if (!imagePaths || imagePaths.length === 0) {
-      return alert('이미지를 업로드하세요.');
+      return message.success('이미지를 업로드하세요.');
     }
 
     setIsSubmitting(true);
@@ -40,7 +41,7 @@ const PlayerForm = ({ onSubmit }) => {
       .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
       .then(({ ok, data }) => {
         if (!ok) throw new Error(data.error || '등록 실패');
-        alert('선수 등록 완료');
+        message.success('선수 등록 완료');
         onSubmit?.(data.player);
 
         // ✅ 폼 초기화
@@ -49,37 +50,36 @@ const PlayerForm = ({ onSubmit }) => {
       })
       .catch((err) => {
         console.error('등록 오류:', err);
-        alert('등록 중 오류 발생');
+        message.success('등록 중 오류 발생');
       })
       .finally(() => setIsSubmitting(false));
   }, [name, rarity, imagePaths, onSubmit]);
 
   const imageInput = useRef();
   const onClickImageUpload = useCallback(() => {
-    imageInput.current?.click();
-  }, []);
-
+    imageInput.current.click();
+  }, [imageInput.current]);
+  // ##1. 이미지 올리기
   const onChangeImages = useCallback((e) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
+    console.log('images', e.target.files); // 파일넘겨받음.
     const imageFormData = new FormData();
-    [].forEach.call(files, (file) => {
-      imageFormData.append('image', file);
+
+    [].forEach.call(e.target.files, (f) => {
+      imageFormData.append('image', f);
     });
 
     dispatch({
       type: UPLOAD_IMAGES_REQUEST,
       data: imageFormData,
     });
-  }, [dispatch]);
+  }, []);
 
   const onRemoveImage = useCallback((index) => () => {
     dispatch({
       type: REMOVE_IMAGE,
       data: index,
     });
-  }, [dispatch]);
+  }, []);
 
   return (
     <Form layout="vertical" style={{ margin: '3%' }} onFinish={onSubmitForm}>
@@ -97,30 +97,26 @@ const PlayerForm = ({ onSubmit }) => {
       </Form.Item>
 
       <Form.Item>
-        <input
-          type="file"
-          name="image"
-          multiple
-          hidden
-          ref={imageInput}
-          onChange={onChangeImages}
-        />
-        <Button onClick={onClickImageUpload}>이미지 업로드</Button>
-        <Button type="primary" style={{ float: 'right' }} htmlType="submit" loading={isSubmitting}>
+        <input type="file" name="image" multiple hidden ref={imageInput} style={{ display: 'none' }} onChange={onChangeImages} />
+        <Button onClick={onClickImageUpload}>이미지업로드</Button>
+        <Button
+          type="primary"
+          style={{ float: 'right' }}
+          htmlType="submit"
+        >
           등록
         </Button>
       </Form.Item>
 
       <div>
-        {Array.isArray(imagePaths) &&
-          imagePaths.map((v, i) => (
-            <div key={v} style={{ display: 'inline-block', marginRight: 8 }}>
-              <img src={`http://localhost:3065${v}`} style={{ width: '200px' }} />
-              <div>
-                <Button onClick={onRemoveImage(i)}>제거</Button>
-              </div>
+        {Array.isArray(imagePaths) ? imagePaths.map((v, i) => (
+          <div key={v} style={{ display: 'inline-block' }}>
+            <img src={`http://localhost:3065/img/player/${v}`} style={{ width: '200px' }} alt={v} />
+            <div>
+              <Button onClick={onRemoveImage(i)}>제거</Button>
             </div>
-          ))}
+          </div>
+        )) : null}
       </div>
     </Form>
   );
