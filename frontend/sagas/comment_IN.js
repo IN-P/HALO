@@ -10,7 +10,7 @@ import { UPDATE_COMMENT_COUNT_IN_POST } from '../reducers/post_IN';
 
 // 트리 전체 불러오기
 function loadCommentsAPI(postId) {
-  return axios.get(`http://localhost:3065/comment/post/${postId}/tree`,{withCredentials: true,});
+  return axios.get(`http://localhost:3065/comment/post/${postId}/tree`, { withCredentials: true });
 }
 function* loadComments(action) {
   try {
@@ -19,7 +19,7 @@ function* loadComments(action) {
     // Mentions 파싱 준비
     const nicknameSet = new Set();
 
-    // 댓글 트리 순회 (재귀)
+    // 댓글 트리 순회 (재귀) -- replies만 탐색
     function traverseComments(comments) {
       comments.forEach(comment => {
         const mentionRegex = /@([^\s@]+)/g;
@@ -27,8 +27,8 @@ function* loadComments(action) {
         while ((match = mentionRegex.exec(comment.content)) !== null) {
           nicknameSet.add(match[1]);
         }
-        if (comment.children && comment.children.length > 0) {
-          traverseComments(comment.children);
+        if (comment.replies && comment.replies.length > 0) {
+          traverseComments(comment.replies);
         }
       });
     }
@@ -40,13 +40,17 @@ function* loadComments(action) {
     const nicknames = Array.from(nicknameSet);
 
     if (nicknames.length > 0) {
-      const response = yield call(axios.get, `http://localhost:3065/mention/users?q=${encodeURIComponent(nicknames.join(','))}&limit=100`, { withCredentials: true });
+      const response = yield call(
+        axios.get,
+        `http://localhost:3065/mention/users?q=${encodeURIComponent(nicknames.join(','))}&limit=100`,
+        { withCredentials: true }
+      );
       response.data.forEach((user) => {
         userMap[user.nickname] = user.id;
       });
     }
 
-    // Mentions 추가하기 (재귀)
+    // Mentions 추가하기 (재귀) -- replies만 탐색
     function addMentionsToComments(comments) {
       comments.forEach(comment => {
         const mentionRegex = /@([^\s@]+)/g;
@@ -61,8 +65,8 @@ function* loadComments(action) {
         }
         comment.Mentions = mentions;
 
-        if (comment.children && comment.children.length > 0) {
-          addMentionsToComments(comment.children);
+        if (comment.replies && comment.replies.length > 0) {
+          addMentionsToComments(comment.replies);
         }
       });
     }
@@ -116,7 +120,11 @@ function* addComment(action) {
     const nicknames = Array.from(nicknameSet);
 
     if (nicknames.length > 0) {
-      const response = yield call(axios.get, `http://localhost:3065/mention/users?q=${encodeURIComponent(nicknames.join(','))}&limit=100`, { withCredentials: true });
+      const response = yield call(
+        axios.get,
+        `http://localhost:3065/mention/users?q=${encodeURIComponent(nicknames.join(','))}&limit=100`,
+        { withCredentials: true }
+      );
       response.data.forEach((user) => {
         userMap[user.nickname] = user.id;
       });
@@ -133,7 +141,6 @@ function* addComment(action) {
       });
     }
 
-    // Mentions를 res.data에 추가 (만약 화면에 직접 써야할 경우 대비용 → 지금은 LOAD_COMMENTS_REQUEST 다시 가니 참고용)
     res.data.Mentions = mentions;
 
     yield put({ type: LOAD_COMMENTS_REQUEST, postId: action.data.postId });
@@ -173,7 +180,11 @@ function* editComment(action) {
     const nicknames = Array.from(nicknameSet);
 
     if (nicknames.length > 0) {
-      const response = yield call(axios.get, `http://localhost:3065/mention/users?q=${encodeURIComponent(nicknames.join(','))}&limit=100`, { withCredentials: true });
+      const response = yield call(
+        axios.get,
+        `http://localhost:3065/mention/users?q=${encodeURIComponent(nicknames.join(','))}&limit=100`,
+        { withCredentials: true }
+      );
       response.data.forEach((user) => {
         userMap[user.nickname] = user.id;
       });
@@ -190,8 +201,7 @@ function* editComment(action) {
       });
     }
 
-    // Mentions를 따로 관리하고 싶으면 res.data 에 Mentions 넣어줄 수 있음
-    // res.data.Mentions = mentions; (지금은 사용 X)
+    // res.data.Mentions = mentions; // 필요시 주석 해제
     
     // 수정 후 트리 새로고침
     yield put({ type: LOAD_COMMENTS_REQUEST, postId: action.data.postId });

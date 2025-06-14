@@ -53,7 +53,8 @@ const adminPostsRouter = require('./routes/adminPosts');
 const logRouter = require('./routes/log'); //윤기추가
 const userPoint = require('./routes/userPoint'); // 준혁
 const mentionUserRouter = require('./routes/mentionUser'); //재원 맨션
-
+const initDummyUsers = require('./utils/init/initDummyUsers'); //윤기
+const attackDetector = require('./middlewares/attackDetector'); //윤기 공격 탐지 미들웨어
 
 // .env 적용
 dotenv.config();
@@ -86,17 +87,17 @@ app.use(session({
 // 반드시 session 뒤에 호출! 이것도 추가입니다
 app.use(passport.initialize());  //##윤기 <-- 이거 꼭 넣어야 req.isAuthenticated가 생김
 app.use(passport.session()); //##윤기
+app.use(attackDetector); //윤기
 
 // DB 연결 ##윤기 추가
 db.sequelize.sync()
   .then(async () => {
     console.log('DB 연결 성공');
-
     await initUserStatus();   //## 윤기 추가
     await initMembership();    //## 윤기 추가
     await initMyTeam();     //## 윤기 추가
     await initSocials();     //## 윤기 추가
-    
+    await initDummyUsers(); //## 윤기추가
     app.set('models', db); //윤기추가
     console.log('기본 데이터 초기화 완료'); //## 윤기 추가
   })
