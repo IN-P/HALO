@@ -52,7 +52,7 @@ const QuizRegisterForm = () => {
     }
     dispatch({ type: REGISTER_QUIZ_REQUEST, data: payload });
     message.success("퀴즈 등록 완료");
-    router.push("/adminQuizList");
+    router.push("/admin/quiz");
   }
 
   return(
