@@ -69,7 +69,7 @@ const ChatList = ({ chatRooms,setChatRooms,onSelectUser }) => {
             display: 'flex',
             alignItems: 'center',
             gap: 12,
-            position: 'relative', // 👈 이 줄 추가
+            position: 'relative', 
             overflow: 'hidden',
             marginBottom: '4px',
              background: '#fff',

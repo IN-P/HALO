@@ -1,7 +1,5 @@
-// pages/admin/ads/index.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-
 
 const cardStyle = {
   width: 320,
@@ -51,7 +49,7 @@ const AdminAdsPage = () => {
 
   const fetchAds = async () => {
     try {
-      const res = await axios.get('http://localhost:3065/advertisement', { withCredentials: true });
+      const res = await axios.get('http://localhost:3065/api/advertisement', { withCredentials: true });
       setAds(res.data);
     } catch (err) {
       console.error(err);
@@ -88,7 +86,7 @@ const AdminAdsPage = () => {
   imageFormData.append('image', form.image);
 
   try {
-    const imageRes = await axios.post('http://localhost:3065/advertisement/image', imageFormData, {
+    const imageRes = await axios.post('http://localhost:3065/api/advertisement/image', imageFormData, {
       withCredentials: true,
     });
     console.log('imageRes.data:', imageRes.data);
@@ -122,12 +120,12 @@ console.log('payload to send:', payload);
     return; // 수정 취소
   }
 
-  await axios.patch(`http://localhost:3065/advertisement/${editingAdId}`, payload, {
+  await axios.patch(`http://localhost:3065/api/advertisement/${editingAdId}`, payload, {
     withCredentials: true,
   });
   setEditingAdId(null);
 } else {
-  await axios.post('http://localhost:3065/advertisement', payload, { withCredentials: true });
+  await axios.post('http://localhost:3065/api/advertisement', payload, { withCredentials: true });
 }
 
       setForm({
@@ -165,7 +163,7 @@ const handleDelete = async (id) => {
   }
 
   try {
-    await axios.delete(`http://localhost:3065/advertisement/${id}`, { withCredentials: true });
+    await axios.delete(`http://localhost:3065/api/advertisement/${id}`, { withCredentials: true });
     fetchAds();
   } catch (err) {
     console.error(err);
@@ -299,6 +297,17 @@ const handleDelete = async (id) => {
               <div style={{ marginTop: '12px' }}>
                 <button onClick={() => handleEdit(ad)} style={buttonStyle}>수정</button>
                 <button onClick={() => handleDelete(ad.id)} style={{ ...buttonStyle, marginLeft: '8px', backgroundColor: '#ff4d4f' }}>삭제</button>
+                <a
+                  href={`/admin/ads/${ad.id}`}
+                  style={{
+                    ...buttonStyle,
+                    marginLeft: '8px', // 다른 버튼과의 간격을 위해 유지
+                    backgroundColor: '#000', // 검은색 배경
+                    color: '#fff', // 흰색 글자
+                  }}
+                >
+                  상세 보기
+                </a>
               </div>
             </div>
           </div>
