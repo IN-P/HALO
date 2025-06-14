@@ -10,6 +10,7 @@ const { Op } = require('sequelize');
 
 
 // 광고 이미지 업로드 폴더 체크
+
 const uploadAdvertisementImage = multer({
   storage: multer.diskStorage({
     destination(req, file, done) {

@@ -47,6 +47,7 @@ const ImportantNotificationCount = styled.span`
 `
 
 // 재사용 가능한 버튼 컴포넌트
+
 const SidebarButton = ({ icon, children, onClick }) => {
   return (
     <Button
@@ -74,6 +75,7 @@ const SidebarButton = ({ icon, children, onClick }) => {
     </Button>
   );
 };
+
 
 // 준혁 추가 : 알림창 토글 상태 showNotification, onToggleNotification, notificationCount
 const Sidebar = ({ showNotification, onToggleNotification, notificationCount, themeMode, onToggleTheme, importantCount }) => {
@@ -109,9 +111,22 @@ const Sidebar = ({ showNotification, onToggleNotification, notificationCount, th
             <SidebarButton icon={<EditOutlined />}>게시물 작성</SidebarButton>
           </Link>
           {/* 준혁 추가 : 알림창 토글 onClick={onToggleNotification} active={showNotification} */}
-          <SidebarButton icon={<BellOutlined />} onClick={onToggleNotification} active={showNotification}>알림
-          {notificationCount > 0 && ( <NotificationCount>{notificationCount > 99 ? '99+' : notificationCount}</NotificationCount> )}
-          {importantCount > 0 && ( <ImportantNotificationCount>{importantCount > 99 ? '99+' : importantCount} !</ImportantNotificationCount> )}
+          <SidebarButton
+            icon={<BellOutlined />}
+            onClick={onToggleNotification}
+            warning={importantCount > 0} // 여기 추가!
+          >
+            알림
+            {notificationCount > 0 && (
+              <NotificationCount>
+                {notificationCount > 99 ? '99+' : notificationCount}
+              </NotificationCount>
+            )}
+            {importantCount > 0 && (
+              <ImportantNotificationCount>
+                {importantCount > 99 ? '99+' : importantCount} !
+              </ImportantNotificationCount>
+            )}
           </SidebarButton>         
           <Link href="/chat" passHref>
             <SidebarButton icon={<MessageOutlined />}>채팅 (DM)</SidebarButton>
