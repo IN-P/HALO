@@ -132,7 +132,7 @@ app.use('/user/reset-password', resetPasswordRouter); //윤기 비번재발급
 app.use('/auth', authRouter); //윤기추가 /auth/google, /auth/google/callback 용
 app.use('/pay', kakaopayRouter); //윤기추가
 app.use('/api/admin', adminRouter);
-app.use('/advertisement', advertisementRouter); // 재원 광고 라우터
+app.use('/api/advertisement', advertisementRouter); // 재원 광고 라우터
 app.use('/report-result', reportResultRouter);//율비
 app.use('/recovery', recoveryRouter); //윤기추가
 app.use('/membership', membershipRouter); // 윤기추가

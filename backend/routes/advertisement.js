@@ -6,7 +6,7 @@ const path = require('path');
 const { Advertisement } = require('../models');
 
 const isAdmin = require('../middlewares/isAdmin');
-
+const { Op } = require('sequelize');
 
 
 // 광고 이미지 업로드 폴더 체크
@@ -129,6 +129,39 @@ router.delete('/:id', isAdmin, async (req, res, next) => {
   }
 });
 
+//광고 조회
+router.get('/active', async (req, res, next) => {
+  try {
+    const today = new Date();
+
+    const activeAds = await Advertisement.findAll({
+      where: {
+        is_active: true,
+        start_date: { [Op.lte]: today },
+        end_date: { [Op.gte]: today },
+      },
+      order: [['createdAt', 'DESC']],
+    });
+
+    res.status(200).json(activeAds);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+//광고 조회
+router.get('/:id', async (req, res, next) => {
+  try {
+    const ad = await Advertisement.findByPk(req.params.id);
+    if (!ad) {
+      return res.status(404).json({ message: '광고를 찾을 수 없습니다.' });
+    }
+    res.status(200).json(ad);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
 
 
 module.exports = router;
