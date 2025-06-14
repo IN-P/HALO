@@ -42,8 +42,10 @@ router.get('/me', isLoggedIn, async (req, res) => {
 */
 router.post('/', async (req, res, next) => {
   try {
-    const { email, nickname, password } = req.body;
-
+    const { email, password } = req.body;
+    let nickname = req.body.nickname;
+    nickname = nickname.trim().replace(/\s+/g, '_');
+   
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(403).send('이미 사용 중인 이메일입니다.');
@@ -74,7 +76,7 @@ router.post('/', async (req, res, next) => {
       profile_img: '/img/profile/default.jpg', //바뀜
       user_status_id: 1,    // 일반계정
       membership_id: 1,     // 브론즈
-      myteam_id: 1,         // "응원팀 없음"
+      myteam_id: req.body.myteam_id || 1,         // "응원팀 없음"
       social_id: 1,         // 간편로그인 안한양반으로 디폴트
       ip,   //ip저장
     });
