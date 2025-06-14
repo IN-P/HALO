@@ -175,9 +175,16 @@ const SignupPage = () => {
                 <Form.Item label="추천 닉네임 선택" colon={false}>
                   <Space wrap>
                     {nicknameOptions.map((name, idx) => (
-                      <Button key={idx} size="small" onClick={() => form.setFieldsValue({ nickname: name })}>
-                        {name}
-                      </Button>
+<Button
+  key={idx}
+  size="small"
+  onClick={() => {
+    setNickname(name);                         // nickname state 반영
+    form.setFieldsValue({ nickname: name });  // form도 반영
+  }}
+>
+  {name}
+</Button>
                     ))}
                   </Space>
                 </Form.Item>
