@@ -1,13 +1,32 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { EditOutlined, DeleteOutlined, MoreOutlined, FlagOutlined } from "@ant-design/icons";
+import {
+  ADD_COMMENT_REQUEST,
+  LOAD_COMMENTS_REQUEST,
+  EDIT_COMMENT_REQUEST,
+  REMOVE_COMMENT_REQUEST,
+} from "../reducers/comment_IN";
 import MentionTextArea from "./MentionTextArea";
-import { ADD_COMMENT_REQUEST, LOAD_COMMENTS_REQUEST, EDIT_COMMENT_REQUEST, REMOVE_COMMENT_REQUEST } from "../reducers/comment_IN";
+import { EditOutlined, DeleteOutlined, MoreOutlined, FlagOutlined } from "@ant-design/icons";
 import { FaLevelUpAlt } from 'react-icons/fa';
 
 const CommentDetail = ({ postId, currentUserId }) => {
   const dispatch = useDispatch();
+  const mentionUserMap = useSelector((state) => state.mentionUser_JW?.mentionUserMap || {});
   const { comments: allComments, addCommentLoading, editCommentLoading, loadCommentsDone } = useSelector((state) => state.comment_IN);
+
+  const [receiverIdMap, setReceiverIdMap] = useState({});
+  const [inputValue, setInputValue] = useState("");
+  const [replyTarget, setReplyTarget] = useState(null);
+  const [editId, setEditId] = useState(null);
+  const [editValue, setEditValue] = useState("");
+  const [menuOpenId, setMenuOpenId] = useState(null);
+  const [openReplies, setOpenReplies] = useState({});
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    dispatch({ type: "LOAD_MENTION_USERS_REQUEST" });
+  }, [dispatch]);
 
   useEffect(() => {
     if (!loadCommentsDone?.[postId]) {
@@ -16,13 +35,6 @@ const CommentDetail = ({ postId, currentUserId }) => {
   }, [dispatch, postId, loadCommentsDone]);
 
   const comments = allComments[postId] || [];
-  const [inputValue, setInputValue] = useState('');
-  const [replyTarget, setReplyTarget] = useState(null);
-  const inputRef = useRef(null);
-  const [editId, setEditId] = useState(null);
-  const [editValue, setEditValue] = useState("");
-  const [menuOpenId, setMenuOpenId] = useState(null);
-  const [openReplies, setOpenReplies] = useState({});
 
   const toggleReplies = (commentId) => {
     setOpenReplies(prev => ({ ...prev, [commentId]: !prev[commentId] }));
@@ -38,9 +50,14 @@ const CommentDetail = ({ postId, currentUserId }) => {
     if (!inputValue.trim()) return;
     dispatch({
       type: ADD_COMMENT_REQUEST,
-      data: { postId, content: inputValue, parentId: replyTarget?.id || null },
+      data: {
+        postId,
+        content: inputValue,
+        parentId: replyTarget?.id || null,
+        receiver_id: replyTarget ? receiverIdMap[replyTarget.id] : receiverIdMap[0],
+      },
     });
-    setInputValue('');
+    setInputValue("");
     setReplyTarget(null);
   };
 
@@ -72,21 +89,40 @@ const CommentDetail = ({ postId, currentUserId }) => {
     alert("신고 처리(예시)");
   };
 
-  const renderContent = (content, mentions = []) => {
+  const renderContent = (content, mentions = [], parentNickname) => {
     if (!content) return null;
     const userMap = {};
     mentions.forEach(m => {
       userMap[m.nickname?.toLowerCase()] = m.user_id;
     });
-    return content.split(/(#[^\s#]+|@[^\s@]+)/g).filter(Boolean).map((part, i) => {
-      if (part.startsWith("#")) return <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: "#007bff", textDecoration: "none" }}>{part}</a>;
-      if (part.startsWith("@")) {
-        const nickname = part.slice(1).toLowerCase();
-        const userId = userMap[nickname];
-        return userId ? <a key={i} href={`/profile/${userId}`} style={{ color: "#28a745", textDecoration: "none" }}>{part}</a> : <span key={i} style={{ color: "#28a745" }}>{part}</span>;
-      }
-      return <span key={i}>{part}</span>;
-    });
+
+    let text = content;
+    let showParentNickname = false;
+    if (parentNickname && content.startsWith(`@${parentNickname}`)) {
+      text = content.slice(parentNickname.length + 1).trimStart();
+      showParentNickname = true;
+    }
+
+    return (
+      <>
+        {showParentNickname && <b>@{parentNickname} </b>}
+        {text.split(/(#[^\s#]+|@[^\s@]+)/g).filter(Boolean).map((part, i) => {
+          if (part.startsWith("#")) {
+            return <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: "#007bff", textDecoration: "none" }}>{part}</a>;
+          }
+          if (part.startsWith("@")) {
+            const nickname = part.slice(1).toLowerCase();
+            const userId = userMap[nickname] || mentionUserMap[nickname];
+            return userId ? (
+              <a key={i} href={`/profile/${userId}`} style={{ color: "#28a745", textDecoration: "none" }}>{part}</a>
+            ) : (
+              <span key={i} style={{ color: "#28a745" }}>{part}</span>
+            );
+          }
+          return <span key={i}>{part}</span>;
+        })}
+      </>
+    );
   };
 
   const renderComments = (list) => {
@@ -99,10 +135,15 @@ const CommentDetail = ({ postId, currentUserId }) => {
       const isRepliesOpen = openReplies[c.id];
 
       return (
-        <div key={c.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: isReply ? "7px 0 7px 0" : "10px 0", marginBottom: isReply ? 1 : 4 }}>
+        <div key={c.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: isReply ? "7px 0" : "10px 0", marginBottom: isReply ? 1 : 4 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             {isReply && <FaLevelUpAlt style={{ transform: "rotate(90deg)", color: "#bbb", fontSize: 14, marginTop: 1 }} />}
-            <img src={c.User?.profile_img ? `http://localhost:3065${c.User.profile_img}` : "/img/profile/default.jpg"} alt="avatar" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", border: "1px solid #eee", flexShrink: 0, cursor: "pointer", marginTop: 2 }} onClick={() => window.location.href = `/profile/${c.User?.id}`} />
+            <img
+              src={c.User?.profile_img ? `http://localhost:3065${c.User.profile_img}` : "/img/profile/default.jpg"}
+              alt="avatar"
+              style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", border: "1px solid #eee", flexShrink: 0, cursor: "pointer", marginTop: 2 }}
+              onClick={() => window.location.href = `/profile/${c.User?.id}`}
+            />
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -131,7 +172,7 @@ const CommentDetail = ({ postId, currentUserId }) => {
                   <button style={btnStyle} onClick={() => onEditSubmit(c)} disabled={editCommentLoading}>완료</button>
                   <button style={btnStyle} onClick={() => setEditId(null)}>취소</button>
                 </span>
-              ) : renderContent(c.content, c.Mentions))}
+              ) : renderContent(c.content, c.Mentions, c.Parent?.User?.nickname))}
             </div>
             {c.parent_id === null && (
               <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
@@ -158,9 +199,22 @@ const CommentDetail = ({ postId, currentUserId }) => {
         )}
         {Array.isArray(comments) && renderComments(comments.filter(c => !c.parent_id))}
       </div>
-      <div style={{ borderTop: "1px solid #f1f1f1", background: "#fafbfc", padding: "12px 12px 14px 12px", display: "flex", alignItems: "flex-start", gap: 10, width: '100%', boxSizing: 'border-box' }}>
+      <div style={{ borderTop: "1px solid #f1f1f1", background: "#fafbfc", padding: "12px 12px 14px", display: "flex", alignItems: "flex-start", gap: 10 }}>
         <div style={{ flex: 1 }}>
-          <MentionTextArea ref={inputRef} value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder={replyTarget ? `@${replyTarget.nickname} 에게 답글달기` : "댓글을 입력하세요..."} style={{ width: '100%', minHeight: 72, fontSize: 15, borderRadius: 8, border: '1px solid #ccc', padding: '12px 16px', resize: 'none', background: "#fff", boxSizing: 'border-box' }} />
+          <MentionTextArea
+            ref={inputRef}
+            value={inputValue}
+            onChange={e => setInputValue(e.target.value)}
+            onMentionSelect={(user) => {
+              if (replyTarget) {
+                setReceiverIdMap(prev => ({ ...prev, [replyTarget.id]: user.id }));
+              } else {
+                setReceiverIdMap({ 0: user.id });
+              }
+            }}
+            placeholder={replyTarget ? `@${replyTarget.nickname} 에게 답글달기` : "댓글을 입력하세요..."}
+            style={{ width: '100%', minHeight: 72, fontSize: 15, borderRadius: 8, border: '1px solid #ccc', padding: '12px 16px', resize: 'none', background: "#fff" }}
+          />
         </div>
         <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "stretch", height: 68, minWidth: 64, gap: 6 }}>
           <button style={actionBtnStyle} disabled={addCommentLoading} onClick={onSubmit}>등록</button>
@@ -174,7 +228,7 @@ const CommentDetail = ({ postId, currentUserId }) => {
 };
 
 const btnStyle = { background: "#f2f2f2", border: "none", borderRadius: 6, fontSize: 13, color: "#222", padding: "5px 14px", marginLeft: 5, cursor: "pointer" };
-const actionBtnStyle = { width: "100%", height: 28, background: "#2296f3", border: "none", borderRadius: 7, color: "#fff", fontWeight: 600, fontSize: 15, cursor: "pointer", margin: 0, padding: 0, transition: "background 0.18s", outline: "none", boxShadow: "0 1px 3px rgba(34,150,243,0.07)" };
+const actionBtnStyle = { width: "100%", height: 28, background: "#2296f3", border: "none", borderRadius: 7, color: "#fff", fontWeight: 600, fontSize: 15, cursor: "pointer", margin: 0, padding: 0 };
 const moreBtnStyle = { background: "none", border: "none", color: "#999", fontSize: 18, padding: 2, cursor: "pointer" };
 const menuItemStyle = { display: "block", width: "100%", padding: "8px 18px", border: "none", background: "none", textAlign: "left", cursor: "pointer", fontSize: 15, color: "#444" };
 const popoverMenuStyle = { position: "absolute", right: 0, top: 28, background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,0.15)", borderRadius: 8, zIndex: 100, minWidth: 100 };

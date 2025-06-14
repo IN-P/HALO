@@ -28,11 +28,11 @@ function getRelativeTime(date) {
 const PostCard = ({ post }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user_YG);
+  const mentionUserMap = useSelector((state) => state.mentionUser_JW?.mentionUserMap || {});
 
   const isRegram = !!post.regram_id;
   const origin = post.Regram;
   const basePost = isRegram && origin ? origin : post;
-  // feed 작성자(=리그램유저), origin이 원본
   const feedProfile = post.User;
   const feedNickname = post.User?.nickname;
   const feedProfileImg = post.User?.profile_img;
@@ -119,72 +119,27 @@ const PostCard = ({ post }) => {
   const onBookmark = () => dispatch({ type: BOOKMARK_POST_REQUEST, data: basePost.id });
   const onUnbookmark = () => dispatch({ type: UNBOOKMARK_POST_REQUEST, data: basePost.id });
 
-  // 리그램 안내 (본문-작성일 사이에)
+  const onShowDetailModal = () => setShowDetailModal(true);
+
   const RegramInfo = isRegram && origin && origin.User && (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      margin: '8px 0 10px 0',
-      fontSize: 15,
-      color: '#444'
-    }}>
+    <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10, fontSize: 15, color: '#444' }}>
       <img
         src={origin.User.profile_img ? `http://localhost:3065${origin.User.profile_img}` : 'http://localhost:3065/img/profile/default.jpg'}
         alt="프로필"
-        style={{
-          width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', marginRight: 7, border: '1.5px solid #bbb', cursor: 'pointer'
-        }}
+        style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', marginRight: 7, border: '1.5px solid #bbb', cursor: 'pointer' }}
         onClick={() => window.location.href = `/profile/${origin.User.id}`}
       />
-      <span
-        style={{
-          fontWeight: 700, marginRight: 5, cursor: 'pointer', color: '#0055ff'
-        }}
-        onClick={() => window.location.href = `/profile/${origin.User.id}`}
-      >
-        {origin.User.nickname}
-      </span>
+      <span style={{ fontWeight: 700, marginRight: 5, cursor: 'pointer', color: '#0055ff' }} onClick={() => window.location.href = `/profile/${origin.User.id}`}>{origin.User.nickname}</span>
       님의 게시글을 리그램했습니다
     </div>
   );
 
-  const onShowDetailModal = () => setShowDetailModal(true);
-
   return (
-    <div style={{
-      display: 'flex',
-      background: '#fff',
-      borderRadius: 20,
-      boxShadow: '0 3px 16px rgba(0,0,0,0.12)',
-      margin: '32px 0',
-      padding: 0,
-      overflow: 'hidden',
-      position: 'relative',
-      width: IMAGE_SIZE.width + 480,
-      minWidth: IMAGE_SIZE.width + 420,
-      maxWidth: IMAGE_SIZE.width + 520,
-    }}>
-      {/* 왼쪽 이미지 */}
-      <div style={{
-        width: IMAGE_SIZE.width,
-        height: IMAGE_SIZE.height,
-        position: 'relative',
-        background: '#eee',
-        flexShrink: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
+    <div style={{ display: 'flex', background: '#fff', borderRadius: 20, boxShadow: '0 3px 16px rgba(0,0,0,0.12)', margin: '32px 0', overflow: 'hidden', position: 'relative', width: IMAGE_SIZE.width + 480 }}>
+      <div style={{ width: IMAGE_SIZE.width, height: IMAGE_SIZE.height, position: 'relative', background: '#eee', flexShrink: 0 }}>
         {currentImages.length > 0 ? (
-          <img
-            src={`http://localhost:3065/uploads/post/${currentImages[imageIndex]?.src}`}
-            alt=""
-            style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#eee', cursor: 'pointer' }}
-            onClick={onShowDetailModal}
-          />
-        ) : (
-          <div style={{ width: '100%', height: '100%', background: '#f3f3f3' }} />
-        )}
+          <img src={`http://localhost:3065/uploads/post/${currentImages[imageIndex]?.src}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#eee', cursor: 'pointer' }} onClick={onShowDetailModal} />
+        ) : (<div style={{ width: '100%', height: '100%', background: '#f3f3f3' }} />)}
         {currentImages.length > 1 && (
           <>
             <button onClick={prevImage} style={{ ...arrowBtnStyle, left: 16 }}>←</button>
@@ -192,207 +147,47 @@ const PostCard = ({ post }) => {
           </>
         )}
       </div>
-      {/* 오른쪽 정보 */}
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'flex-start',
-        width: 480,
-        minWidth: 420,
-        maxWidth: 520,
-        padding: '22px 28px 18px 28px',
-        height: IMAGE_SIZE.height,
-        boxSizing: 'border-box',
-        overflow: 'hidden',
-        gap: 8,
-      }}>
-        {/* 1. 프로필 (항상 리그램유저, 일반글은 자기) */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8, minHeight: 54 }}>
-          <img
-            src={feedProfileImg ? `http://localhost:3065${feedProfileImg}` : 'http://localhost:3065/img/profile/default.jpg'}
-            alt="프로필"
-            style={{ width: 54, height: 54, borderRadius: '50%', objectFit: 'cover', marginRight: 16, border: '2px solid #bbb' }}
-            onClick={() => window.location.href = `/profile/${feedProfile?.id}`}
-          />
+      <div style={{ flex: 1, height: IMAGE_SIZE.height, display: 'flex', flexDirection: 'column', background: '#fff', minWidth: 390, boxSizing: 'border-box', padding: '20px 24px', overflowX: 'hidden' }}>
+        {isRegram && (<div style={{ display: 'flex', alignItems: 'center', color: '#0088ff', fontWeight: 600, fontSize: 15, marginBottom: 4, gap: 5 }}><FaRetweet />재게시했습니다</div>)}
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+          <img src={feedProfileImg ? `http://localhost:3065${feedProfileImg}` : 'http://localhost:3065/img/profile/default.jpg'} alt="프로필" style={{ width: 54, height: 54, borderRadius: '50%', objectFit: 'cover', marginRight: 16, border: '2px solid #bbb' }} onClick={() => window.location.href = `/profile/${feedProfile?.id}`} />
           <div>
             <div style={{ fontWeight: 'bold', fontSize: 20, display: 'flex', alignItems: 'center', gap: 6 }}>
               {feedNickname}
-              {privatePost && (
-                <span style={{
-                  display: 'inline-block',
-                  background: '#ffe3e3',
-                  color: '#e50000',
-                  fontWeight: 700,
-                  fontSize: 12,
-                  padding: '2px 8px',
-                  borderRadius: 10,
-                  marginLeft: 6,
-                }}>나만보기</span>
-              )}
-              {isAccountPrivate === 1 && (
-                <span style={{
-                  display: 'inline-block',
-                  background: '#eee',
-                  color: '#1558d6',
-                  fontWeight: 700,
-                  fontSize: 12,
-                  padding: '2px 8px',
-                  borderRadius: 10,
-                  marginLeft: 6,
-                }}>비공개</span>
-              )}
+              {privatePost && (<span style={{ background: '#ffe3e3', color: '#e50000', fontWeight: 700, fontSize: 12, padding: '2px 8px', borderRadius: 10 }}>나만보기</span>)}
+              {isAccountPrivate === 1 && (<span style={{ background: '#eee', color: '#1558d6', fontWeight: 700, fontSize: 12, padding: '2px 8px', borderRadius: 10 }}>비공개</span>)}
             </div>
-            <div style={{ fontSize: 13, color: '#aaa', marginTop: 2 }}>
-              마지막 접속&nbsp;
-              {getRelativeTime(feedProfile?.last_active)}
-            </div>
+            <div style={{ fontSize: 13, color: '#aaa', marginTop: 2 }}>마지막 접속 {getRelativeTime(feedProfile?.last_active)}</div>
           </div>
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <PostMenu
-              showMenu={showMenu}
-              setShowMenu={setShowMenu}
-              menuRef={menuRef}
-              isMine={isMine}
-              isRegram={isRegram}
-              postId={post.id}
-              setShowReportModal={setShowReportModal}
-            />
+          <div style={{ marginLeft: 'auto' }}>
+            <PostMenu showMenu={showMenu} setShowMenu={setShowMenu} menuRef={menuRef} isMine={isMine} isRegram={isRegram} postId={post.id} setShowReportModal={setShowReportModal} />
           </div>
         </div>
-        {/* 2. 작성일자 */}
-        <div style={{ fontSize: 13, color: '#bbb', margin: '2px 0 4px 0' }}>
-          작성일&nbsp;
-          {post.createdAt ? new Date(post.createdAt).toLocaleString('ko-KR', {
-            year: 'numeric', month: '2-digit', day: '2-digit',
-            hour: '2-digit', minute: '2-digit'
-          }) : ''}
-        </div>
-        {/* 3. 리그램 안내 */}
+        <div style={{ fontSize: 13, color: '#bbb', margin: '2px 0 6px 0' }}>작성일 {post.createdAt ? new Date(post.createdAt).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}</div>
+        {location && (<div style={{ fontSize: 15, color: '#1558d6', marginBottom: 10, cursor: 'pointer', fontWeight: 500, textDecoration: 'underline' }} onClick={() => setShowMapModal(true)}>{location}</div>)}
         {RegramInfo}
-        {/* 4. 본문 내용 */}
-        <div style={{
-          fontSize: 17, lineHeight: 1.6, marginBottom: 8, minHeight: 42, maxHeight: 75, overflowY: 'auto', overflowX: 'hidden', wordBreak: 'break-all',
-        }}>
-          {post.content}
+        <div style={{ fontSize: 17, lineHeight: 1.6, marginBottom: 12, minHeight: 60, maxHeight: 130, overflowY: 'auto', overflowX: 'hidden', wordBreak: 'break-all' }}>{post.content}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 22, fontSize: 26, margin: '12px 0 0 0', borderTop: '1.5px solid #f2f2f2', paddingTop: 10 }}>
+          <button style={iconBtnStyle} onClick={onShowDetailModal}><FaRegComment /><span style={countStyle}>{getTotalCommentCount(post.Comments || [])}</span></button>
+          <button style={iconBtnStyle} onClick={liked ? onUnlike : onLike}>{liked ? <FaHeart color="red" /> : <FaRegHeart />}<span style={countStyle}>{likeCount}</span></button>
+          <button style={iconBtnStyle} onClick={onRegram} disabled={regramDisabled} title={regramTooltip}><FaRetweet color={regramIconColor} /><span style={countStyle}>{regramCount}</span></button>
+          <button style={iconBtnStyle} onClick={bookmarked ? onUnbookmark : onBookmark}>{bookmarked ? <FaBookmark color="#007bff" /> : <FaRegBookmark />}<span style={countStyle}>{bookmarkCount}</span></button>
+          <button style={iconBtnStyle} onClick={handleCopyLink} title="공유 링크 복사"><FaShareAlt /><span style={{ fontSize: 16, marginLeft: 2, fontWeight: 500 }}>공유</span></button>
         </div>
-        {/* 5. 아이콘 줄 (공유 버튼 항상 노출) */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 16, fontSize: 25, margin: '12px 0 0 0',
-          borderTop: '1.5px solid #f2f2f2', paddingTop: 10, flexWrap: 'nowrap'
-        }}>
-          <button style={iconBtnStyle} onClick={onShowDetailModal}>
-            <FaRegComment />
-            <span style={countStyle}>{getTotalCommentCount(post.Comments || [])}</span>
-          </button>
-          <button style={iconBtnStyle} onClick={liked ? onUnlike : onLike}>
-            {liked ? <FaHeart color="red" /> : <FaRegHeart />}
-            <span style={countStyle}>{likeCount}</span>
-          </button>
-          <button style={iconBtnStyle} onClick={onRegram} disabled={regramDisabled} title={regramTooltip}>
-            <FaRetweet color={regramIconColor} />
-            <span style={countStyle}>{regramCount}</span>
-          </button>
-          <button style={iconBtnStyle} onClick={bookmarked ? onUnbookmark : onBookmark}>
-            {bookmarked ? <FaBookmark color="#007bff" /> : <FaRegBookmark />}
-            <span style={countStyle}>{bookmarkCount}</span>
-          </button>
-          <button style={iconBtnStyle} onClick={handleCopyLink} title="공유 링크 복사">
-            <FaShareAlt />
-            <span style={{ fontSize: 16, marginLeft: 2, fontWeight: 500 }}>공유</span>
-          </button>
-        </div>
-        {/* 6. 댓글 프리뷰 (최신이 위에!) */}
         <div style={{ margin: '20px 0 0 0', flex: 1, minHeight: 0 }}>
           <CommentPreview postId={post.id} onShowDetailModal={onShowDetailModal} />
         </div>
-        {showReportModal && (
-          <ReportModal
-            visible={showReportModal}
-            postId={post.id}
-            onClose={() => setShowReportModal(false)}
-            targetType={1}
-          />
-        )}
+        {showReportModal && <ReportModal visible={showReportModal} postId={post.id} onClose={() => setShowReportModal(false)} targetType={1} />}
       </div>
-      <PostDetailModal
-        post={post}
-        basePost={basePost}
-        origin={origin}
-        user={user}
-        imageIndex={imageIndex}
-        setImageIndex={setImageIndex}
-        show={showDetailModal}
-        onClose={() => setShowDetailModal(false)}
-        liked={liked}
-        onLike={onLike}
-        onUnlike={onUnlike}
-        bookmarked={bookmarked}
-        onBookmark={onBookmark}
-        onUnbookmark={onUnbookmark}
-        likeCount={likeCount}
-        regramCount={regramCount}
-        bookmarkCount={bookmarkCount}
-        commentCount={getTotalCommentCount(post.Comments || [])}
-        onRegram={onRegram}
-        regramIconColor={regramIconColor}
-        regramDisabled={regramDisabled}
-        regramTooltip={regramTooltip}
-        showReportModal={showReportModal}
-        setShowReportModal={setShowReportModal}
-        handleCopyLink={handleCopyLink}
-      />
-      {showCopyToast && (
-        <div style={{
-          position: 'fixed', bottom: 48, left: '50%', transform: 'translateX(-50%)',
-          background: '#222', color: '#fff', padding: '12px 26px', borderRadius: 10, fontSize: 16,
-          zIndex: 3000, boxShadow: '0 4px 16px rgba(0,0,0,0.15)'
-        }}>
-          링크가 복사되었습니다!
-        </div>
-      )}
-      <MapModal
-        visible={showMapModal}
-        onClose={() => setShowMapModal(false)}
-        location={location}
-        latitude={latitude}
-        longitude={longitude}
-      />
+      <PostDetailModal post={post} basePost={basePost} origin={origin} user={user} imageIndex={imageIndex} setImageIndex={setImageIndex} show={showDetailModal} onClose={() => setShowDetailModal(false)} liked={liked} onLike={onLike} onUnlike={onUnlike} bookmarked={bookmarked} onBookmark={onBookmark} onUnbookmark={onUnbookmark} likeCount={likeCount} regramCount={regramCount} bookmarkCount={bookmarkCount} commentCount={getTotalCommentCount(post.Comments || [])} onRegram={onRegram} regramIconColor={regramIconColor} regramDisabled={regramDisabled} regramTooltip={regramTooltip} showReportModal={showReportModal} setShowReportModal={setShowReportModal} />
+      {showCopyToast && (<div style={{ position: 'fixed', bottom: 48, left: '50%', transform: 'translateX(-50%)', background: '#222', color: '#fff', padding: '12px 26px', borderRadius: 10, fontSize: 16, zIndex: 3000, boxShadow: '0 4px 16px rgba(0,0,0,0.15)' }}>링크가 복사되었습니다!</div>)}
+      <MapModal visible={showMapModal} onClose={() => setShowMapModal(false)} location={location} latitude={latitude} longitude={longitude} />
     </div>
   );
 };
 
-const arrowBtnStyle = {
-  position: 'absolute',
-  top: '50%',
-  transform: 'translateY(-50%)',
-  background: 'rgba(0,0,0,0.4)',
-  color: '#fff',
-  border: 'none',
-  borderRadius: '50%',
-  width: 48,
-  height: 48,
-  fontSize: 28,
-  cursor: 'pointer',
-  zIndex: 1,
-};
-const iconBtnStyle = {
-  background: 'none',
-  border: 'none',
-  cursor: 'pointer',
-  fontSize: 26,
-  color: '#444',
-  outline: 'none',
-  display: 'flex',
-  alignItems: 'center',
-  gap: 4,
-};
-const countStyle = {
-  fontSize: 16,
-  marginLeft: 4,
-  color: '#444',
-  minWidth: 18,
-  textAlign: 'right',
-  fontWeight: 600,
-};
+const arrowBtnStyle = { position: 'absolute', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.4)', color: '#fff', border: 'none', borderRadius: '50%', width: 48, height: 48, fontSize: 28, cursor: 'pointer', zIndex: 1 };
+const iconBtnStyle = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 26, color: '#444', outline: 'none', display: 'flex', alignItems: 'center', gap: 4 };
+const countStyle = { fontSize: 16, marginLeft: 4, color: '#444', minWidth: 18, textAlign: 'right', fontWeight: 600 };
 
 export default PostCard;
