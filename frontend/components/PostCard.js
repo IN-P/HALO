@@ -69,20 +69,20 @@ const PostCard = ({ post }) => {
   }
   const myRegram = !!myRegramPost;
 
- let regramIconColor = '#000';
+let regramIconColor = '#000';
 let regramDisabled = false;
 let regramTooltip = '리그램하기';
-
-const isDark = typeof window !== 'undefined' && document.body.classList.contains('dark-mode');
 
 if (isRegram && origin && origin.private_post && origin.user_id !== user?.id) {
   regramDisabled = true;
   regramTooltip = '비공개(나만보기) 원본글입니다.';
 } else if (myRegram) {
-  regramIconColor = '#32e732'; 
+  regramIconColor = '#32e732';
   regramTooltip = '이미 리그램한 글입니다.';
 } else {
-  regramIconColor = isDark ? '#cccccc' : '#000000';
+  // ✅ 현재 body에 다크모드 클래스가 붙었는지만 확인
+  const isDark = typeof window !== 'undefined' && document.body.classList.contains('dark-mode');
+  regramIconColor = isDark ? '#ccc' : '#000';
 }
 
 if (isRegram && !origin) return null;
@@ -202,7 +202,7 @@ if (isRegram && !origin) return null;
           <button style={iconBtnStyle} onClick={bookmarked ? onUnbookmark : onBookmark}>{bookmarked ? <FaBookmark color="#007bff" /> : <FaRegBookmark />}<span style={countStyle}>{bookmarkCount}</span></button>
           <button style={iconBtnStyle} onClick={handleCopyLink} title="공유 링크 복사"><FaShareAlt /><span style={{ fontSize: 16, marginLeft: 2, fontWeight: 500 }}>공유</span></button>
         </div>
-        <div style={{ margin: '20px 0 0 0', flex: 1, minHeight: 0 }}>
+        <div className="comment-preview-wrapper"  style={{ margin: '20px 0 0 0', flex: 1, minHeight: 0 }}>
           <CommentPreview postId={post.id} onShowDetailModal={onShowDetailModal} />
         </div>
         {showReportModal && <ReportModal visible={showReportModal} postId={post.id} onClose={() => setShowReportModal(false)} targetType={1} />}

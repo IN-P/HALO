@@ -109,6 +109,7 @@ const RightSidebar = () => {
         }}>
             {/*미니 프로필 영역*/}
             <div 
+            className="mini-profile-card"
             onClick={() => window.location.href = `http://localhost:3000/profile/${user?.id}`} 
             style={{
                 marginBottom: 24,
@@ -119,7 +120,7 @@ const RightSidebar = () => {
                 alignItems: 'center',
                 gap: 12,
                 cursor: 'pointer',
-                backgroundColor: '#fafafa',
+                //backgroundColor: '#fafafa',
                 transition: 'transform 0.2s ease, box-shadow 0.2s ease',
             }}
             onMouseEnter={e => {
@@ -132,7 +133,9 @@ const RightSidebar = () => {
             }}
             >
                         {/* 프로필 이미지 */}
-            <div style={{
+            <div 
+            className="user-profile-circle"
+            style={{
             width: 48,
             height: 48,
             borderRadius: '50%',
