@@ -20,7 +20,7 @@ try {
 const uploadAdvertisementImage = multer({
   storage: multer.diskStorage({
     destination(req, file, done) {
-      done(null, 'uploads/advertisement_uploads');
+      done(null, 'uploads/advertisement');
     },
     filename(req, file, done) {
       const ext = path.extname(file.originalname);
