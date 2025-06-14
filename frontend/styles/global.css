@@ -1,11 +1,179 @@
-/* light-mode 스타일 */
-body.light-mode {
-  background-color: #ffffff;  /* 밝은 배경 */
-  color: #000000;  /* 어두운 텍스트 */
+body.dark-mode {
+  background-color: #121212;
+  color: #f0f0f0;
 }
 
-/* dark-mode 스타일 */
-body.dark-mode {
-  background-color: #121212;  /* 어두운 배경 */
-  color: #ffffff;  /* 밝은 텍스트 */
+body.dark-mode * {
+  background-color: transparent;
+  color: inherit;
+  border-color: #444 !important;
+}
+
+body.dark-mode .ant-btn {
+  background-color: #1e1e1e;
+  color: #f5f5f5;
+  border-color: #444;
+}
+
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode .ant-input {
+  background-color: #1e1e1e;
+  color: #fff;
+  border: 1px solid #444;
+}
+body.dark-mode .ant-card,
+body.dark-mode .your-custom-class,
+body.dark-mode .box {
+  background-color: #1e1e1e !important;
+}
+body.dark-mode button,
+body.dark-mode .ant-btn {
+  background-color: #1e1e1e;
+  color: #f5f5f5;
+  border-color: #444;
+}
+
+body.dark-mode input,
+body.dark-mode textarea {
+  background-color: #1e1e1e;
+  color: #fff;
+  border: 1px solid #444;
+}
+
+body.light-mode .main-contents {
+  background-color: #ffffff;
+}
+body.dark-mode .main-contents {
+  background-color: #121212;
+}
+/* 기본 라이트모드 */
+.post-card {
+  background-color: #ffffff;
+}
+.post-card-content {
+  background-color: #ffffff;
+}
+
+/* 다크모드 */
+body.dark-mode .post-card {
+  background-color: #1f1f1f;
+}
+body.dark-mode .post-card-content {
+  background-color: #1f1f1f;
+}
+
+.weather-box {
+  background-color: #ffffff;
+  color: #333;
+}
+
+body.dark-mode .weather-box {
+  background-color: #1f1f1f;
+  color: #eee;
+  border: 1px solid #444;
+}
+.weather-status-main {
+  font-size: 24px;
+  font-weight: bold;
+  color: #0077b6;
+}
+.weather-status-sub {
+  font-size: 16px;
+  color: #555;
+}
+.weather-detail {
+  font-size: 12px;
+  color: #666;
+}
+
+/* 다크모드용 */
+body.dark-mode .weather-status-main {
+  color: #4fc3f7;
+}
+body.dark-mode .weather-status-sub {
+  color: #aaa;
+}
+body.dark-mode .weather-detail {
+  color: #bbb;
+}
+/* 기본 라이트모드 */
+.custom-sidebar {
+  background-color: #ffffff;
+  color: #222;
+}
+
+/* 다크모드 */
+body.dark-mode .custom-sidebar {
+  background-color: #1a1a1a;
+  color: #f5f5f5;
+}
+
+/* 버튼 텍스트 색 */
+body.dark-mode .custom-sidebar .ant-btn {
+  color: #f5f5f5;
+}
+
+/* 아이콘 색 변경 */
+body.dark-mode .custom-sidebar svg {
+  color: #f5f5f5;
+}
+/* 호버 버튼 변경 */
+body.light-mode .sidebar-btn:hover {
+  background: linear-gradient(90deg, #f0faff 0%, #d0eaff 100%);
+}
+
+body.dark-mode .sidebar-btn:hover {
+  background: linear-gradient(90deg, #2a2a2a 0%, #3a3a3a 100%);
+}
+/* 라이트모드 버튼 색상 명확하게 */
+body.light-mode .custom-sidebar .sidebar-btn {
+  color: #222 !important;
+}
+
+/* 다크모드 버튼 색상도 확실히 */
+body.dark-mode .custom-sidebar .sidebar-btn {
+  color: #f5f5f5 !important;
+}
+.weather-nav-btn {
+  color: #333; /* 기본 라이트모드 색상 */
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* 다크모드에서 더 밝게 보이도록 */
+body.dark-mode .weather-nav-btn {
+  color: #f0f0f0;
+  border-color: #555;
+}
+
+/* hover 시 효과도 추가하면 UX 향상 */
+.weather-nav-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+body.dark-mode .weather-nav-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.weather-detail {
+  font-size: 12px;
+  color: #666; /* 라이트모드 기준 */
+}
+
+/* 다크모드에서 더 밝게 */
+body.dark-mode .weather-detail {
+  color: #bbb;
+}
+.post-card button {
+  color: #444;
+}
+
+/* 다크모드 아이콘 색상 */
+body.dark-mode .post-card button {
+  color: #ddd;
+}
+.post-card .count-text {
+  color: #444;
+}
+body.dark-mode .post-card .count-text {
+  color: #ccc;
 }

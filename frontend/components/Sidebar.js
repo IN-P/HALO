@@ -47,35 +47,27 @@ const ImportantNotificationCount = styled.span`
 `
 
 // 재사용 가능한 버튼 컴포넌트
-const SidebarButton = ({ icon, children, onClick, warning = false }) => {
-  const [hover, setHover] = useState(false);
 
-  const baseBackground = warning
-    ? '#FFE0B2' // 주황색 계열
-    : hover
-    ? 'linear-gradient(90deg, #f0faff 0%, #d0eaff 100%)'
-    : 'transparent';
-
+const SidebarButton = ({ icon, children, onClick }) => {
   return (
     <Button
+      className="sidebar-btn"
       icon={icon}
       block
       type="text"
       onClick={onClick}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
       style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'flex-start',
         padding: '12px 12px',
-        background: baseBackground,
+        backgroundColor: 'transparent',
         boxShadow: 'none',
-        transition: 'background 0.3s ease',
+        transition: 'all 0.2s ease-in-out',
         outline: 'none',
         border: 'none',
         borderRadius: '6px',
-        color: '#333',
+        color: 'inherit',
         textAlign: 'left',
       }}
     >
@@ -91,10 +83,12 @@ const Sidebar = ({ showNotification, onToggleNotification, notificationCount, th
   const dispatch = useDispatch(); //  윤기 추가: 로그아웃 디스패치
 
   return (
-    <div style={{
+    <div 
+    className="custom-sidebar"
+    style={{
       width: 240,
       height: '100vh',
-      background: '#fff',
+      //background: '#fff',
       borderRight: '1px solid #eee',
       display: 'flex',
       flexDirection: 'column',

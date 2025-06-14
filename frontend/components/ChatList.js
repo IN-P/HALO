@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import socket from '../socket';
-//import Wave from './lottie/Wave';
+import Wave from './lottie/Wave';
 
 const ChatList = ({ chatRooms,setChatRooms,onSelectUser }) => {
   console.log('🔥 ChatList 렌더링됨 chatRooms:', chatRooms);
@@ -50,35 +50,39 @@ const ChatList = ({ chatRooms,setChatRooms,onSelectUser }) => {
       )}
        {chatRooms.map((room) => (
         <div
-          key={room.roomId}
-          onClick={() => onSelectUser(room.otherUser)}
-          // ✅ 여기에 console.log 추가!
+          key={room.roomId}
+          onClick={() => {
+              onSelectUser(room.otherUser);
+              console.log('ChatList: 채팅방 클릭됨, roomId:', room.roomId); // ✅ 클릭 로그도 추가!
+          }}
           onMouseEnter={() => {
             setHoveredRoomId(room.roomId);
-            console.log('ChatList: 마우스 진입, hoveredRoomId:', room.roomId);
+            console.log('ChatList: 마우스 진입, hoveredRoomId:', room.roomId); // ✅ 여기에 console.log 추가!
           }}
-          // ✅ 여기에 console.log 추가!
           onMouseLeave={() => {
             setHoveredRoomId(null);
-            console.log('ChatList: 마우스 이탈, hoveredRoomId:', null);
+            console.log('ChatList: 마우스 이탈, hoveredRoomId:', null); // ✅ 여기에 console.log 추가!
           }}
-          style={{
-            padding: '12px 0',
-            borderBottom: '1px solid #eee',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            position: 'relative', 
+          style={{
+            padding: '12px 0',
+            borderBottom: '1px solid #eee',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            position: 'relative',
             overflow: 'hidden',
-            marginBottom: '4px',
+             marginBottom: '4px',
              background: '#fff',
              borderRadius: '8px',
              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
              transition: 'transform 0.2s, box-shadow 0.2s',
-          }}
-        >
-          {/*
+             border: hoveredRoomId === room.roomId ? '1px solid #007bff' : '1px solid #e0e0e0', // 호버 시 파란색, 기본 연회색
+                transform: hoveredRoomId === room.roomId ? 'translateY(-2px)' : 'translateY(0)', // 호버 시 살짝 올라오는 효과
+                boxShadow: hoveredRoomId === room.roomId ? '0 4px 8px rgba(0,0,0,0.1)' : '0 1px 3px rgba(0,0,0,0.05)', // 호버 시 그림자 강하게
+          }}
+        >
+          
           <div
                 style={{
                     position: 'absolute', 
@@ -94,7 +98,7 @@ const ChatList = ({ chatRooms,setChatRooms,onSelectUser }) => {
             >
                 <Wave isHovered={hoveredRoomId === room.roomId} />
             </div>
-            */}
+            
           <img
             src={room.otherUser?.profileImage ? `${API_URL}${room.otherUser.profileImage}` : '/default.png'}
             alt=""

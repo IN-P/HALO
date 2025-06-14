@@ -217,7 +217,7 @@ useEffect(() => {
           left: 240,
           height: '100vh',
           width: '20vw',
-          backgroundColor: '#fff',
+          //backgroundColor: '#fff',
           borderRight: '1px solid #eee',
           boxShadow: '4px 0 10px rgba(0,0,0,0.08)',
           zIndex: 1100,
@@ -234,9 +234,10 @@ useEffect(() => {
           flex: 1,
           padding: 24,
           minHeight: '100vh',
-          background: '#ffffff',
+          //background: '#ffffff',
         }}
         id="mainContents"
+        className="main-contents"
       >
         {children}
       </div>
