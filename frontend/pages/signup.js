@@ -66,9 +66,11 @@ const SignupPage = () => {
     if (!agree) return message.warning('약관에 동의해주세요.');
     if (password !== confirm) return message.warning('비밀번호가 일치하지 않습니다.');
 
+    const sanitizedNickname = nickname.trim().replace(/\s+/g, '_');
+    
     dispatch({
       type: SIGN_UP_REQUEST,
-      data: { email, nickname, password, myteam_id: teamId },
+      data: { email, nickname: sanitizedNickname, password, myteam_id: teamId },
     });
   };
 
@@ -106,6 +108,8 @@ const SignupPage = () => {
     config: { tension: 200, friction: 20 },
     delay: 100,
   });
+  
+  const [nickname, setNickname] = useState('');
 
   return (
     <Row
@@ -184,7 +188,22 @@ const SignupPage = () => {
                 label="닉네임"
                 rules={[{ required: true, message: '닉네임을 입력해주세요.' }]}
               >
-                <Input prefix={<UserOutlined />} placeholder="닉네임" allowClear />
+                <>
+                  <Input
+                    prefix={<UserOutlined />}
+                    placeholder="닉네임"
+                    allowClear
+                    value={nickname}
+                    onChange={(e) => {
+                      const formatted = e.target.value.replace(/\s+/g, '_');
+                      setNickname(formatted);
+                      form.setFieldsValue({ nickname: formatted });
+                    }}
+                  />
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    ※ 공백은 자동으로 언더바(_)로 변경됩니다.
+                  </Typography.Text>
+                </>
               </Form.Item>
 
               <Form.Item

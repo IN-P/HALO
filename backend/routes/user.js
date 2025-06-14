@@ -42,8 +42,10 @@ router.get('/me', isLoggedIn, async (req, res) => {
 */
 router.post('/', async (req, res, next) => {
   try {
-    const { email, nickname, password } = req.body;
-
+    const { email, password } = req.body;
+    let nickname = req.body.nickname;
+    nickname = nickname.trim().replace(/\s+/g, '_');
+   
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(403).send('이미 사용 중인 이메일입니다.');
