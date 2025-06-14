@@ -2,7 +2,7 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import { useDispatch } from 'react-redux';
 import { REMOVE_POST_REQUEST } from '../reducers/post_IN';
-import ReportButton from './ReportButton';
+import { FaRegFlag } from 'react-icons/fa';
 
 const menuBtnStyle = {
   background: 'none',
@@ -74,12 +74,17 @@ function PostMenu({ showMenu, setShowMenu, menuRef, isMine, isRegram, postId, se
               </>
             )
           ) : (
-            <ReportButton
+            <button
+              style={{ ...menuItemStyle, color: '#ff4d4f', display: 'flex', alignItems: 'center', gap: 8 }}
               onClick={() => {
                 setShowReportModal(true);
                 setShowMenu(false);
               }}
-            />
+            >
+              <FaRegFlag />
+              신고
+            </button>
+
           )}
         </div>
       )}

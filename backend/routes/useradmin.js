@@ -168,7 +168,7 @@ router.delete('/users/force/:id', isAdminUserManager, async (req, res) => {
     return res.status(400).json({ message: '잘못된 유저 ID입니다.' });
   }
 
-  const t = await User.sequelize.transaction();
+  const t = await sequelize.transaction();
   try {
     const user = await User.findByPk(userId, { transaction: t });
     if (!user) {
@@ -256,26 +256,34 @@ router.delete('/users/force/:id', isAdminUserManager, async (req, res) => {
     // [3] 유저 하드삭제
     await User.destroy({ where: { id: userId }, force: true, transaction: t });
 
+    // [4] 트랜잭션 커밋
     await t.commit();
+  } catch (error) {
+    if (!t.finished) await t.rollback();
+    console.error('[관리자] 유저 하드딜리트 실패:', error);
+    return res.status(500).json({ message: '서버 오류로 삭제 실패' });
+  }
 
-    // 로그 기록
+  // [5] 로그는 트랜잭션 밖에서 별도로 처리
+  try {
     await createLog({
       userId: req.user.id,
       targetUserId: userId,
       action: 'DELETE_HARD',
       description: '관리자가 유저를 하드 딜리트 처리함 (백업 포함)',
     });
-
-    return res.status(200).json({ message: '유저 완전 삭제 완료 (백업 포함)' });
-  } catch (error) {
-    await t.rollback();
-    console.error('[관리자] 유저 하드딜리트 실패:', error);
-    return res.status(500).json({ message: '서버 오류로 삭제 실패' });
+  } catch (logErr) {
+    console.error('[하드딜리트 후 로그 기록 실패]', logErr);
+    // 로그 실패는 사용자 응답에는 영향 없음
   }
+
+  return res.status(200).json({ message: '유저 완전 삭제 완료 (백업 포함)' });
 });
 
+/*
+현재까진 게시글 작성, 게시글좋아요, 댓글 (대댓X), 리트윗, 북마크까지 한 유저 하드딜리트 성공
 
-
+*/
 
 
 module.exports = router;

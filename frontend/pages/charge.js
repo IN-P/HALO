@@ -5,11 +5,14 @@ import axios from 'axios';
 import AppLayout from '../components/AppLayout';
 import { SmileOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import confetti from 'canvas-confetti';
+import useRequireLogin from '../hooks/useRequireLogin';
 
 const ChargePage = () => {
   const [amount, setAmount] = useState(10000);
   const { user } = useSelector((state) => state.user_YG);
   const [hovered, setHovered] = useState(false);
+
+   useRequireLogin();
 
   const launchConfetti = () => {
     const duration = 1.5 * 1000;

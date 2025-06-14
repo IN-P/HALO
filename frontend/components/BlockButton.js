@@ -28,9 +28,25 @@ const BlockButton = ({ toUserId, isBlocked: initialBlocked, onRefetch }) => {
       }
     }
   };
+  const buttonStyle = {
+    padding: "8px 16px",
+    fontSize: "14px",
+    border: "none",
+    borderRadius: "6px",
+    cursor: blockLoading ? "not-allowed" : "pointer",
+    backgroundColor: blockLoading
+      ? "#cccccc"
+      : isBlocked
+        ? "#999999" // 차단 해제용 버튼 - 회색
+        : "#999999", // 차단 버튼 - 빨강
+    color: "#fff",
+    transition: "background-color 0.3s",
+    boxShadow: "0 2px 6px rgba(0, 0, 0, 0.15)",
+    minWidth: "90px",
+  };
 
   return (
-    <button onClick={handleClick} disabled={blockLoading}>
+    <button onClick={handleClick} disabled={blockLoading} style={buttonStyle}>
       {blockLoading ? "처리 중..." : isBlocked ? "차단 해제" : "차단하기"} {/* 율비 */}
     </button>
   );

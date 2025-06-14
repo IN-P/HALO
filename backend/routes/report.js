@@ -4,9 +4,9 @@ const { Report, User, TargetType } = require('../models');
 const { where } = require('sequelize');
 const { isLoggedIn } = require('./middlewares');
 // 신고 등록 (C)http://localhost:3065/report
-router.post('/', isLoggedIn,async (req, res, next) => {
+router.post('/', isLoggedIn, async (req, res, next) => {
   try {
-  
+
     const { reason, target_type_id, target_id } = req.body;
     const users_id = req.user.id;
 
@@ -100,15 +100,33 @@ router.delete('/:id', async (req, res, next) => {
     });
 
     // ✅ 유저 상태 복구 (정상: 1)
-    if (result) {
-      await User.update(
-        { user_status_id: 1 },
-        { where: { id: result.user_id } }
-      );
+    const { Op } = require("sequelize");
 
-      // ReportResult도 삭제
-      await result.destroy();
+    if (result) {
+      const userId = result.user_id;
+
+      // 다른 ReportResult가 있는지 확인 (현재 삭제하려는 거 제외)
+      const otherResults = await require('../models').ReportResult.findAll({
+        where: {
+          user_id: userId,
+          id: { [Op.ne]: result.id },
+        },
+      });
+
+      // 다른 정지 기록이 없을 때만 복구
+      if (otherResults.length === 0) {
+        await User.update(
+          {
+            user_status_id: 1,
+            suspended_until: null,
+          },
+          { where: { id: userId } }
+        );
+      }
+
+      await result.destroy(); // ReportResult 삭제
     }
+
 
     // 신고 삭제
     await report.destroy();
