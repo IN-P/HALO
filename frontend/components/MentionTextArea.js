@@ -65,7 +65,6 @@ const MentionTextArea = React.forwardRef(({ value, onChange, placeholder = "댓�
     borderRadius: 8,
     border: '1px solid #ccc',
     resize: 'none',
-    background: '#fff',
     boxSizing: 'border-box',
     ...style, // ✅ 외부에서 전달된 스타일 반영
   };
@@ -78,6 +77,7 @@ const MentionTextArea = React.forwardRef(({ value, onChange, placeholder = "댓�
         onChange={handleInputChange}
         placeholder={placeholder}
         style={combinedStyle}
+        className="comment-textarea"
       />
 
       {showMentionList && mentionResults.length > 0 && (

@@ -35,12 +35,13 @@ const ChatList = ({ chatRooms,setChatRooms,onSelectUser }) => {
   
 
    return (
-    <div style={{
+    <div 
+    className="chat-list-wrapper"
+    style={{
       width: 300,
       borderRight: '1px solid #eee',
       height: '100vh',
       overflowY: 'auto',
-      background: '#fff',
       padding: 16
     }}>
       <h3 style={{ marginBottom: 20 }}>ChatList</h3>
@@ -50,6 +51,7 @@ const ChatList = ({ chatRooms,setChatRooms,onSelectUser }) => {
       )}
        {chatRooms.map((room) => (
         <div
+        className={`chat-room-box ${hoveredRoomId === room.roomId ? 'hovered' : ''}`}
           key={room.roomId}
           onClick={() => {
               onSelectUser(room.otherUser);
@@ -63,25 +65,23 @@ const ChatList = ({ chatRooms,setChatRooms,onSelectUser }) => {
             setHoveredRoomId(null);
             console.log('ChatList: 마우스 이탈, hoveredRoomId:', null); // ✅ 여기에 console.log 추가!
           }}
-          style={{
-            padding: '12px 0',
-            borderBottom: '1px solid #eee',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            position: 'relative',
-            overflow: 'hidden',
-             marginBottom: '4px',
-             background: '#fff',
-             borderRadius: '8px',
-             boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-             transition: 'transform 0.2s, box-shadow 0.2s',
-             border: hoveredRoomId === room.roomId ? '1px solid #007bff' : '1px solid #e0e0e0', // 호버 시 파란색, 기본 연회색
-                transform: hoveredRoomId === room.roomId ? 'translateY(-2px)' : 'translateY(0)', // 호버 시 살짝 올라오는 효과
-                boxShadow: hoveredRoomId === room.roomId ? '0 4px 8px rgba(0,0,0,0.1)' : '0 1px 3px rgba(0,0,0,0.05)', // 호버 시 그림자 강하게
-          }}
-        >
+          style={{
+            padding: '12px 0',
+            borderBottom: '1px solid #eee',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            marginBottom: '4px',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            position: 'relative',
+            overflow: 'hidden',
+            transition: 'transform 0.2s, box-shadow 0.2s',
+            border: hoveredRoomId === room.roomId ? '1px solid #007bff' : '1px solid #e0e0e0',
+            transform: hoveredRoomId === room.roomId ? 'translateY(-2px)' : 'translateY(0)',
+            boxShadow: hoveredRoomId === room.roomId ? '0 4px 8px rgba(0,0,0,0.1)' : '0 1px 3px rgba(0,0,0,0.05)',
+          }}
+        >
           
           <div
                 style={{
@@ -105,8 +105,8 @@ const ChatList = ({ chatRooms,setChatRooms,onSelectUser }) => {
             style={{ width: 40, height: 40, borderRadius: '50%', zIndex: 1, position: 'relative' }}
           />
           <div style={{ flex: 1, zIndex: 1, position: 'relative' }}>
-            <div style={{ fontWeight: 'bold' }}>{room.otherUser.nickname}</div>
-            <div style={{ fontSize: 12, color: '#999' }}>{room.lastMessage}</div>
+            <div className="chat-room-nickname">{room.otherUser.nickname}</div>
+            <div className="chat-room-message">{room.lastMessage}</div>
           </div>
           <div style={{ fontSize: 12, color: '#ccc', display: 'flex', alignItems: 'center', zIndex: 1, position: 'relative' }}>
             <span>{room.lastTime}</span>

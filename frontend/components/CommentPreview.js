@@ -45,13 +45,12 @@ const CommentPreview = ({ postId, onShowDetailModal }) => {
 
   return (
     <div
+    className="comment-preview-box"
       style={{
         margin: '8px 0 0 0',
-        background: '#fafbfc',
         borderRadius: 10,
         minHeight: 40,
         padding: '10px 14px 8px 14px',
-        border: '1px solid #f2f2f2',
         fontSize: 15,
         color: '#333',
         boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
@@ -95,7 +94,9 @@ const CommentPreview = ({ postId, onShowDetailModal }) => {
               }}
             />
             <div style={{ flex: 1 }}>
-              <span style={{ fontWeight: 'bold', cursor: 'pointer' }}
+              <span 
+              className="comment-nickname"
+              style={{ fontWeight: 'bold', cursor: 'pointer' }}
                 onClick={(e) => {
                   e.stopPropagation();
                   window.location.href = `/profile/${c.User?.id}`;
@@ -103,11 +104,10 @@ const CommentPreview = ({ postId, onShowDetailModal }) => {
               >
                 {c.User?.nickname || "알 수 없음"}
               </span>
-              <div style={{
-                whiteSpace: "pre-wrap",
-                fontSize: 15,
-                color: c.is_deleted ? "#721c24" : "#222",
-              }}>
+              <div
+                  className={c.is_deleted ? "comment-text-deleted" : "comment-text"}
+                  style={{ whiteSpace: "pre-wrap", fontSize: 15 }}
+                >
                 {c.is_deleted ? "삭제된 댓글입니다." : renderContent(c.content, c.Mentions)}
               </div>
             </div>
