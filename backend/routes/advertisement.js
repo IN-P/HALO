@@ -10,22 +10,16 @@ const { Op } = require('sequelize');
 
 
 // 광고 이미지 업로드 폴더 체크
-try {
-  fs.accessSync('uploads/advertisement_uploads');
-} catch (error) {
-  console.log('advertisement_uploads 폴더가 없으면 생성합니다.');
-  fs.mkdirSync('advertisement_uploads');
-}
-
 const uploadAdvertisementImage = multer({
   storage: multer.diskStorage({
     destination(req, file, done) {
+      // uploads/advertisement_uploads 폴더가 반드시 미리 존재해야 함
       done(null, 'uploads/advertisement_uploads');
     },
     filename(req, file, done) {
       const ext = path.extname(file.originalname);
       const basename = path.basename(file.originalname, ext);
-      done(null, basename + '_' + new Date().getTime() + ext);
+      done(null, `${basename}_${Date.now()}${ext}`);
     },
   }),
   limits: { fileSize: 20 * 1024 * 1024 },
