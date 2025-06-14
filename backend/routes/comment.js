@@ -17,6 +17,44 @@ router.post('/post/:postId', isLoggedIn, async (req, res, next) => {
       post_id: post.id,
       user_id: req.user.id,
     });
+    const mentions = req.body.content.match(/@[^\s@]+/g);
+
+    if (mentions) {
+  await Promise.all(
+    mentions.map(async tag => {
+      const nickname = tag.slice(1);
+      const receiver = await User.findOne({ where: { nickname } });
+      if (receiver) {
+        await Mention.create({
+          senders_id: req.user.id,
+          receiver_id: receiver.id,
+          target_type: 'COMMENT',
+          target_id: comment.id, // ✅ 댓글 id로 target_id 저장!
+          context: req.body.content,
+          createAt: new Date(),
+        });
+        // 준혁 : 알림 생성
+        const sender = await User.findOne({
+          where: req.user.id,
+          attributes: ['nickname'] })
+        await Notification.create({
+          content: sender.nickname,
+          users_id:  receiver.id,
+          target_type_id: 8,
+        })
+        // 소켓 푸시
+        sendNotification(receiver.id, {
+          type: "MENTION",
+          message: '당신을 언급했습니다'
+        });
+        //
+        console.log(`✅ Mention 저장 완료 (COMMENT): @${nickname} → userId=${receiver.id}`);
+      } else {
+        console.log(`⚠️ Mention 대상 유저 없음 (COMMENT): @${nickname}`);
+      }
+    })
+  );
+}
 
     const fullComment = await Comment.findOne({
       where: { id: comment.id },
@@ -36,16 +74,16 @@ router.post('/post/:postId', isLoggedIn, async (req, res, next) => {
     } );
     // 재원 맨션
     if (req.body.receiver_id) {
-  await Mention.create({
-    senders_id: req.user.id,
-    receiver_id: req.body.receiver_id,
-    target_type: 'COMMENT',
-    target_id: comment.id,
-    context: req.body.content,
-    createAt: new Date(),
-  });
-  console.log('✅ 댓글 Mention 저장 완료');
-}
+      await Mention.create({
+        senders_id: req.user.id,
+        receiver_id: req.body.receiver_id,
+        target_type: 'COMMENT',
+        target_id: comment.id,
+        context: req.body.content,
+        createAt: new Date(),
+      });
+      console.log('✅ 댓글 Mention 저장 완료');
+    }
 //
     // 알림 생성
     // 댓글이 달린 포스트의 내용과 user id 추출
@@ -274,7 +312,7 @@ router.patch('/:commentId', isLoggedIn, async (req, res, next) => {
     // 활동 내역 생성
     await ActiveLog.create({
       action: "UPDATE",
-      target_id: reply.id,
+      target_id: comment.id,
       users_id: req.user.id,
       target_type_id: 2,
     } );

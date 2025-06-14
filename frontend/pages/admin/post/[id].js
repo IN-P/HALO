@@ -33,21 +33,29 @@ export default function AdminPostDetail() {
       onOk: async () => {
         await axios.delete(`/api/admin/post/${id}`);
         message.success("삭제 완료!");
-        router.push("/admin/posts");
+        router.push("/admin//admin/post/posts");
       },
     });
   };
 
-  // 수정권고 확인
+  // 수정권고: 실제로 알림을 보냄
   const handleWarn = () => {
     Modal.confirm({
-      title: `${post.User?.nickname}님에게 수정 권고 알림을 보내시겠습니까?`,
+      title: "수정 권고를 보냅니다",
       icon: <ExclamationCircleOutlined />,
-      okText: "알림 전송",
+      content: "이 게시물에 대해 수정 권고 알림을 보냅니다. 진행하시겠습니까?",
+      okText: "경고 전송",
+      okType: "danger",
       cancelText: "취소",
       onOk: async () => {
-        await axios.post(`/api/admin/post/${id}/warn`);
-        message.success("알림 전송 완료!");
+        try {
+          await axios.post(`/api/admin/post/${id}/warn`);
+          message.success("경고 완료!");
+          router.push("/admin/post/posts");
+        } catch (err) {
+          message.error("경고 전송 실패");
+          console.error(err);
+        }
       },
     });
   };
@@ -121,8 +129,63 @@ export default function AdminPostDetail() {
           <Text strong>댓글:</Text>
           {Array.isArray(post.Comments) && post.Comments.length > 0 ? (
             post.Comments.map((comment) => (
-              <div key={comment.id} style={{ marginBottom: 10, padding: 8, background: "#f9f9f9", borderRadius: 5 }}>
-                <b>{comment.User?.nickname || "알수없음"}</b> : {comment.content}
+              <div
+                key={comment.id}
+                style={{
+                  marginBottom: 10,
+                  padding: 8,
+                  background: "#f9f9f9",
+                  borderRadius: 5,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
+                <b>{comment.User?.nickname || "알수없음"}</b> : <span style={{ flex: 1 }}>{comment.content}</span>
+                {comment.is_deleted ? (
+                  <Tag color="red" style={{ marginLeft: 8 }}>삭제됨</Tag>
+                ) : (
+                  <>
+                    <Button
+                      type="danger"
+                      size="small"
+                      style={{ marginLeft: 8 }}
+                      onClick={async () => {
+                        Modal.confirm({
+                          title: "댓글을 삭제하시겠습니까?",
+                          icon: <ExclamationCircleOutlined />,
+                          okText: "삭제",
+                          okType: "danger",
+                          cancelText: "취소",
+                          onOk: async () => {
+                            await axios.delete(`/api/admin/comment/${comment.id}`);
+                            setPost((prev) => ({
+                              ...prev,
+                              Comments: prev.Comments.map((c) =>
+                                c.id === comment.id
+                                  ? { ...c, is_deleted: true, content: "삭제된 댓글입니다." }
+                                  : c
+                              ),
+                            }));
+                            message.success("댓글 삭제 완료!");
+                          },
+                        });
+                      }}
+                    >
+                      삭제
+                    </Button>
+                    <Button
+                      type="primary"
+                      size="small"
+                      style={{ marginLeft: 4 }}
+                      onClick={() => {
+                        message.info("수정 권고 알림 기능은 추후 연결 예정입니다.");
+                      }}
+                    >
+                      수정권고
+                    </Button>
+                  </>
+                )}
               </div>
             ))
           ) : (

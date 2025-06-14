@@ -1,17 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react'; 
 import { useDispatch, useSelector } from 'react-redux';
 import { Button } from 'antd';
-import Link from 'next/link';
 import { LOAD_QUIZZES_REQUEST } from '../reducers/quiz_GM';
-import QuizModal from './QuizModal';  // 새로 만든 컴포넌트 import
+import QuizModal from './QuizModal';
 
 const EventPage = () => {
   const dispatch = useDispatch();
   const { quizList } = useSelector((state) => state.quiz);
   const [selectedQuiz, setSelectedQuiz] = useState(null);
+  const [solvedIds, setSolvedIds] = useState([]);
 
   useEffect(() => {
     dispatch({ type: LOAD_QUIZZES_REQUEST });
+
+    // ✅ 로컬스토리지에서 푼 퀴즈 ID 목록 불러오기
+    const stored = JSON.parse(localStorage.getItem('solvedQuizIds') || '[]');
+    setSolvedIds(stored);
   }, [dispatch]);
 
   const openModal = (quiz) => setSelectedQuiz(quiz);
@@ -38,7 +42,7 @@ const EventPage = () => {
             <th style={thStyle}>NO</th>
             <th style={thStyle}>문제</th>
             <th style={thStyle}>포인트</th>
-            <th style={thStyle} />
+            <th style={thStyle}></th>
           </tr>
         </thead>
         <tbody>
@@ -48,14 +52,17 @@ const EventPage = () => {
               <td style={tdStyle}>{item.question}</td>
               <td style={tdStyle}>{item.point_reward}</td>
               <td style={tdStyle}>
-                <Button type="link" onClick={() => openModal(item)}>도전하기</Button>
+                {!solvedIds.includes(item.id) ? (
+                  <Button type="link" onClick={() => openModal(item)}>도전하기</Button>
+                ) : (
+                  <span style={{ color: '#999' }}>도전 완료</span>
+                )}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      {/* 모달 렌더링 */}
       {selectedQuiz && (
         <QuizModal visible={true} quiz={selectedQuiz} onClose={closeModal} />
       )}

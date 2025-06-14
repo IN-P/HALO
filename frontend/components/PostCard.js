@@ -26,8 +26,15 @@ function getRelativeTime(date) {
 }
 
 const PostCard = ({ post }) => {
+  console.log('......1번- post',post);
+  
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user_YG);
+  const mentionUserMap = useSelector((state) => state.mentionUser_JW?.mentionUserMap || {});
+
+  console.log('mentionUserMap:', mentionUserMap);
+
+
 
   // ------ 리그램/원본글 구분 ------
   const isRegram = !!post.regram_id;
@@ -102,6 +109,12 @@ const PostCard = ({ post }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showMenu]);
 
+  useEffect(() => {
+  dispatch({
+    type: 'LOAD_MENTION_USERS_REQUEST',
+  });
+}, [dispatch]);
+
   const onRegram = () => {
     if (regramDisabled) return;
     if (myRegramPost) {
@@ -120,13 +133,41 @@ const PostCard = ({ post }) => {
   const onBookmark = () => dispatch({ type: BOOKMARK_POST_REQUEST, data: basePost.id });
   const onUnbookmark = () => dispatch({ type: UNBOOKMARK_POST_REQUEST, data: basePost.id });
 
-  const renderContent = (content) =>
-    content
-      ? content.split(/(#[^\s#]+)/g).map((part, i) =>
-        part.startsWith('#')
-          ? <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: '#007bff' }}>{part}</a>
-          : part)
-      : null;
+const renderContent = (content, userMap = {}) =>
+  content
+    ? content
+        .split(/(#[^\s#]+|@[^\s@]+)/g)
+        .filter(Boolean)
+        .map((part, i) => {
+          if (part.startsWith('#')) {
+            return (
+              <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: '#007bff', textDecoration: 'none' }}>
+                {part}
+              </a>
+            );
+          }
+
+          console.log('@........1분:', content);
+          if (part.startsWith('@')) {
+            console.log('@........2분:', part);
+            const nickname = part.slice(1);
+
+            console.log('@........3분:', nickname);
+            const userId = userMap[nickname]; // ✅ 여기만 수정! mentionUserMap[nickname] X
+            console.log(`@${nickname} → userId=${userId}`);
+
+            return userId ? (
+              <a key={i} href={`/profile/${userId}`} style={{ color: '#28a745', textDecoration: 'none' }}>
+                {part}
+              </a>
+            ) : (
+              <span key={i} style={{ color: '#28a745' }}>{part}</span>
+            );
+          }
+
+          return <span key={i}>{part}</span>;
+        })
+    : null;
 
   // ⭐ 리그램 표시문구: 위치-내용 사이
   const RegramInfo = isRegram && origin && origin.User && (
@@ -278,7 +319,7 @@ const PostCard = ({ post }) => {
           fontSize: 17, lineHeight: 1.6, marginBottom: 12,
           minHeight: 60, maxHeight: 130, overflowY: 'auto', overflowX: 'hidden', wordBreak: 'break-all',
         }}>
-          {renderContent(post.content)}
+          {renderContent(post.content, mentionUserMap)}
         </div>
         <div style={{
           display: 'flex', alignItems: 'center', gap: 22, fontSize: 26, margin: '12px 0 0 0',

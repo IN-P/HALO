@@ -127,7 +127,7 @@ const API_URL = 'http://localhost:3065';
 
 
   const handleExitConfirm = () => {
-    const confirmExit = window.confirm('채팅방을 나가시면 현재 사용자에게만 메시지 기록이 모두 모두 삭제됩니다. 정말 나가시겠습니까?');
+    const confirmExit = window.confirm('채팅방을 나가시면 메세지기록이 모두 삭제됩니다. 정말 나가시겠습니까?');
     if (confirmExit) {
       onExit();
     }
@@ -151,7 +151,7 @@ const API_URL = 'http://localhost:3065';
     >
       {/* 상단 타이틀 */}
       <h2 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
-        <span>💬 {selectedUser.nickname}와의 채팅 (내 ID: {me.id})</span>
+        <span>💬 {selectedUser.nickname}님과의 채팅</span>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
           {/* 닫기 버튼 */}
@@ -167,7 +167,7 @@ const API_URL = 'http://localhost:3065';
               borderRadius: '6px',
               cursor: 'pointer',
             }}
-          >
+          > 
             닫기
           </button>
 

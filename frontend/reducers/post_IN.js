@@ -304,6 +304,7 @@ const postINReducer = (state = initialState, action) =>
           post.content = action.data.content;
           post.Images = action.data.Images;
           post.private_post = action.data.private_post;
+          post.Mentions = action.data.Mentions;
         }
         break;
       }

@@ -280,7 +280,7 @@ const handleDelete = async (id) => {
           <div key={ad.id} style={cardStyle}>
             <div style={imageBoxStyle}>
               <img
-                src={`http://localhost:3065/advertisement_uploads/${ad.image_url}`}
+                src={`http://localhost:3065/uploads/advertisement_uploads/${ad.image_url}`}
                 alt={ad.title}
                 style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px 12px 0 0' }}
               />

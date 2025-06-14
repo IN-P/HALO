@@ -15,26 +15,131 @@ function loadCommentsAPI(postId) {
 function* loadComments(action) {
   try {
     const result = yield call(loadCommentsAPI, action.postId);
-    yield put({ type: LOAD_COMMENTS_SUCCESS, data: result.data, postId: action.postId });
+
+    // Mentions 파싱 준비
+    const nicknameSet = new Set();
+
+    // 댓글 트리 순회 (재귀)
+    function traverseComments(comments) {
+      comments.forEach(comment => {
+        const mentionRegex = /@([^\s@]+)/g;
+        let match;
+        while ((match = mentionRegex.exec(comment.content)) !== null) {
+          nicknameSet.add(match[1]);
+        }
+        if (comment.children && comment.children.length > 0) {
+          traverseComments(comment.children);
+        }
+      });
+    }
+
+    traverseComments(result.data);
+
+    // nickname → user_id 매핑
+    let userMap = {};
+    const nicknames = Array.from(nicknameSet);
+
+    if (nicknames.length > 0) {
+      const response = yield call(axios.get, `http://localhost:3065/mention/users?q=${encodeURIComponent(nicknames.join(','))}&limit=100`, { withCredentials: true });
+      response.data.forEach((user) => {
+        userMap[user.nickname] = user.id;
+      });
+    }
+
+    // Mentions 추가하기 (재귀)
+    function addMentionsToComments(comments) {
+      comments.forEach(comment => {
+        const mentionRegex = /@([^\s@]+)/g;
+        const mentions = [];
+        let match;
+        while ((match = mentionRegex.exec(comment.content)) !== null) {
+          const nickname = match[1];
+          mentions.push({
+            nickname,
+            user_id: userMap[nickname],
+          });
+        }
+        comment.Mentions = mentions;
+
+        if (comment.children && comment.children.length > 0) {
+          addMentionsToComments(comment.children);
+        }
+      });
+    }
+
+    addMentionsToComments(result.data);
+
+    // reducer로 넘기기
+    yield put({
+      type: LOAD_COMMENTS_SUCCESS,
+      data: result.data,
+      postId: action.postId,
+    });
   } catch (error) {
-    yield put({ type: LOAD_COMMENTS_FAILURE, error: error.response?.data || error.message });
+    yield put({
+      type: LOAD_COMMENTS_FAILURE,
+      error: error.response?.data || error.message,
+    });
   }
 }
+
 
 // 댓글/대댓글 작성
 function addCommentAPI(data) {
   if (data.parentId) {
-    return axios.post(`http://localhost:3065/comment/${data.parentId}/reply`, { content: data.content,receiver_id: data.receiver_id, }, { withCredentials: true });
+    return axios.post(
+      `http://localhost:3065/comment/${data.parentId}/reply`,
+      { content: data.content, receiver_id: data.receiver_id },
+      { withCredentials: true }
+    );
   }
-  return axios.post(`http://localhost:3065/comment/post/${data.postId}`, { content: data.content,receiver_id: data.receiver_id, }, { withCredentials: true });
+  return axios.post(
+    `http://localhost:3065/comment/post/${data.postId}`,
+    { content: data.content, receiver_id: data.receiver_id },
+    { withCredentials: true }
+  );
 }
 function* addComment(action) {
   try {
     const res = yield call(addCommentAPI, action.data);
+
+    // Mentions 파싱
+    const mentionRegex = /@([^\s@]+)/g;
+    const nicknameSet = new Set();
+    let match;
+    while ((match = mentionRegex.exec(res.data.content)) !== null) {
+      nicknameSet.add(match[1]);
+    }
+
+    // nickname → user_id 매핑
+    let userMap = {};
+    const nicknames = Array.from(nicknameSet);
+
+    if (nicknames.length > 0) {
+      const response = yield call(axios.get, `http://localhost:3065/mention/users?q=${encodeURIComponent(nicknames.join(','))}&limit=100`, { withCredentials: true });
+      response.data.forEach((user) => {
+        userMap[user.nickname] = user.id;
+      });
+    }
+
+    // Mentions 구성
+    const mentions = [];
+    const mentionRegex2 = /@([^\s@]+)/g;
+    while ((match = mentionRegex2.exec(res.data.content)) !== null) {
+      const nickname = match[1];
+      mentions.push({
+        nickname,
+        user_id: userMap[nickname],
+      });
+    }
+
+    // Mentions를 res.data에 추가 (만약 화면에 직접 써야할 경우 대비용 → 지금은 LOAD_COMMENTS_REQUEST 다시 가니 참고용)
+    res.data.Mentions = mentions;
+
     yield put({ type: LOAD_COMMENTS_REQUEST, postId: action.data.postId });
-    yield put({ 
-      type: UPDATE_COMMENT_COUNT_IN_POST, 
-      data: { postId: res.data.postId, commentCount: res.data.commentCount } 
+    yield put({
+      type: UPDATE_COMMENT_COUNT_IN_POST,
+      data: { postId: res.data.postId, commentCount: res.data.commentCount }
     });
     yield put({ type: ADD_COMMENT_SUCCESS });
   } catch (error) {
@@ -42,13 +147,52 @@ function* addComment(action) {
   }
 }
 
+
 // 댓글 수정
 function editCommentAPI(data) {
-  return axios.patch(`http://localhost:3065/comment/${data.commentId}`, { content: data.content }, { withCredentials: true });
+  return axios.patch(
+    `http://localhost:3065/comment/${data.commentId}`,
+    { content: data.content },
+    { withCredentials: true }
+  );
 }
 function* editComment(action) {
   try {
-    yield call(editCommentAPI, action.data);
+    const res = yield call(editCommentAPI, action.data);
+
+    // Mentions 파싱
+    const mentionRegex = /@([^\s@]+)/g;
+    const nicknameSet = new Set();
+    let match;
+    while ((match = mentionRegex.exec(action.data.content)) !== null) {
+      nicknameSet.add(match[1]);
+    }
+
+    // nickname → user_id 매핑
+    let userMap = {};
+    const nicknames = Array.from(nicknameSet);
+
+    if (nicknames.length > 0) {
+      const response = yield call(axios.get, `http://localhost:3065/mention/users?q=${encodeURIComponent(nicknames.join(','))}&limit=100`, { withCredentials: true });
+      response.data.forEach((user) => {
+        userMap[user.nickname] = user.id;
+      });
+    }
+
+    // Mentions 구성
+    const mentions = [];
+    const mentionRegex2 = /@([^\s@]+)/g;
+    while ((match = mentionRegex2.exec(action.data.content)) !== null) {
+      const nickname = match[1];
+      mentions.push({
+        nickname,
+        user_id: userMap[nickname],
+      });
+    }
+
+    // Mentions를 따로 관리하고 싶으면 res.data 에 Mentions 넣어줄 수 있음
+    // res.data.Mentions = mentions; (지금은 사용 X)
+    
     // 수정 후 트리 새로고침
     yield put({ type: LOAD_COMMENTS_REQUEST, postId: action.data.postId });
     yield put({ type: EDIT_COMMENT_SUCCESS });
@@ -56,6 +200,7 @@ function* editComment(action) {
     yield put({ type: EDIT_COMMENT_FAILURE, error: error.response?.data || error.message });
   }
 }
+
 
 // 댓글 삭제
 function removeCommentAPI(id) {

@@ -4,6 +4,7 @@ import MyPost from "./MyPost";
 import MyBookmark from "./MyBookmark";
 import MyLiked from "./MyLiked";
 import MySave from "./MySave";
+import PlayerCard from "./PlayerCard"
 
 const ProfilePost = ({ data, isMyProfile, isBlocked, isBlockedByTarget }) => {//윫 수정
     const [activeTab, setActiveTab] = useState("posts");
@@ -90,6 +91,18 @@ const ProfilePost = ({ data, isMyProfile, isBlocked, isBlockedByTarget }) => {//
                         <InboxOutlined />
                         <span>보관함</span>
                         </div>
+                        {/* 플레이어 카드 */}
+                        <div
+                            role="tab"
+                            tabIndex={0}
+                            onClick={() => setActiveTab("card")}
+                            onKeyDown={(e) => e.key === "Enter" && setActiveTab("card")}
+                            style={activeTab === "card" ? activeTabStyle : inactiveTabStyle}
+                            aria-selected={activeTab === "card"}
+                        >
+                            <TagOutlined />
+                            <span>카드 보관함</span>
+                        </div>
                     </>
                 )}
             </nav>
@@ -104,6 +117,7 @@ const ProfilePost = ({ data, isMyProfile, isBlocked, isBlockedByTarget }) => {//
             {activeTab === "bookmark" && isMyProfile && <MyBookmark data={data} />}
             {activeTab === "like" && isMyProfile && <MyLiked data={data} />}
             {activeTab === "save" && isMyProfile && <MySave data={data} />}
+            {activeTab === "card" && isMyProfile && <PlayerCard />}  {/* 플레이어 카드 */}
             </div>
         </div>
     );

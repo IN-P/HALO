@@ -116,7 +116,7 @@ const AdminSidebar = () => {
       case 7: // 커스텀 관리자
         items.push(
           <Menu.Item key="custom" icon={<AppstoreOutlined />}>
-            <Link href="/admin/custom">커스텀 관리</Link>
+            <Link href="/admin/custom/badge">커스텀 관리</Link>
           </Menu.Item>
         );
         break;

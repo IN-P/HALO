@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import AppLayout from "../components/AppLayout";
+import AppLayout from "../../../components/AppLayout";
 import styled from "styled-components";
 import { useDispatch, useSelector } from "react-redux";
-import { LOAD_BADGE_REQUEST, ADD_BADGE_REQUEST } from "../reducers/badge_JH";
+import { LOAD_BADGE_REQUEST, ADD_BADGE_REQUEST } from "../../../reducers/badge_JH";
 
 const Container = styled.div`
   padding: 40px 32px;

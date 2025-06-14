@@ -18,6 +18,11 @@ export const LOAD_MY_INFO_REQUEST = 'LOAD_MY_INFO_REQUEST';
 export const LOAD_MY_INFO_SUCCESS = 'LOAD_MY_INFO_SUCCESS';
 export const LOAD_MY_INFO_FAILURE = 'LOAD_MY_INFO_FAILURE';
 
+// 준혁 : 회원탈퇴
+export const DELETE_ACCOUNT_REQUEST = 'DELETE_ACCOUNT_REQUEST';
+export const DELETE_ACCOUNT_SUCCESS = 'DELETE_ACCOUNT_SUCCESS';
+export const DELETE_ACCOUNT_FAILURE = 'DELETE_ACCOUNT_FAILURE';
+
 //  초기 상태
 export const initialState = {
   user: null,
@@ -38,6 +43,12 @@ export const initialState = {
   loadMyInfoLoading: false,
   loadMyInfoDone: false,
   loadMyInfoError: null,
+
+  // 준혁 : 회원탈퇴
+  deleteAccountLoading: false,
+  deleteAccountDone: false,
+  deleteAccountError: null,
+  //
 };
 
 //  리듀서
@@ -116,6 +127,23 @@ const reducer = (state = initialState, action) => produce(state, (draft) => {
       draft.isLogin = false;
       draft.user = null;
       break;
+
+    // 준혁 : 회원탈퇴
+    case DELETE_ACCOUNT_REQUEST:
+      draft.deleteAccountLoading = true;
+      draft.deleteAccountDone = false;
+      draft.deleteAccountError = null;
+      break;
+    case DELETE_ACCOUNT_SUCCESS:
+      draft.deleteAccountLoading = false;
+      draft.deleteAccountDone = true;
+      draft.isLogin = null;
+      break;
+    case DELETE_ACCOUNT_FAILURE:
+      draft.deleteAccountLoading = false;
+      draft.deleteAccountError = action.error;
+      break;
+      //
 
     default:
       break;

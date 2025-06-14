@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState ,useEffect} from 'react';
+import { useDispatch, useSelector } from 'react-redux'; 
 import { FaHeart, FaRegHeart, FaRegComment, FaBookmark, FaRegBookmark, FaRetweet } from 'react-icons/fa';
 import Comment from './Comment';
 import ReportModal from './ReportModal';
@@ -16,10 +17,18 @@ const PostDetailModal = ({
   onRegram, regramIconColor, regramDisabled, regramTooltip,
   showReportModal, setShowReportModal,
 }) => {
+  const dispatch = useDispatch();
+  const mentionUserMap = useSelector((state) => state.mentionUser_JW?.mentionUserMap || {});
+
+  useEffect(() => {
+    dispatch({
+      type: 'LOAD_MENTION_USERS_REQUEST',
+    });
+  }, [dispatch]);
+
   const images = basePost.Images || [];
   const prevImage = () => setImageIndex(i => (i > 0 ? i - 1 : images.length - 1));
   const nextImage = () => setImageIndex(i => (i < images.length - 1 ? i + 1 : 0));
-
   // 지도 모달용 state
   const [showMapModal, setShowMapModal] = useState(false);
 
@@ -34,17 +43,32 @@ const PostDetailModal = ({
   }) : '';
 
   // 본문 내용 렌더링
-  const renderContent = (content) =>
+  const renderContent = (content, userMap = {}) =>
     content
-      ? content.split(/(#[^\s#]+)/g).map((part, i) =>
-        part.startsWith('#') ? (
-          <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: '#007bff' }}>
-            {part}
-          </a>
-        ) : (
-          part
-        )
-      )
+      ? content
+          .split(/(#[^\s#]+|@[^\s@]+)/g)
+          .filter(Boolean)
+          .map((part, i) => {
+            if (part.startsWith('#')) {
+              return (
+                <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: '#007bff', textDecoration: 'none' }}>
+                  {part}
+                </a>
+              );
+            }
+            if (part.startsWith('@')) {
+              const nickname = part.slice(1).toLowerCase();
+              const userId = userMap[nickname];
+              return userId ? (
+                <a key={i} href={`/profile/${userId}`} style={{ color: '#28a745' }}>
+                  {part}
+                </a>
+              ) : (
+                <span key={i} style={{ color: '#28a745' }}>{part}</span>
+              );
+            }
+            return <span key={i}>{part}</span>;
+          })
       : null;
 
   // ⭐ 리그램 정보
@@ -177,7 +201,7 @@ const PostDetailModal = ({
             overflowX: 'hidden',
             wordBreak: 'break-all',
           }}>
-            {renderContent(post.content)}
+            {renderContent(post.content, mentionUserMap)}
           </div>
           {/* 아이콘/카운트 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 22, fontSize: 26, marginBottom: 8 }}>
