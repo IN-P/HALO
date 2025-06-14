@@ -6,19 +6,16 @@ const CommentPreview = ({ postId, onShowDetailModal }) => {
   const dispatch = useDispatch();
   const { comments, loadCommentsDone } = useSelector(state => state.comment_IN);
 
-  // 새로고침/마운트시 항상 fetch!
   useEffect(() => {
     if (!loadCommentsDone?.[postId]) dispatch({ type: LOAD_COMMENTS_REQUEST, postId });
   }, [dispatch, postId, loadCommentsDone]);
 
   const effectiveComments = comments[postId] && loadCommentsDone?.[postId] ? comments[postId] : [];
-
-  // 플랫하게 펼침(1,2뎁스 다 포함)
   const flatten = arr => arr.reduce((acc, c) => acc.concat(c, c.replies || []), []);
   const allComments = flatten(effectiveComments);
-  // 최신순(아래로), 마지막 3개만
-  const sorted = [...allComments].sort((a, b) => a.id - b.id);
-  const previewComments = sorted.slice(-3);
+  // 최신순(위에!)  
+  const sorted = [...allComments].sort((a, b) => b.id - a.id); // 최신이 위로  
+  const previewComments = sorted.slice(0, 3);
 
   return (
     <div

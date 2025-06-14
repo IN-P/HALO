@@ -34,33 +34,18 @@ const PostDetailModal = ({
   const isRegram = !!post.regram_id;
   const RegramInfo = isRegram && origin && origin.User && (
     <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      marginBottom: 10,
-      fontSize: 15,
-      color: '#444'
+      display: 'flex', alignItems: 'center', margin: '8px 0 10px 0', fontSize: 15, color: '#444'
     }}>
       <img
         src={origin.User.profile_img ? `http://localhost:3065${origin.User.profile_img}` : 'http://localhost:3065/img/profile/default.jpg'}
         alt="프로필"
         style={{
-          width: 28,
-          height: 28,
-          borderRadius: '50%',
-          objectFit: 'cover',
-          marginRight: 7,
-          border: '1.5px solid #bbb',
-          cursor: 'pointer'
+          width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', marginRight: 7, border: '1.5px solid #bbb', cursor: 'pointer'
         }}
         onClick={() => window.location.href = `/profile/${origin.User.id}`}
       />
       <span
-        style={{
-          fontWeight: 700,
-          marginRight: 5,
-          cursor: 'pointer',
-          color: '#0055ff'
-        }}
+        style={{ fontWeight: 700, marginRight: 5, cursor: 'pointer', color: '#0055ff' }}
         onClick={() => window.location.href = `/profile/${origin.User.id}`}
       >
         {origin.User.nickname}
@@ -101,28 +86,16 @@ const PostDetailModal = ({
         <div style={{
           display: 'flex',
           flexDirection: 'column',
-          width: 480,
-          minWidth: 440,
-          maxWidth: 520,
+          width: 500,
+          minWidth: 420,
+          maxWidth: 540,
           height: IMAGE_SIZE.height,
           background: '#fff',
           boxSizing: 'border-box',
-          padding: '36px 40px 20px 40px',
+          padding: '36px 18px 20px 18px', // ← 패딩 줄임
           overflow: 'hidden',
         }}>
-          {isRegram && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              color: '#0088ff',
-              fontWeight: 600,
-              fontSize: 15,
-              marginBottom: 4,
-              gap: 5
-            }}>
-              <FaRetweet />재게시했습니다
-            </div>
-          )}
+          {/* 작성자 정보+메뉴 */}
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8, minHeight: 54 }}>
             <img
               src={post.User?.profile_img ? `http://localhost:3065${post.User.profile_img}` : 'http://localhost:3065/img/profile/default.jpg'}
@@ -139,26 +112,20 @@ const PostDetailModal = ({
               </div>
             </div>
           </div>
+          {/* 리그램 정보 */}
+          {RegramInfo}
+          {/* 본문 내용 */}
+          <div style={{
+            fontSize: 17, lineHeight: 1.6, marginBottom: 8, minHeight: 36, maxHeight: 70, overflowY: 'auto', wordBreak: 'break-all',
+          }}>
+            {post.content}
+          </div>
+          {/* 작성일 */}
           <div style={{ fontSize: 13, color: '#bbb', margin: '2px 0 6px 0' }}>
             작성일&nbsp;
             {writtenAt}
           </div>
-          {post.location && (
-            <div style={{
-              fontSize: 15, color: '#1558d6', marginBottom: 10,
-              cursor: 'pointer', fontWeight: 500, textDecoration: 'underline'
-            }}
-              onClick={() => setShowMapModal(true)}>
-              {post.location}
-            </div>
-          )}
-          {RegramInfo}
-          <div style={{
-            fontSize: 17, lineHeight: 1.6, marginBottom: 10,
-            minHeight: 36, maxHeight: 70, overflowY: 'auto', wordBreak: 'break-all',
-          }}>
-            {post.content}
-          </div>
+          {/* 아이콘 */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 18, fontSize: 27, margin: '10px 0 6px 0',
             borderTop: '1.5px solid #f2f2f2', paddingTop: 8, flexWrap: 'nowrap'
@@ -187,7 +154,7 @@ const PostDetailModal = ({
           {/* 댓글 상세 */}
           <div style={{
             flex: 1, minHeight: 0, overflowY: 'auto', background: '#fafbfc',
-            borderRadius: 14, padding: '18px 10px 0 10px', marginTop: 8, position: 'relative'
+            borderRadius: 14, padding: '18px 0 0 0', marginTop: 8, position: 'relative', width: '100%',
           }}>
             <CommentDetail
               postId={post.id}
