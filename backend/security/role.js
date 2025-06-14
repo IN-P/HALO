@@ -14,6 +14,8 @@ const UserRole = {
   CHAT_MANAGER: 9,
   POST_MANAGER: 10,
   ANALYTICS_MANAGER: 11, // 분석 관리자
+  EVENT_MANAGER : 12,
+  STORE_MANAGER : 13,
 };
 
 const UserRoleNames = {
@@ -29,7 +31,8 @@ const UserRoleNames = {
   9: "채팅 관리자",
   10: "포스트 관리자",
   11: "분석 관리자",
-  11: "이벤트 관리자",
+  12: "이벤트 관리자",
+  13: "상점 관리자",
 };
 
 const getRoleName = (code) => UserRoleNames[code] || "알 수 없음";
