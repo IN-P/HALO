@@ -17,7 +17,7 @@ const SearchModal = ({ onClose, onUserSelect, userMap }) => {
   return (
     <div style={{
       position: 'absolute',
-      top: '400px',
+      top: '450px',
       left: '50%',
       transform: 'translateX(-50%)',
       width: '400px',

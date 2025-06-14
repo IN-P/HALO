@@ -1,6 +1,4 @@
-// ✅ 최종 안정화된 ChatPage 구조 (중복 제거 완료)
-
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback ,useMemo} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import AppLayout from '../components/AppLayout';
 import ChatList from '../components/ChatList';
@@ -21,7 +19,7 @@ import {
 import useRequireLogin from '../hooks/useRequireLogin';
 import { wrapper } from '../store/configureStore';
 import socket from '../socket';
-//import ChatStart from '../components/lottie/ChatStart';
+import ChatStart from '../components/lottie/ChatStart';
 
 export const getServerSideProps = wrapper.getServerSideProps(async (context) => {
   const cookie = context.req ? context.req.headers.cookie : '';
@@ -62,6 +60,10 @@ const ChatPage = () => {
   const [selectedChatRoomId, setSelectedChatRoomId] = useState(null);
   //const [skipAutoSelect, setSkipAutoSelect] = useState(false);
 const skipAutoSelect = useRef(false);
+
+const memoizedDataForSearch = useMemo(() => {
+    return userMap && typeof userMap === 'object' ? Object.values(userMap) : [];
+  }, [userMap]);
 
   const handleReadUpdate = useCallback((readMessageIdsRaw) => {
     const readMessageIds = Array.isArray(readMessageIdsRaw) ? readMessageIdsRaw : [readMessageIdsRaw];
@@ -382,7 +384,7 @@ useEffect(() => {
             <SearchModal
               onUserSelect={handleUserSelect}
               onClose={() => dispatch(toggleSearchModal(false))}
-              userMap={userMap}
+              userMap={memoizedDataForSearch}
             />
           )}
 
@@ -505,9 +507,14 @@ useEffect(() => {
               />
             </div>
           ) : (
-            <div style={{ margin: 'auto' }}>
+            <div style={{ margin: 'auto', position: 'relative', minHeight: 'calc(100vh - 120px)' }}>
               <h2
-                style={{ cursor: 'pointer' }}
+                style={{
+                  cursor: 'pointer',
+                  marginTop: '550px', 
+                  zIndex: 10, 
+                  position: 'relative' 
+                }}
                 onClick={() => {
                   skipAutoSelect.current = true; 
                   dispatch(setSelectedUser(null));
@@ -517,6 +524,7 @@ useEffect(() => {
               >
                 💬 채팅을 시작하세요
               </h2>
+              <ChatStart />
             </div>
           )}
         </div>
