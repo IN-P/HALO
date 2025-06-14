@@ -1,41 +1,35 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { EditOutlined, DeleteOutlined, MoreOutlined, FlagOutlined } from "@ant-design/icons";
 import MentionTextArea from "./MentionTextArea";
 import {
-  ADD_COMMENT_REQUEST,
-  EDIT_COMMENT_REQUEST,
-  REMOVE_COMMENT_REQUEST,
+  ADD_COMMENT_REQUEST, LOAD_COMMENTS_REQUEST,  EDIT_COMMENT_REQUEST, REMOVE_COMMENT_REQUEST,
 } from "../reducers/comment_IN";
 
-const CommentDetail = ({
-  postId,
-  currentUserId,
-  comments = [],
-}) => {
+const CommentDetail = ({ postId, currentUserId }) => {
   const dispatch = useDispatch();
-  const { addCommentLoading, editCommentLoading } = useSelector((state) => state.comment_IN);
+  const { comments: allComments, addCommentLoading, editCommentLoading, loadCommentsDone } = useSelector((state) => state.comment_IN);
 
-  // 인풋창 상태
+  useEffect(() => {
+    if (!loadCommentsDone?.[postId]) {
+      dispatch({ type: LOAD_COMMENTS_REQUEST, postId });
+    }
+  }, [dispatch, postId, loadCommentsDone]);
+
+  const comments = allComments[postId] || [];
   const [inputValue, setInputValue] = useState('');
-  const [replyTarget, setReplyTarget] = useState(null); // { id, nickname }
+  const [replyTarget, setReplyTarget] = useState(null);
   const inputRef = useRef(null);
-
-  // 수정 관련
   const [editId, setEditId] = useState(null);
   const [editValue, setEditValue] = useState("");
-
-  // 쩜3개 메뉴
   const [menuOpenId, setMenuOpenId] = useState(null);
 
-  // 답글 달기 핸들러 (답글 대상 세팅 + 인풋 프리셋)
   const onReplyClick = (comment) => {
     setReplyTarget({ id: comment.id, nickname: comment.User.nickname });
     setInputValue(`@${comment.User.nickname} `);
     setTimeout(() => inputRef.current?.focus(), 100);
   };
 
-  // 댓글/답글 등록
   const onSubmit = () => {
     if (!inputValue.trim()) return;
     dispatch({
@@ -50,7 +44,6 @@ const CommentDetail = ({
     setReplyTarget(null);
   };
 
-  // 수정 핸들러
   const onEdit = (c) => {
     setEditId(c.id);
     setEditValue(c.content);
@@ -107,17 +100,31 @@ const CommentDetail = ({
   };
 
   // 트리 구조 (댓글/대댓글 2뎁스)
-  const renderComments = (list) =>
+  const renderComments = (list, level = 0) =>
     list?.map((c) => {
       if (!c || typeof c.id === "undefined") return null;
       const isAuthor = currentUserId === c.User?.id;
       const replies = c.replies || [];
+      const isReply = !!c.parent_id;
+
       return (
-        <div key={c.id} style={commentCardStyle}>
+        <div key={c.id}
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 12,
+            padding: isReply ? "7px 0 7px 30px" : "10px 0",
+            marginBottom: isReply ? 1 : 4,
+            background: "none",
+          }}
+        >
           <img
             src={c.User?.profile_img ? `http://localhost:3065${c.User.profile_img}` : "/img/profile/default.jpg"}
             alt="avatar"
-            style={avatarStyle}
+            style={{
+              width: 32, height: 32, borderRadius: "50%", objectFit: "cover",
+              border: "1px solid #eee", flexShrink: 0, cursor: "pointer", marginTop: 2,
+            }}
             onClick={() => window.location.href = `/profile/${c.User?.id}`}
           />
           <div style={{ flex: 1 }}>
@@ -167,12 +174,8 @@ const CommentDetail = ({
                         value={editValue}
                         onChange={e => setEditValue(e.target.value)}
                         style={{
-                          width: "70%",
-                          padding: 6,
-                          borderRadius: 4,
-                          border: "1px solid #ccc",
-                          marginRight: 4,
-                          fontSize: 14,
+                          width: "70%", padding: 6, borderRadius: 4, border: "1px solid #ccc",
+                          marginRight: 4, fontSize: 14,
                         }}
                       />
                       <button style={btnStyle} onClick={() => onEditSubmit(c)} disabled={editCommentLoading}>완료</button>
@@ -183,25 +186,22 @@ const CommentDetail = ({
                 )
               }
             </div>
-            {/* 답글달기: 오른쪽 인풋에서만 처리, 버튼은 아래처럼 인풋에 parentId 세팅 */}
-            {replies.length > 0 && (
+            {/* 1뎁스(최상위댓글)만 답글달기! */}
+            {c.parent_id === null && (
               <button
                 style={replyBtnStyle}
                 onClick={() => onReplyClick(c)}
               >
-                답글달기 ({replies.length})
+                답글달기{replies.length > 0 && ` (${replies.length})`}
               </button>
             )}
-            {/* 답글들 */}
-            {replies.length > 0 && (
-              <div style={{ marginLeft: 36, marginTop: 6 }}>
-                {replies.map((r) => renderComments([r]))}
-              </div>
-            )}
+            {/* 2뎁스(대댓글)는 들여쓰기만, 답글버튼 없음 */}
+            {replies.length > 0 && renderComments(replies, level + 1)}
           </div>
         </div>
       );
     });
+
 
   // 스크롤(댓글영역)과 인풋 분리: 전체영역 flex, 댓글리스트만 overflowY
   return (

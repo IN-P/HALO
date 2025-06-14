@@ -8,7 +8,7 @@ import PostDetailModal from './PostDetailModal';
 import ReportModal from './ReportModal';
 import MapModal from './MapModal';
 import { getTotalCommentCount } from '../utils/comment';
-import CommentPreview from './CommentPreview'; // ← 미리보기용
+import CommentPreview from './CommentPreview';
 const IMAGE_SIZE = { width: 540, height: 640 };
 
 function getRelativeTime(date) {
@@ -35,7 +35,7 @@ const PostCard = ({ post }) => {
     });
   }
 
-  // ------ 리그램/원본글 구분 ------
+  // 리그램/원본글 구분
   const isRegram = !!post.regram_id;
   const origin = post.Regram;
   const basePost = isRegram && origin ? origin : post;
@@ -61,7 +61,6 @@ const PostCard = ({ post }) => {
   };
 
   const isMine = post.User?.id === user?.id;
-  // 리그램 관련
   let myRegramPost = null;
   if (!isRegram && post.Regrams) {
     myRegramPost = post.Regrams.find(rg => rg.User?.id === user?.id);
@@ -151,57 +150,22 @@ const PostCard = ({ post }) => {
           })
       : null;
 
-  // 리그램 표시문구
-  const RegramInfo = isRegram && origin && origin.User && (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      marginBottom: 10,
-      fontSize: 15,
-      color: '#444'
-    }}>
-      <img
-        src={origin.User.profile_img ? `http://localhost:3065${origin.User.profile_img}` : 'http://localhost:3065/img/profile/default.jpg'}
-        alt="프로필"
-        style={{
-          width: 28,
-          height: 28,
-          borderRadius: '50%',
-          objectFit: 'cover',
-          marginRight: 7,
-          border: '1.5px solid #bbb',
-          cursor: 'pointer'
-        }}
-        onClick={() => window.location.href = `/profile/${origin.User.nickname}`}
-      />
-      <span
-        style={{
-          fontWeight: 700,
-          marginRight: 5,
-          cursor: 'pointer',
-          color: '#0055ff'
-        }}
-        onClick={() => window.location.href = `/profile/${origin.User.nickname}`}
-      >
-        {origin.User.nickname}
-      </span>
-      님의 게시글을 리그램했습니다
-    </div>
-  );
+  const onShowDetailModal = () => setShowDetailModal(true);
 
-  // ⭐ 레이아웃 변경: 6:4 그리드(왼쪽이미지, 오른쪽정보)
   return (
     <div style={{
-      display: 'grid',
-      gridTemplateColumns: '3fr 2fr', // 6:4 비율
-      gap: 0,
+      display: 'flex',
+      flexDirection: 'row',
       background: '#fff',
       borderRadius: 20,
       boxShadow: '0 3px 16px rgba(0,0,0,0.12)',
       margin: '32px 0',
       padding: 0,
       overflow: 'hidden',
-      position: 'relative'
+      position: 'relative',
+      width: IMAGE_SIZE.width + 460,
+      minWidth: IMAGE_SIZE.width + 400,
+      maxWidth: IMAGE_SIZE.width + 480,
     }}>
       {/* 왼쪽 이미지 */}
       <div style={{
@@ -219,7 +183,7 @@ const PostCard = ({ post }) => {
             src={`http://localhost:3065/uploads/post/${currentImages[imageIndex]?.src}`}
             alt=""
             style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#eee', cursor: 'pointer' }}
-            onClick={() => setShowDetailModal(true)}
+            onClick={onShowDetailModal}
           />
         ) : (
           <div style={{ width: '100%', height: '100%', background: '#f3f3f3' }} />
@@ -233,8 +197,17 @@ const PostCard = ({ post }) => {
       </div>
       {/* 오른쪽 정보 */}
       <div style={{
-        display: 'flex', flexDirection: 'column', justifyContent: 'flex-start',
-        minWidth: 340, maxWidth: 430, padding: '22px 28px 18px 28px', height: IMAGE_SIZE.height, boxSizing: 'border-box', overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-start',
+        width: 440,
+        minWidth: 400,
+        maxWidth: 480,
+        padding: '22px 28px 18px 28px',
+        height: IMAGE_SIZE.height,
+        boxSizing: 'border-box',
+        overflow: 'hidden',
+        gap: 8,
       }}>
         {/* 리그램 오버레이 */}
         {isRegram && (
@@ -319,8 +292,6 @@ const PostCard = ({ post }) => {
             {location}
           </div>
         )}
-        {/* 리그램정보 */}
-        {RegramInfo}
         {/* 본문 내용 */}
         <div style={{
           fontSize: 17, lineHeight: 1.6, marginBottom: 8, minHeight: 42, maxHeight: 75, overflowY: 'auto', overflowX: 'hidden', wordBreak: 'break-all',
@@ -329,10 +300,10 @@ const PostCard = ({ post }) => {
         </div>
         {/* 아이콘 */}
         <div style={{
-          display: 'flex', alignItems: 'center', gap: 22, fontSize: 25, margin: '12px 0 0 0',
-          borderTop: '1.5px solid #f2f2f2', paddingTop: 10
+          display: 'flex', alignItems: 'center', gap: 16, fontSize: 25, margin: '12px 0 0 0',
+          borderTop: '1.5px solid #f2f2f2', paddingTop: 10, flexWrap: 'nowrap'
         }}>
-          <button style={iconBtnStyle} onClick={() => setShowDetailModal(true)}>
+          <button style={iconBtnStyle} onClick={onShowDetailModal}>
             <FaRegComment />
             <span style={countStyle}>{getTotalCommentCount(post.Comments || [])}</span>
           </button>
@@ -355,11 +326,7 @@ const PostCard = ({ post }) => {
         </div>
         {/* 댓글 프리뷰(3개만, 더보기) */}
         <div style={{ margin: '20px 0 0 0', flex: 1, minHeight: 0 }}>
-          <CommentPreview
-            comments={post.Comments || []}
-            previewCount={3}
-            onShowDetailModal={() => setShowDetailModal(true)}
-          />
+          <CommentPreview postId={post.id} onShowDetailModal={onShowDetailModal} />
         </div>
         {showReportModal && (
           <ReportModal
@@ -395,6 +362,7 @@ const PostCard = ({ post }) => {
         regramTooltip={regramTooltip}
         showReportModal={showReportModal}
         setShowReportModal={setShowReportModal}
+        handleCopyLink={handleCopyLink}
       />
       {showCopyToast && (
         <div style={{

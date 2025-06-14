@@ -1,40 +1,43 @@
-import React from "react";
-import { MessageOutlined } from "@ant-design/icons";
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from "react-redux";
+import { LOAD_COMMENTS_REQUEST } from "../reducers/comment_IN";
 
-const CommentPreview = ({
-  comments = [],
-  onShowDetailModal,
-  previewCount = 3,
-}) => {
-  if (!Array.isArray(comments)) return null;
+const CommentPreview = ({ postId, onShowDetailModal }) => {
+  const dispatch = useDispatch();
+  const { comments, loadCommentsDone } = useSelector(state => state.comment_IN);
 
-  const sorted = [...comments].sort((a, b) => b.id - a.id);
-  const previewComments = sorted.slice(0, previewCount);
+  // 새로고침/마운트시 항상 fetch!
+  useEffect(() => {
+    if (!loadCommentsDone?.[postId]) dispatch({ type: LOAD_COMMENTS_REQUEST, postId });
+  }, [dispatch, postId, loadCommentsDone]);
+
+  const effectiveComments = comments[postId] && loadCommentsDone?.[postId] ? comments[postId] : [];
+
+  // 플랫하게 펼침(1,2뎁스 다 포함)
+  const flatten = arr => arr.reduce((acc, c) => acc.concat(c, c.replies || []), []);
+  const allComments = flatten(effectiveComments);
+  // 최신순(아래로), 마지막 3개만
+  const sorted = [...allComments].sort((a, b) => a.id - b.id);
+  const previewComments = sorted.slice(-3);
 
   return (
     <div
-      className="comment-preview-wrap"
-      onClick={onShowDetailModal}
       style={{
-        background: "#fafbfc",
+        margin: '8px 0 0 0',
+        background: '#fafbfc',
         borderRadius: 10,
-        minHeight: 50,
-        padding: "12px 16px 8px 16px",
-        border: "1px solid #f2f2f2",
+        minHeight: 40,
+        padding: '10px 14px 8px 14px',
+        border: '1px solid #f2f2f2',
         fontSize: 15,
-        color: "#333",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
-        cursor: "pointer",
+        color: '#333',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+        cursor: onShowDetailModal ? "pointer" : "default",
       }}
+      onClick={onShowDetailModal}
     >
-      <div style={{ display: "flex", alignItems: "center", marginBottom: 4 }}>
-        <MessageOutlined style={{ fontSize: 17, color: "#888" }} />
-        <span style={{ marginLeft: 8, color: "#555", fontWeight: 500 }}>
-          댓글
-        </span>
-      </div>
       {previewComments.length === 0 && (
-        <div style={{ color: "#b0b0b0", fontStyle: "italic", fontSize: 15 }}>
+        <div style={{ color: '#b0b0b0', margin: '6px 2px', fontStyle: 'italic', fontSize: 15 }}>
           아직 댓글이 없습니다 🙃
         </div>
       )}
@@ -44,68 +47,37 @@ const CommentPreview = ({
             key={c.id}
             style={{
               display: "flex",
+              gap: 10,
               alignItems: "center",
-              gap: 8,
-              padding: "10px 0 0 0",
-              borderBottom: "1px solid #f4f4f4",
-              minHeight: 36,
+              padding: "12px 0 0 0",
+              borderBottom: "1px solid #f1f1f1",
+              background: "none",
             }}
           >
             <img
-              src={
-                c.User?.profile_img
-                  ? `http://localhost:3065${c.User.profile_img}`
-                  : "/img/profile/default.jpg"
-              }
+              src={c.User?.profile_img ? `http://localhost:3065${c.User.profile_img}` : "http://localhost:3065/img/profile/default.jpg"}
               alt="avatar"
               style={{
-                width: 26,
-                height: 26,
-                borderRadius: "50%",
-                objectFit: "cover",
-                border: "1px solid #eee",
-                flexShrink: 0,
-                cursor: "pointer",
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                window.location.href = `/profile/${c.User?.id}`;
+                width: 28, height: 28, borderRadius: "50%", objectFit: "cover", border: "1px solid #eee", flexShrink: 0, cursor: "pointer",
               }}
             />
-            <span
-              style={{
-                fontWeight: "bold",
-                marginRight: 5,
-                fontSize: 14,
-                cursor: "pointer",
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                window.location.href = `/profile/${c.User?.id}`;
-              }}
-            >
-              {c.User?.nickname || "알 수 없음"}
-            </span>
-            <span style={{ color: "#444", fontSize: 15, flex: 1 }}>
-              {c.is_deleted ? (
-                <span style={{ color: "#bb0d23" }}>삭제된 댓글입니다.</span>
-              ) : (
-                c.content
-              )}
-            </span>
+            <div style={{ flex: 1 }}>
+              <span style={{ fontWeight: 'bold', cursor: 'pointer' }}>
+                {c.User?.nickname || "알 수 없음"}
+              </span>
+              <div style={{
+                whiteSpace: "pre-wrap", fontSize: 15, color: c.is_deleted ? "#721c24" : "#222",
+              }}>
+                {c.is_deleted ? "삭제된 댓글입니다." : c.content}
+              </div>
+            </div>
           </div>
         ) : null
       )}
-      {comments.length > previewCount && (
+      {allComments.length > 3 && (
         <div
           style={{
-            color: "#2995f4",
-            fontSize: 15,
-            fontWeight: 500,
-            marginTop: 5,
-            userSelect: "none",
-            cursor: "pointer",
-            textAlign: "left",
+            color: "#2995f4", fontSize: 15, fontWeight: 500, marginTop: 3, userSelect: "none",
           }}
         >
           댓글 더보기

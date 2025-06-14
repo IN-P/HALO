@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { FaHeart, FaRegHeart, FaRegComment, FaBookmark, FaRegBookmark, FaRetweet } from 'react-icons/fa';
-import CommentDetail from './CommentDetail'; // 상세 댓글 연결
+import { FaHeart, FaRegHeart, FaRegComment, FaBookmark, FaRegBookmark, FaRetweet, FaShareAlt } from 'react-icons/fa';
+import CommentDetail from './CommentDetail';
 import ReportModal from './ReportModal';
 import MapModal from './MapModal';
 
-const IMAGE_SIZE = { width: 756, height: 896 }; // 140% 확대
+const IMAGE_SIZE = { width: 756, height: 896 };
 
 const PostDetailModal = ({
   post, basePost, origin, user,
@@ -15,6 +15,7 @@ const PostDetailModal = ({
   likeCount, regramCount, bookmarkCount, commentCount,
   onRegram, regramIconColor, regramDisabled, regramTooltip,
   showReportModal, setShowReportModal,
+  handleCopyLink,
 }) => {
   const images = basePost.Images || [];
   const prevImage = () => setImageIndex(i => (i > 0 ? i - 1 : images.length - 1));
@@ -25,43 +26,10 @@ const PostDetailModal = ({
   const baseDate = post.User?.last_active ? new Date(post.User.last_active) : new Date(post.createdAt);
   const minutesAgo = Math.floor((Date.now() - baseDate.getTime()) / 60000);
 
-  const userMap = {};
-  post.Mentions?.forEach(m => {
-    userMap[m.nickname.toLowerCase()] = m.user_id;
-  });
-
   const writtenAt = post.createdAt ? new Date(post.createdAt).toLocaleString('ko-KR', {
     year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit'
   }) : '';
-
-  const renderContent = (content, userMap = {}) =>
-    content
-      ? content
-          .split(/(#[^\s#]+|@[^\s@]+)/g)
-          .filter(Boolean)
-          .map((part, i) => {
-            if (part.startsWith('#')) {
-              return (
-                <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: '#007bff', textDecoration: 'none' }}>
-                  {part}
-                </a>
-              );
-            }
-            if (part.startsWith('@')) {
-              const nickname = part.slice(1).toLowerCase();
-              const userId = userMap[nickname];
-              return userId ? (
-                <a key={i} href={`/profile/${userId}`} style={{ color: '#28a745' }}>
-                  {part}
-                </a>
-              ) : (
-                <span key={i} style={{ color: '#28a745' }}>{part}</span>
-              );
-            }
-            return <span key={i}>{part}</span>;
-          })
-      : null;
 
   const isRegram = !!post.regram_id;
   const RegramInfo = isRegram && origin && origin.User && (
@@ -106,7 +74,11 @@ const PostDetailModal = ({
       <div style={detailBoxStyle} onClick={e => e.stopPropagation()}>
         {/* 왼쪽: 이미지 */}
         <div style={{
-          ...IMAGE_SIZE, position: 'relative', background: '#eee', flexShrink: 0,
+          width: IMAGE_SIZE.width,
+          height: IMAGE_SIZE.height,
+          position: 'relative',
+          background: '#eee',
+          flexShrink: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center'
         }}>
           {images.length > 0 ? (
@@ -127,16 +99,16 @@ const PostDetailModal = ({
         </div>
         {/* 오른쪽: 정보+댓글 */}
         <div style={{
-          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          width: 480,
           minWidth: 440,
           maxWidth: 520,
           height: IMAGE_SIZE.height,
-          display: 'flex',
-          flexDirection: 'column',
           background: '#fff',
           boxSizing: 'border-box',
-          padding: '32px 34px 20px 34px',
-          overflowX: 'hidden',
+          padding: '36px 40px 20px 40px',
+          overflow: 'hidden',
         }}>
           {isRegram && (
             <div style={{
@@ -181,17 +153,15 @@ const PostDetailModal = ({
             </div>
           )}
           {RegramInfo}
-          {/* 본문 */}
           <div style={{
             fontSize: 17, lineHeight: 1.6, marginBottom: 10,
             minHeight: 36, maxHeight: 70, overflowY: 'auto', wordBreak: 'break-all',
           }}>
-            {renderContent(post.content, userMap)}
+            {post.content}
           </div>
-          {/* 아이콘 */}
           <div style={{
-            display: 'flex', alignItems: 'center', gap: 22, fontSize: 27, margin: '10px 0 6px 0',
-            borderTop: '1.5px solid #f2f2f2', paddingTop: 8
+            display: 'flex', alignItems: 'center', gap: 18, fontSize: 27, margin: '10px 0 6px 0',
+            borderTop: '1.5px solid #f2f2f2', paddingTop: 8, flexWrap: 'nowrap'
           }}>
             <div style={iconBtnStyle}>
               <FaRegComment />
@@ -209,17 +179,19 @@ const PostDetailModal = ({
               {bookmarked ? <FaBookmark color="#007bff" /> : <FaRegBookmark />}
               <span style={countStyle}>{bookmarkCount}</span>
             </button>
+            <button style={iconBtnStyle} onClick={handleCopyLink} title="공유 링크 복사">
+              <FaShareAlt />
+              <span style={{ fontSize: 16, marginLeft: 2, fontWeight: 500 }}>공유</span>
+            </button>
           </div>
-          {/* 댓글 상세(140% 확대, 댓글 비중↑, 인풋 항상 아래 고정) */}
+          {/* 댓글 상세 */}
           <div style={{
-            flex: 1, minHeight: 0, background: '#fafbfc',
+            flex: 1, minHeight: 0, overflowY: 'auto', background: '#fafbfc',
             borderRadius: 14, padding: '18px 10px 0 10px', marginTop: 8, position: 'relative'
           }}>
             <CommentDetail
               postId={post.id}
               currentUserId={user?.id}
-              comments={post.Comments}
-              onClose={() => setShowDetailModal(false)}
             />
           </div>
           {showReportModal && (
@@ -258,7 +230,6 @@ const detailBoxStyle = {
   position: 'relative',
   padding: 0,
 };
-
 const modalStyle = {
   position: 'fixed',
   zIndex: 3000,
@@ -271,7 +242,6 @@ const modalStyle = {
   alignItems: 'center',
   justifyContent: 'center',
 };
-
 const arrowBtnStyle = {
   position: 'absolute',
   top: '50%',
