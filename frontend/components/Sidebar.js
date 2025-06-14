@@ -47,8 +47,14 @@ const ImportantNotificationCount = styled.span`
 `
 
 // 재사용 가능한 버튼 컴포넌트
-const SidebarButton = ({ icon, children, onClick }) => {
+const SidebarButton = ({ icon, children, onClick, warning = false }) => {
   const [hover, setHover] = useState(false);
+
+  const baseBackground = warning
+    ? '#FFE0B2' // 주황색 계열
+    : hover
+    ? 'linear-gradient(90deg, #f0faff 0%, #d0eaff 100%)'
+    : 'transparent';
 
   return (
     <Button
@@ -63,9 +69,7 @@ const SidebarButton = ({ icon, children, onClick }) => {
         alignItems: 'center',
         justifyContent: 'flex-start',
         padding: '12px 12px',
-        background: hover
-          ? 'linear-gradient(90deg, #f0faff 0%, #d0eaff 100%)'
-          : 'transparent',
+        background: baseBackground,
         boxShadow: 'none',
         transition: 'background 0.3s ease',
         outline: 'none',
@@ -79,6 +83,7 @@ const SidebarButton = ({ icon, children, onClick }) => {
     </Button>
   );
 };
+
 
 // 준혁 추가 : 알림창 토글 상태 showNotification, onToggleNotification, notificationCount
 const Sidebar = ({ showNotification, onToggleNotification, notificationCount, themeMode, onToggleTheme, importantCount }) => {
@@ -112,9 +117,22 @@ const Sidebar = ({ showNotification, onToggleNotification, notificationCount, th
             <SidebarButton icon={<EditOutlined />}>게시물 작성</SidebarButton>
           </Link>
           {/* 준혁 추가 : 알림창 토글 onClick={onToggleNotification} active={showNotification} */}
-          <SidebarButton icon={<BellOutlined />} onClick={onToggleNotification} active={showNotification}>알림
-          {notificationCount > 0 && ( <NotificationCount>{notificationCount > 99 ? '99+' : notificationCount}</NotificationCount> )}
-          {importantCount > 0 && ( <ImportantNotificationCount>{importantCount > 99 ? '99+' : importantCount} !</ImportantNotificationCount> )}
+          <SidebarButton
+            icon={<BellOutlined />}
+            onClick={onToggleNotification}
+            warning={importantCount > 0} // 여기 추가!
+          >
+            알림
+            {notificationCount > 0 && (
+              <NotificationCount>
+                {notificationCount > 99 ? '99+' : notificationCount}
+              </NotificationCount>
+            )}
+            {importantCount > 0 && (
+              <ImportantNotificationCount>
+                {importantCount > 99 ? '99+' : importantCount} !
+              </ImportantNotificationCount>
+            )}
           </SidebarButton>         
           <Link href="/chat" passHref>
             <SidebarButton icon={<MessageOutlined />}>채팅 (DM)</SidebarButton>

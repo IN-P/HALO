@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { FormOutlined, CommentOutlined, HeartFilled, UserAddOutlined, UserDeleteOutlined, HeartOutlined } from '@ant-design/icons';
+import { FormOutlined, CommentOutlined, HeartFilled, UserAddOutlined, UserDeleteOutlined, HeartOutlined, MessageOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 import { LOAD_ACTIVE_LOG_REQUEST } from '../../reducers/activeLog_JH';
 
@@ -59,7 +59,7 @@ const iconStyle = { fontSize: 32, marginRight: 16 };
   if (action === 'CREATE') {
     switch (target_type_id) {
       case 1: return <FormOutlined style={{ ...iconStyle, color: '#52c41a', marginRight: 12 }} />; 
-      case 2: return <CommentOutlined style={{ ...iconStyle, color: '#52c41a', marginRight: 12 }} />; 
+      case 2: return <MessageOutlined style={{ ...iconStyle, color: '#52c41a', marginRight: 12 }} />; 
       case 3: return <UserAddOutlined style={{ ...iconStyle, color: '#1890ff', marginRight: 12 }} />;
       case 4: return <CommentOutlined style={{ ...iconStyle, color: '#fa8c16', marginRight: 12 }} />; 
       case 5: return <HeartFilled style={{ ...iconStyle, color: '#eb2f96', marginRight: 12 }} />; 
@@ -70,7 +70,7 @@ const iconStyle = { fontSize: 32, marginRight: 16 };
   if (action === 'UPDATE') {
     switch (target_type_id) {
       case 1: return <FormOutlined style={{ ...iconStyle, color: '#52c41a', marginRight: 12 }} />;
-      case 2: return <CommentOutlined style={{ ...iconStyle, color: '#52c41a', marginRight: 12 }} />;
+      case 2: return <MessageOutlined style={{ ...iconStyle, color: '#52c41a', marginRight: 12 }} />;
       case 4: return <CommentOutlined style={{ ...iconStyle, color: '#fa8c16', marginRight: 12 }} />;
       default: return null;
     }
@@ -79,7 +79,7 @@ const iconStyle = { fontSize: 32, marginRight: 16 };
   if (action === 'DELETE') {
     switch (target_type_id) {
       case 1: return <FormOutlined style={{ ...iconStyle, color: '#ff4d4f', marginRight: 12 }} />;
-      case 2: return <CommentOutlined style={{ ...iconStyle, color: '#ff4d4f', marginRight: 12 }} />; 
+      case 2: return <MessageOutlined style={{ ...iconStyle, color: '#ff4d4f', marginRight: 12 }} />; 
       case 3: return <UserDeleteOutlined style={{ ...iconStyle, color: '#bfbfbf', marginRight: 12 }} />;
       case 4: return <CommentOutlined style={{ ...iconStyle, color: '#ff4d4f', marginRight: 12 }} />; 
       case 5: return <HeartOutlined style={{ ...iconStyle, color: '#bfbfbf', marginRight: 12 }} />;
@@ -114,7 +114,7 @@ const getActionMessage = (action, target_type_id) => {
   if (action === 'DELETE') {
     if ([1, 2, 4].includes(target_type_id)) return `${targetTypeMap[target_type_id]} 삭제했습니다`;
     if (target_type_id === 3) return `${targetTypeMap[3]} 언팔로우했습니다`;
-    if (target_type_id === 5) return `${targetTypeMap[5]} 철회했습니다`;
+    if (target_type_id === 5) return `${targetTypeMap[5]} 취소했습니다`;
   }
   // 기본값
   return `${targetTypeMap[target_type_id] || ''} ${action}`;
