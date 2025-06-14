@@ -53,7 +53,7 @@ const adminPostsRouter = require('./routes/adminPosts');
 const logRouter = require('./routes/log'); //윤기추가
 const userPoint = require('./routes/userPoint'); // 준혁
 const mentionUserRouter = require('./routes/mentionUser'); //재원 맨션
-
+const initDummyUsers = require('./utils/init/initDummyUsers'); //윤기
 
 // .env 적용
 dotenv.config();
@@ -91,7 +91,7 @@ app.use(passport.session()); //##윤기
 db.sequelize.sync()
   .then(async () => {
     console.log('DB 연결 성공');
-
+    await initDummyUsers(); //## 윤기추가
     await initUserStatus();   //## 윤기 추가
     await initMembership();    //## 윤기 추가
     await initMyTeam();     //## 윤기 추가
