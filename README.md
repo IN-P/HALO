@@ -1,18 +1,8 @@
 # HALO
-> 리드미 뼈대만 잡았어요 나중에 입맛대로 수정해요! 이게 정답은 아니니까
+> HALO는 소셜미디어(SNS), 실시간 커뮤니케이션, 결제 기반 멤버십 시스템이 통합된 플랫폼입니다.
   
 ---
-# 링크 바로가기 ( 이파트는 나중에 삭제하시면 됩니다)
-- (구글 공유시트)[https://docs.google.com/spreadsheets/d/14VBShfAerDHdVO0Yvr8Ct_cezvB2znE-J5dq9IzkbRI/edit?gid=0#gid=0]
-- (썜 블로그)[https://hi-sally03915.tistory.com/1786]
-- (react+node+몽고db 채팅앱 만들기 예시)[https://www.youtube.com/watch?v=uE9Ncr6qInQ&t=284s]
-- (참고할만한 프로젝트 github)[https://github.com/SeungjaeLee00/Instagram_Clone]
-- (그록 ai)[https://grok.com/]
-- (재미나이 ai)[https://gemini.google.com/?hl=ko]
 
-
-
----
 
 ## 프로젝트 소개:
 
@@ -23,7 +13,48 @@
 ## 주요기능 :
 
 ---
-## 인증 및 보안 (따로 md만들어도 됨)
+## 인증 및 보안
+
+HALO는 사용자 인증과 보안 강화를 위해 다음과 같은 기능을 직접 구현했습니다.
+
+###  로그인 및 인증 방식
+- **로컬 로그인**: 이메일 + 비밀번호 기반 (`Passport-Local`)
+- **간편 로그인**: 카카오, 구글 OAuth2 로그인 지원
+- **세션 기반 인증**: `express-session` + `cookie-parser` 기반 세션 로그인 처리
+- **비밀번호 보안**: `bcrypt`로 해시 처리하여 안전하게 저장
+- **XSS/Injection 방어**: 입력값 필터링 + Sequelize ORM의 이스케이핑 기능 이용
+
+###  계정 상태 및 복구
+- **소프트 딜리트 방식**: 탈퇴 시 30일간 `users.deleted = true` 처리 후 보관
+- **계정 상태 분기**: `user_status` 필드로 탈퇴 / 휴면 / 정지 계정 구분
+- **이메일 인증 기반 복구**:
+  - 탈퇴 계정 복구 (`/user/restore`)
+  - 휴면 계정 복구 (자동/수동 분기)
+  - 비밀번호 재발급 기능 포함
+
+###  관리자 권한 기반 제어
+- `role` 값(0~13) 기반 접근 제한
+- 관리자 전용 페이지는 role 체크 미들웨어로 보호
+- 유저 관리자, 보안 관리자, 마스터 관리자만 민감 데이터 접근 가능
+
+###  보안 로그 시스템
+- **중요 이벤트 기록**: 회원가입, 로그인 시도, 관리자 접근, 결제, 유저 제재 등 로그 저장
+- **로그 저장 위치**: `utils/logs/` 내 파일 기반 로그 기록
+- **조회 제한**: 로그 접근은 `보안 관리자(role=6)` 이상만 가능
+
+###  자동화 공격 탐지 기능
+- **탐지 이벤트**:
+  - 반복 로그인 시도 (로그인 시도 횟수 기록)
+  - 탈퇴/정지된 계정의 접근 시도
+  - 빠른 클릭/접속 패턴 (User-Agent 기반 접근 분석 포함)
+- **탐지 시 처리 방식**:
+  - 로그로 기록 후 관리자 알림
+  - 설계상 샌드박스 진입 구조를 고려하였으나 현재는 경고 메시지 및 로그 처리
+
+---
+
+※ 실제 블록체인 로그 시스템은 미구현이며, 향후 확장 가능성으로만 고려 중입니다.
+
 
 
 ---
@@ -39,54 +70,56 @@
 
 ## 기술 스택 (Tech Stack)
 
-### Frontend
+#### 프론트엔드 환경 (Next.js 기반)
+| 항목 | 버전 | 용도 |
+|------|--------|------|
+| Node.js | **v22.15.0** | 전체 자바스크립트 런타임 |
+| NPM | **v10.9.2** | 패키지 설치 및 관리 |
+| Next.js | ^13.4.13 | SSR 지원 React 프레임워크 |
+| React | ^18.3.1 | UI 컴포넌트 구성 라이브러리 |
+| Redux | ^4.0.5 | 글로벌 상태 관리 |
+| Redux-Saga | ^1.1.3 | 비동기 사이드이펙트 처리 |
+| Styled-Components | ^5.3.11 | CSS-in-JS 방식 스타일링 |
+| Ant Design | ^4.24.16 | UI 컴포넌트 프레임워크 |
+| Framer-Motion | ^12.17.0 | 애니메이션 및 인터랙션 |
+| React-Slick | ^0.30.3 | 슬라이더/캐러셀 구현 |
+| Immer | ^9.0.19 | 상태 불변성 유지 보조 |
+| Axios | ^1.9.0 | HTTP 통신 (API 요청) |
+| Lottie / Lottie-Player | ^2.x | JSON 기반 애니메이션 표시 |
+| Shortid | ^2.2.15 | 고유 ID 생성 |
+| Prop-Types | ^15.8.1 | 컴포넌트 타입 검사 |
 
-- Next.js 13.4.13 - React 기반 프레임워크 (SSR 및 라우팅 지원)
-- React 18.3.1 - UI 컴포넌트 기반 라이브러리
-- Redux 4.0.5 - 상태 관리 라이브러리
-- Redux-Saga 1.1.3 - Redux를 위한 사이드 이펙트 처리 미들웨어
-- Next-Redux-Wrapper 8.1.0 - Next.js에서 Redux 상태 유지용 래퍼
-- Styled-Components 5.3.11 - CSS-in-JS 스타일링 도구
-- Ant Design (antd) 4.24.16 - UI 컴포넌트 프레임워크
-- @ant-design/icons 5.6.1 - Ant Design 아이콘 패키지
-- React-Slick 0.30.3 - 슬라이드/캐러셀 구현용 컴포넌트
-- Immer 9.0.19 - 불변성 유지를 위한 상태 관리 유틸
-- Shortid 2.2.15 - 고유 ID 생성 라이브러리
-- Prop-Types 15.8.1 - 런타임 타입 체크 도구
+####  백엔드 환경 (Node.js + Express)
+| 항목 | 버전 | 용도 |
+|------|--------|------|
+| Node.js | **v22.15.0** | 서버 실행 및 API 처리 |
+| NPM | **v10.9.2** | 백엔드 의존성 관리 |
+| Express | ^5.1.0 | 웹 서버 및 REST API 프레임워크 |
+| Sequelize | ^6.37.7 | ORM: DB 테이블 관리 |
+| Sequelize CLI | ^6.6.3 | 마이그레이션 및 모델 자동화 |
+| MySQL2 | ^3.14.1 | MySQL 연결용 드라이버 |
+| Passport | ^0.7.0 | 인증 처리 프레임워크 |
+| Passport-Local | ^1.0.0 | 기본 이메일+비밀번호 로그인 |
+| Passport-Kakao | ^1.0.1 | 카카오 간편 로그인 |
+| Passport-Google | ^2.0.0 | 구글 간편 로그인 |
+| Bcrypt | ^6.0.0 | 비밀번호 해시 처리 |
+| Express-Session | ^1.18.1 | 세션 기반 로그인 관리 |
+| Cookie-Parser | ^1.4.7 | 쿠키 읽기 및 파싱 |
+| Dotenv | ^16.5.0 | 환경변수 설정(.env) 로드 |
+| Multer | ^2.0.0 | 이미지 및 파일 업로드 |
+| Morgan | ^1.10.0 | 요청 로깅 (로그 미들웨어) |
+| Cors | ^2.8.5 | CORS 설정 (프론트-백 연결 허용) |
+| Nodemailer | ^7.0.3 | 이메일 발송 기능 |
+| Node-Cron | ^4.1.0 | 예약 작업 실행 (예: 자동 삭제) |
+| OpenAI | ^5.3.0 | AI 자동화 기능 테스트용 |
+| Socket.io | ^4.8.1 | 실시간 채팅 및 알림 |
+| Express-Socket.io-Session | ^1.3.5 | 세션 기반 실시간 통신 연동 |
+| Moment / Timezone | ^2.x / ^0.6.0 | 날짜/시간 포맷 처리 |
 
-#### 프론트엔드 개발 도구
-
-- @faker-js/faker 9.8.0 - 더미 데이터 생성 라이브러리
-- ESLint-Airbnb 설정
-  - babel-eslint 10.1.0
-  - eslint-config-airbnb 18.1.0
-  - eslint-plugin-import 2.20.2
-  - eslint-plugin-jsx-a11y 6.2.3
-  - eslint-plugin-react-hooks 4.0.4
-
-### Backend
-
-- Express 5.1.0 - Node.js 웹 프레임워크
-- Sequelize 6.37.7 - ORM(Object-Relational Mapping)
-- Sequelize-CLI 6.6.3 - 마이그레이션 및 모델 생성 툴
-- MySQL2 3.14.1 - MySQL 드라이버
-- Passport 0.7.0 - 인증 미들웨어
-- Passport-Local 1.0.0 - 로컬 전략 인증 처리
-- Bcrypt 6.0.0 - 비밀번호 해싱 라이브러리
-- Express-Session 1.18.1 - 세션 관리 미들웨어
-- Cookie-Parser 1.4.7 - 쿠키 파싱 미들웨어
-- Dotenv 16.5.0 - 환경변수 관리
-- Morgan 1.10.0 - 요청 로깅 미들웨어
-- CORS 2.8.5 - Cross-Origin 설정 미들웨어
-- Multer 2.0.0 - 파일 업로드 미들웨어
-
-#### 백엔드 개발 도구
-
-- Nodemon 2.0.22 - 서버 자동 재시작 도구
-
-#### 데이터베이스
-
-- MySQL 8. 몇버전이지
+####  데이터베이스
+| 항목 | 버전 | 용도 |
+|------|--------|------|
+| MySQL | **8.0.41** | 관계형 DB, 사용자/게시글/결제 등 저장소 |
 
 ---
 ## 협업 도구
