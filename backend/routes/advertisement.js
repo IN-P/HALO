@@ -11,10 +11,10 @@ const { Op } = require('sequelize');
 
 // 광고 이미지 업로드 폴더 체크
 try {
-  fs.accessSync('uploads/advertisement_uploads');
+  fs.accessSync('uploads/advertisement');
 } catch (error) {
   console.log('advertisement_uploads 폴더가 없으면 생성합니다.');
-  fs.mkdirSync('advertisement_uploads');
+  fs.mkdirSync('uploads/advertisement');
 }
 
 const uploadAdvertisementImage = multer({
