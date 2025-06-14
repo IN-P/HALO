@@ -7,6 +7,7 @@ import { LOAD_USER_NOTIFICATION_REQUEST, IS_READ_TRUE_REQUEST, DELETE_NOTIFICATI
 import { setChatRooms } from '../reducers/chatReducer_JW';
 import socket, { registerUserSocket, subscribeToNotifications, unsubscribeFromNotifications } from '../socket';
 import axios from 'axios';
+import styled from 'styled-components';
 
 const AppLayout = ({ children }) => {
   const dispatch = useDispatch();
@@ -183,21 +184,33 @@ useEffect(() => {
     };
   }, [dispatch, chatRooms]);
 
+  const [windowWidth, setWindowWidth] = useState(0);
+  useEffect(() => {
+    setWindowWidth(window.innerWidth);
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  const RightSidebarLimit = windowWidth > 1720;
+  const LeftSidebarLimit = windowWidth > 1580;
+
   // ✅ 화면 렌더링
   return (
     <div style={{ display: 'flex' }}>
       {/* 좌측 고정 사이드바 */}
-      <Sidebar
-        showNotification={showNotification}
-        onToggleNotification={onToggleNotification}
-        notificationCount={notificationCount}
-        importantCount={importantCount}
-        themeMode={themeMode}
-        onToggleTheme={handleToggleTheme}
-      />
+      { LeftSidebarLimit && (  
+        <Sidebar
+          showNotification={showNotification}
+          onToggleNotification={onToggleNotification}
+          notificationCount={notificationCount}
+          importantCount={importantCount}
+          themeMode={themeMode}
+          onToggleTheme={handleToggleTheme}
+        />
+      )}
 
       {/* 알림창 팝업 */}
-      {showNotification && (
+      {showNotification && LeftSidebarLimit && (
         <div style={{
           position: 'fixed',
           top: 0,
@@ -217,7 +230,7 @@ useEffect(() => {
       {/* 메인 콘텐츠 */}
       <div
         style={{
-          marginLeft: 240,
+          marginLeft: LeftSidebarLimit ? 240 : 0,
           flex: 1,
           padding: 24,
           minHeight: '100vh',
@@ -229,7 +242,9 @@ useEffect(() => {
       </div>
 
       {/* 우측 사이드바 */}
-      <RightSidebar />
+      { RightSidebarLimit && (  
+        <RightSidebar />
+      )}
     </div>
   );
 };

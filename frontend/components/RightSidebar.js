@@ -106,17 +106,65 @@ const RightSidebar = () => {
             flexDirection: 'column'
         }}>
             {/*미니 프로필 영역*/}
-            <div onClick={() => window.location.href = `http://localhost:3000/profile/${user?.id}`} 
-                style={{
+            <div 
+            onClick={() => window.location.href = `http://localhost:3000/profile/${user?.id}`} 
+            style={{
                 marginBottom: 24,
-                padding: 16,
+                padding: 12,
                 border: '1px solid #ddd',
                 borderRadius: 8,
-                textAlign: 'center',
-                cursor:"pointer",
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                cursor: 'pointer',
+                backgroundColor: '#fafafa',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+            }}
+            onMouseEnter={e => {
+                e.currentTarget.style.transform = 'scale(1.02)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+            }}
+            onMouseLeave={e => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = 'none';
+            }}
+            >
+                        {/* 프로필 이미지 */}
+            <div style={{
+            width: 48,
+            height: 48,
+            borderRadius: '50%',
+            backgroundColor: '#e0e0e0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+            flexShrink: 0,
             }}>
-                <strong>{user?.nickname}</strong>
-                <div style={{ fontSize: 12, color: '#888' }}>{user?.email}</div>
+            {user?.profile_img ? (
+                <img 
+                src={`http://localhost:3065${user?.profile_img}`} 
+                alt="프로필 이미지"
+                style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                }}
+                />
+            ) : (
+                <div style={{
+                fontWeight: 'bold',
+                fontSize: 18,
+                color: '#555',
+                }}>
+                {user?.nickname?.charAt(0) || 'U'}
+                </div>
+            )}
+            </div>
+                {/* 닉네임*/}
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontWeight: 'bold', fontSize: 16 }}>{user?.nickname}</span>
+                </div>
             </div>
 
             {/* 일반회원: 날씨 / 관리자: 버튼 */}
