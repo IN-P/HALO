@@ -135,74 +135,31 @@ const API_URL = 'http://localhost:3065';
   };
 
   return (
-    <div
-      style={{
-        width: '600px',
-        maxHeight: '80vh',
-        background: '#fff',
-        border: '1px solid #ccc',
-        borderRadius: '12px',
-        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
-        padding: 20,
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-      }}
-    >
+    <div className="chat-room-container">
       {/* 상단 타이틀 */}
-      <h2 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
-        <span>💬 {selectedUser.nickname}님과의 채팅</span>
+<h2 className="chat-room-header">
+  <span>💬 {selectedUser.nickname}님과의 채팅</span>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
-          {/* 닫기 버튼 */}
-          <button
-            onClick={() => {
-              socket.emit('leave_room', me.id);
-              onClose();
-            }}
-            style={{
-              padding: '4px 10px',
-              background: '#eee',
-              border: '1px solid #ccc',
-              borderRadius: '6px',
-              cursor: 'pointer',
-            }}
-          > 
-            닫기
-          </button>
+  <div className="chat-room-header-buttons">
+    <button className="chat-close-button" onClick={() => {
+      socket.emit('leave_room', me.id);
+      onClose();
+    }}>
+      닫기
+    </button>
 
-          {/* ... 버튼 */}
-          <button
-            onClick={() => setShowReportMenu((prev) => !prev)}
-            style={{
-              padding: '4px 10px',
-              background: '#eee',
-              border: '1px solid #ccc',
-              borderRadius: '6px',
-              cursor: 'pointer',
-            }}
-          >
-            ...
-          </button>
+    <button className="chat-menu-button" onClick={() => setShowReportMenu(prev => !prev)}>
+      ...
+    </button>
 
           {/* 신고 드롭다운 메뉴 */}
-          {showReportMenu && (
-            <div style={{
-              position: 'absolute',
-              top: '40px',
-              right: 0,
-              background: '#fff',
-              border: '1px solid #ccc',
-              borderRadius: '6px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              zIndex: 1000,
-              padding: '8px',
-            }}>
-              <ReportButton onClick={() => {
-                setShowReportModal(true);
-                setShowReportMenu(false);
-              }} />
-            </div>
+    {showReportMenu && (
+      <div className="report-menu-dropdown">
+        <ReportButton onClick={() => {
+          setShowReportModal(true);
+          setShowReportMenu(false);
+        }} />
+      </div>
           )}
         </div>
       </h2>
@@ -213,17 +170,7 @@ const API_URL = 'http://localhost:3065';
         id="chat-box"
         ref={chatBoxRef}
         onScroll={handleScroll}
-        style={{
-          flex: 1,
-          border: '1px solid #ccc',
-          padding: '16px',
-          overflowY: 'auto',
-          marginBottom: '12px',
-          minHeight: '400px',
-          maxHeight: '500px',
-          borderRadius: '8px',
-          background: '#fafafa',
-        }}
+        className="chat-box"
       >
         {log.map((msg, idx) => {
           console.log('msg.id:', msg.id, typeof msg.id, 'msg.is_read:', msg.is_read);
@@ -333,11 +280,11 @@ const API_URL = 'http://localhost:3065';
 
      {/* 메시지 입력 */}
 {isBlockedByMe ? (
-  <div style={{ textAlign: 'center', color: '#999', padding: '16px' }}>
+  <div className="chat-blocked-message">
     ⚠️ 차단한 유저입니다. 메시지를 보낼 수 없습니다.
   </div>
 ) : (
-  <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+  <div className="chat-input-container">
     <input
       value={message}
       onChange={(e) => setMessage(e.target.value)}
@@ -348,28 +295,12 @@ const API_URL = 'http://localhost:3065';
       }}
       placeholder="메시지를 입력하세요"
       disabled={isBlockingMe}
-      style={{
-        flex: 1,
-        padding: '12px 16px',
-        fontSize: '16px',
-        borderRadius: '8px',
-        border: '1px solid #ccc',
-        background: isBlockingMe ? '#f2f2f2' : 'white',
-        color: isBlockingMe ? '#aaa' : 'black',
-      }}
+      className={`chat-input ${isBlockingMe ? 'blocked' : ''}`}
     />
     <button
       onClick={onSendMessage}
       disabled={isBlockingMe}
-      style={{
-        padding: '12px 20px',
-        fontSize: '16px',
-        borderRadius: '8px',
-        border: 'none',
-        background: isBlockingMe ? '#ccc' : '#4a90e2',
-        color: '#fff',
-        cursor: isBlockingMe ? 'not-allowed' : 'pointer',
-      }}
+      className={`chat-send-button ${isBlockingMe ? 'blocked' : ''}`}
     >
       {isBlockingMe ? '전송 불가' : '전송'}
     </button>
@@ -377,7 +308,7 @@ const API_URL = 'http://localhost:3065';
 )}
 
 {isBlockingMe && !isBlockedByMe && (
-  <div style={{ color: '#f00', fontSize: 12, textAlign: 'right', marginTop: 4 }}>
+  <div className="chat-blocked-alert">
     ⚠️ 메시지를 보낼 수 없습니다.
   </div>
 )}
@@ -385,19 +316,13 @@ const API_URL = 'http://localhost:3065';
 
       {/* 나가기 버튼 */}
       <div style={{ marginTop: '16px', textAlign: 'right' }}>
-        <button
-          onClick={handleExitConfirm}
-          style={{
-            padding: '8px 16px',
-            background: '#f5f5f5',
-            border: '1px solid #ccc',
-            borderRadius: '6px',
-            cursor: 'pointer',
-          }}
-        >
-          나가기
-        </button>
-      </div>
+  <button
+    onClick={handleExitConfirm}
+    className="chat-exit-button"
+  >
+    나가기
+  </button>
+</div>
       <ReportModal
         visible={showReportModal}
         onClose={() => setShowReportModal(false)}

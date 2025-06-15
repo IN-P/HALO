@@ -47,31 +47,27 @@ const ImportantNotificationCount = styled.span`
 `
 
 // 재사용 가능한 버튼 컴포넌트
-const SidebarButton = ({ icon, children, onClick }) => {
-  const [hover, setHover] = useState(false);
 
+const SidebarButton = ({ icon, children, onClick }) => {
   return (
     <Button
+      className="sidebar-btn"
       icon={icon}
       block
       type="text"
       onClick={onClick}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
       style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'flex-start',
         padding: '12px 12px',
-        background: hover
-          ? 'linear-gradient(90deg, #f0faff 0%, #d0eaff 100%)'
-          : 'transparent',
+        backgroundColor: 'transparent',
         boxShadow: 'none',
-        transition: 'background 0.3s ease',
+        transition: 'all 0.2s ease-in-out',
         outline: 'none',
         border: 'none',
         borderRadius: '6px',
-        color: '#333',
+        color: 'inherit',
         textAlign: 'left',
       }}
     >
@@ -80,16 +76,19 @@ const SidebarButton = ({ icon, children, onClick }) => {
   );
 };
 
+
 // 준혁 추가 : 알림창 토글 상태 showNotification, onToggleNotification, notificationCount
 const Sidebar = ({ showNotification, onToggleNotification, notificationCount, themeMode, onToggleTheme, importantCount }) => {
   const router = useRouter();
   const dispatch = useDispatch(); //  윤기 추가: 로그아웃 디스패치
 
   return (
-    <div style={{
+    <div 
+    className="custom-sidebar"
+    style={{
       width: 240,
       height: '100vh',
-      background: '#fff',
+      //background: '#fff',
       borderRight: '1px solid #eee',
       display: 'flex',
       flexDirection: 'column',
@@ -112,9 +111,22 @@ const Sidebar = ({ showNotification, onToggleNotification, notificationCount, th
             <SidebarButton icon={<EditOutlined />}>게시물 작성</SidebarButton>
           </Link>
           {/* 준혁 추가 : 알림창 토글 onClick={onToggleNotification} active={showNotification} */}
-          <SidebarButton icon={<BellOutlined />} onClick={onToggleNotification} active={showNotification}>알림
-          {notificationCount > 0 && ( <NotificationCount>{notificationCount > 99 ? '99+' : notificationCount}</NotificationCount> )}
-          {importantCount > 0 && ( <ImportantNotificationCount>{importantCount > 99 ? '99+' : importantCount} !</ImportantNotificationCount> )}
+          <SidebarButton
+            icon={<BellOutlined />}
+            onClick={onToggleNotification}
+            warning={importantCount > 0} // 여기 추가!
+          >
+            알림
+            {notificationCount > 0 && (
+              <NotificationCount>
+                {notificationCount > 99 ? '99+' : notificationCount}
+              </NotificationCount>
+            )}
+            {importantCount > 0 && (
+              <ImportantNotificationCount>
+                {importantCount > 99 ? '99+' : importantCount} !
+              </ImportantNotificationCount>
+            )}
           </SidebarButton>         
           <Link href="/chat" passHref>
             <SidebarButton icon={<MessageOutlined />}>채팅 (DM)</SidebarButton>

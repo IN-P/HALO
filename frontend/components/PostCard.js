@@ -69,17 +69,23 @@ const PostCard = ({ post }) => {
   }
   const myRegram = !!myRegramPost;
 
-  let regramIconColor = '#000';
-  let regramDisabled = false;
-  let regramTooltip = '리그램하기';
-  if (isRegram && origin && origin.private_post && origin.user_id !== user?.id) {
-    regramDisabled = true;
-    regramTooltip = '비공개(나만보기) 원본글입니다.';
-  } else if (myRegram) {
-    regramIconColor = '#32e732';
-    regramTooltip = '이미 리그램한 글입니다.';
-  }
-  if (isRegram && !origin) return null;
+let regramIconColor = '#000';
+let regramDisabled = false;
+let regramTooltip = '리그램하기';
+
+if (isRegram && origin && origin.private_post && origin.user_id !== user?.id) {
+  regramDisabled = true;
+  regramTooltip = '비공개(나만보기) 원본글입니다.';
+} else if (myRegram) {
+  regramIconColor = '#32e732';
+  regramTooltip = '이미 리그램한 글입니다.';
+} else {
+  // ✅ 현재 body에 다크모드 클래스가 붙었는지만 확인
+  const isDark = typeof window !== 'undefined' && document.body.classList.contains('dark-mode');
+  regramIconColor = isDark ? '#ccc' : '#000';
+}
+
+if (isRegram && !origin) return null;
 
   const liked = basePost.Likers?.some((u) => u.id === user?.id);
   const bookmarked = basePost.Bookmarkers?.some((u) => u.id === user?.id);
@@ -150,7 +156,7 @@ const PostCard = ({ post }) => {
     });
 
   return (
-    <div style={{ display: 'flex', background: '#fff', borderRadius: 20, boxShadow: '0 3px 16px rgba(0,0,0,0.12)', margin: '32px 0', overflow: 'hidden', position: 'relative', width: IMAGE_SIZE.width + 480 }}>
+    <div className="post-card" style={{ display: 'flex', borderRadius: 20, boxShadow: '0 3px 16px rgba(0,0,0,0.12)', margin: '32px 0', overflow: 'hidden', position: 'relative', width: IMAGE_SIZE.width + 480 }}>
       <div style={{ width: IMAGE_SIZE.width, height: IMAGE_SIZE.height, position: 'relative', background: '#eee', flexShrink: 0 }}>
         {currentImages.length > 0 ? (
           <img src={`http://localhost:3065/uploads/post/${currentImages[imageIndex]?.src}`} alt=""
@@ -165,7 +171,7 @@ const PostCard = ({ post }) => {
         )}
       </div>
 
-      <div style={{ flex: 1, height: IMAGE_SIZE.height, display: 'flex', flexDirection: 'column', background: '#fff', minWidth: 390, boxSizing: 'border-box', padding: '20px 24px', overflowX: 'hidden' }}>
+      <div className="post-card-content" style={{ flex: 1, height: IMAGE_SIZE.height, display: 'flex', flexDirection: 'column', minWidth: 390, boxSizing: 'border-box', padding: '20px 24px', overflowX: 'hidden' }}>
         {isRegram && (<div style={{ display: 'flex', alignItems: 'center', color: '#0088ff', fontWeight: 600, fontSize: 15, marginBottom: 4, gap: 5 }}><FaRetweet />재게시했습니다</div>)}
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
           <img src={feedProfileImg ? `http://localhost:3065${feedProfileImg}` : 'http://localhost:3065/img/profile/default.jpg'} alt="프로필"
@@ -196,7 +202,7 @@ const PostCard = ({ post }) => {
           <button style={iconBtnStyle} onClick={bookmarked ? onUnbookmark : onBookmark}>{bookmarked ? <FaBookmark color="#007bff" /> : <FaRegBookmark />}<span style={countStyle}>{bookmarkCount}</span></button>
           <button style={iconBtnStyle} onClick={handleCopyLink} title="공유 링크 복사"><FaShareAlt /><span style={{ fontSize: 16, marginLeft: 2, fontWeight: 500 }}>공유</span></button>
         </div>
-        <div style={{ margin: '20px 0 0 0', flex: 1, minHeight: 0 }}>
+        <div className="comment-preview-wrapper"  style={{ margin: '20px 0 0 0', flex: 1, minHeight: 0 }}>
           <CommentPreview postId={post.id} onShowDetailModal={onShowDetailModal} />
         </div>
         {showReportModal && <ReportModal visible={showReportModal} postId={post.id} onClose={() => setShowReportModal(false)} targetType={1} />}
@@ -209,7 +215,7 @@ const PostCard = ({ post }) => {
 };
 
 const arrowBtnStyle = { position: 'absolute', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.4)', color: '#fff', border: 'none', borderRadius: '50%', width: 48, height: 48, fontSize: 28, cursor: 'pointer', zIndex: 1 };
-const iconBtnStyle = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 26, color: '#444', outline: 'none', display: 'flex', alignItems: 'center', gap: 4 };
-const countStyle = { fontSize: 16, marginLeft: 4, color: '#444', minWidth: 18, textAlign: 'right', fontWeight: 600 };
+const iconBtnStyle = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 26, color: 'inherit', outline: 'none', display: 'flex', alignItems: 'center', gap: 4 };
+const countStyle = { fontSize: 16, marginLeft: 4, color: 'inherit', minWidth: 18, textAlign: 'right', fontWeight: 600 };
 
 export default PostCard;

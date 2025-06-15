@@ -15,14 +15,15 @@ const SearchModal = ({ onClose, onUserSelect, userMap }) => {
   );
 
   return (
-    <div style={{
+    <div 
+    className="search-modal"
+    style={{
       position: 'absolute',
       top: '450px',
       left: '50%',
       transform: 'translateX(-50%)',
       width: '400px',
       maxHeight: '60%',
-      backgroundColor: 'white',
       border: '1px solid #ccc',
       borderRadius: '8px',
       boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
@@ -39,16 +40,7 @@ const SearchModal = ({ onClose, onUserSelect, userMap }) => {
         marginBottom: '15px'
       }}>
         <h3 style={{ margin: 0 }}>새로운 채팅 시작</h3>
-        <button
-          onClick={onClose}
-          style={{
-            background: 'none',
-            border: 'none',
-            fontSize: '24px',
-            cursor: 'pointer',
-            color: '#555'
-          }}
-        >
+        <button onClick={onClose} className="search-close-btn">
           &times;
         </button>
       </div>
@@ -59,13 +51,7 @@ const SearchModal = ({ onClose, onUserSelect, userMap }) => {
         placeholder="닉네임을 검색하세요."
         value={searchTerm}
         onChange={handleSearchChange}
-        style={{
-          width: 'calc(100% - 20px)',
-          padding: '10px',
-          borderRadius: '5px',
-          border: '1px solid #ddd',
-          marginBottom: '15px'
-        }}
+        className="search-input"
       />
 
       {/* 검색 결과 목록 */}
@@ -75,25 +61,7 @@ const SearchModal = ({ onClose, onUserSelect, userMap }) => {
             <div
               key={user.id}
               onClick={() => onUserSelect(user)}
-              style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '10px 15px',
-                  cursor: 'pointer',
-                  background: 'linear-gradient(to bottom, #a8ddf7, #d0e8ff)',
-                  borderRadius: '16px',
-                  marginBottom: '10px',
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
-                }}
+              className="search-user-card"
             >
               <img
                 src={user.profileImage ? `${API_URL}${user.profileImage}` : '/default.png'}
