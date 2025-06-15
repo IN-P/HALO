@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import useDebounce from '../hooks/useDebounce'; // ✅ 이거 import 해서 쓰면 됨
+import useDebounce from '../hooks/useDebounce';
 
 const MentionInput = ({ onMentionSelect }) => {
   const [inputValue, setInputValue] = useState('');
@@ -8,7 +8,6 @@ const MentionInput = ({ onMentionSelect }) => {
   const [mentionResults, setMentionResults] = useState([]);
   const [showMentionList, setShowMentionList] = useState(false);
 
-  // debounce 적용된 mentionQuery
   const debouncedMentionQuery = useDebounce(mentionQuery, 300);
 
   useEffect(() => {
@@ -24,7 +23,6 @@ const MentionInput = ({ onMentionSelect }) => {
       const response = await axios.get(`/mention/users?q=${encodeURIComponent(query)}&limit=5`);
       setMentionResults(response.data);
     } catch (error) {
-      console.error('mention user fetch error:', error);
     }
   };
 

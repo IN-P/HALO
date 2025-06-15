@@ -13,7 +13,6 @@ const { Op } = require('sequelize');
 try {
   fs.accessSync('uploads/advertisement_uploads');
 } catch (error) {
-  console.log('advertisement_uploads 폴더가 없으면 생성합니다.');
   fs.mkdirSync('uploads/advertisement_uploads');
 }
 
@@ -48,14 +47,12 @@ router.post('/', isAdmin, async (req, res, next) => {
 
     res.status(201).json(advertisement);
   } catch (error) {
-    console.error(error);
     next(error);
   }
 });
 
 // 이미지 업로드
 router.post('/image', isAdmin, uploadAdvertisementImage.single('image'), (req, res, next) => {
-  console.log(req.file);
   if (req.file) {
     res.json(req.file.filename);
   } else {
@@ -71,7 +68,6 @@ router.get('/', isAdmin, async (req, res, next) => {
     });
     res.status(200).json(advertisements);
   } catch (error) {
-    console.error(error);
     next(error);
   }
 });
@@ -102,7 +98,6 @@ router.patch('/:id', isAdmin, async (req, res, next) => {
       res.status(404).json({ message: '광고를 찾을 수 없습니다.' });
     }
   } catch (error) {
-    console.error(error);
     next(error);
   }
 });
@@ -125,7 +120,6 @@ router.delete('/:id', isAdmin, async (req, res, next) => {
       res.status(404).json({ message: '광고를 찾을 수 없습니다.' });
     }
   } catch (error) {
-    console.error(error);
     next(error);
   }
 });
@@ -146,7 +140,6 @@ router.get('/active', async (req, res, next) => {
 
     res.status(200).json(activeAds);
   } catch (error) {
-    console.error(error);
     next(error);
   }
 });
@@ -159,7 +152,6 @@ router.get('/:id', async (req, res, next) => {
     }
     res.status(200).json(ad);
   } catch (error) {
-    console.error(error);
     next(error);
   }
 });
