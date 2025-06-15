@@ -29,15 +29,11 @@ export const getServerSideProps = wrapper.getServerSideProps(async (context) => 
     const chatRoomsResponse = await axios.get('http://localhost:3065/api/chat/my-rooms', { withCredentials: true });
     const userResponse = await axios.get('http://localhost:3065/api/user', { withCredentials: true });
 
-        console.log('✅ GSSP chatRooms:', chatRoomsResponse.data);
-    console.log('✅ GSSP user:', userResponse.data);
-
     context.store.dispatch(setChatRooms(chatRoomsResponse.data));
     context.store.dispatch(setMe(userResponse.data));
 
     return { props: {} };
   } catch (error) {
-    console.error('❌ 서버에서 데이터 로드 실패:', error);
     return { props: {} };
   }
 });
@@ -58,7 +54,7 @@ const ChatPage = () => {
   const chatBoxRef = useRef();
   const [userMap, setUserMap] = useState({});
   const [selectedChatRoomId, setSelectedChatRoomId] = useState(null);
-  //const [skipAutoSelect, setSkipAutoSelect] = useState(false);
+
 const skipAutoSelect = useRef(false);
 
 const memoizedDataForSearch = useMemo(() => {
@@ -75,7 +71,6 @@ const memoizedDataForSearch = useMemo(() => {
     : null;
 
     useEffect(() => {
-  console.log('✅ selectedUser:', selectedUser);
 }, [selectedUser]);
 
   useEffect(() => {
@@ -92,7 +87,6 @@ const memoizedDataForSearch = useMemo(() => {
         setUserMap(map);
       })
       .catch(err => {
-        console.error('❌ 유저 목록 불러오기 실패:', err);
       });
   }, []);
 
@@ -129,10 +123,8 @@ const memoizedDataForSearch = useMemo(() => {
   axios.get('http://localhost:3065/api/chat/my-rooms', { withCredentials: true })
     .then((res) => {
       dispatch(setChatRooms(res.data));
-      console.log('🌍 exit_room_success 후 my-rooms 갱신:', res.data);
     })
     .catch((err) => {
-      console.error('❌ exit_room_success 후 my-rooms 갱신 실패:', err);
     });
 }, [dispatch]);
 
@@ -155,30 +147,25 @@ const memoizedDataForSearch = useMemo(() => {
   }, [me]);
 
   useEffect(() => {
-  console.log('🟢 roomId 변경됨:', roomId);
 }, [roomId]);
 
   useEffect(() => {
-  console.log('🔍 selectedUser effect triggered:', selectedUser, chatRooms.length, userMap);
   if (!skipAutoSelect.current && !selectedUser && chatRooms.length > 0) { // ✅ 수정
     const firstRoom = chatRooms[0];
     const otherUser = firstRoom.otherUser || userMap[firstRoom.userId];
     if (otherUser) {
       dispatch(setSelectedUser(otherUser));
-      console.log('✅ selectedUser 자동 설정:', otherUser);
     }
   }
 }, [selectedUser, chatRooms, userMap, dispatch, skipAutoSelect]);
 
   useEffect(() => {
     if (me && me.id && chatRooms.length === 0) {
-      console.log('📌 useEffect chatRooms.length === 0 트리거됨');
       axios.get('http://localhost:3065/api/chat/my-rooms', { withCredentials: true })
         .then(res => {
           dispatch(setChatRooms(res.data));
         })
         .catch(err => {
-          console.error('❌ 채팅방 목록 불러오기 실패:', err);
         });
     }
   }, [dispatch, me, chatRooms.length]);
@@ -195,7 +182,6 @@ const memoizedDataForSearch = useMemo(() => {
           dispatch(setChatRooms(res.data));
         })
         .catch((err) => {
-          console.error('❌ my-rooms 갱신 실패:', err);
         });
     };
 
@@ -257,14 +243,12 @@ const memoizedDataForSearch = useMemo(() => {
     
       dispatch(toggleSearchModal(false));
     } catch (error) {
-      console.error('❌ 채팅방 생성 실패:', error);
       alert(error.response?.data || '채팅방 생성 중 오류가 발생했습니다.');
     }
   }, [dispatch, me]);
 
 useEffect(() => {
   if (roomId && me && selectedUser && chatRooms.length > 0) {
-    console.log('💬 [useEffect] roomId:', roomId, 'selectedUser:', selectedUser);
 
     dispatch(clearLog());
 
@@ -275,7 +259,6 @@ useEffect(() => {
     );
 
     if (existingRoom) {
-      console.log('✅ 기존 채팅방 존재함 → message만 불러오기');
       axios.get(`http://localhost:3065/api/chat/message/${roomId}`, { withCredentials: true })
         .then(getResponse => {
           getResponse.data.reverse().forEach(msg => dispatch(addLog(msg)));
@@ -287,14 +270,11 @@ useEffect(() => {
           socket.emit('join_room', roomId, me.id);
         })
         .catch(error => {
-          console.error('❌ 메시지 로드 실패:', error);
         });
 
     } else {
-      console.log('✅ 기존 채팅방 존재 여부 확인 → allowCreate: false 요청');
       axios.post('http://localhost:3065/api/chat', { targetUserId: selectedUser.id, allowCreate: false }, { withCredentials: true })
         .then(postResponse => {
-          console.log('✅ 기존 채팅방 존재함 → message만 불러오기');
           return axios.get(`http://localhost:3065/api/chat/message/${roomId}`, { withCredentials: true });
         })
         .then(getResponse => {
@@ -308,10 +288,7 @@ useEffect(() => {
         })
         .catch(error => {
           if (error.response && error.response.status === 404) {
-            console.log('✅ 기존 채팅방 없음 → 유저 클릭 시에만 생성해야 함. 여기선 생성 안함.');
-            // 여기서 새로 만들지 않음!! 그냥 selectedUser 유지
           } else {
-            console.error('❌ 채팅방 존재 확인 또는 메시지 로드 실패:', error);
             if (error.response) {
               alert(error.response.data || '채팅방 로드 중 오류가 발생했습니다.');
               dispatch(setSelectedUser(null));
@@ -388,7 +365,7 @@ useEffect(() => {
             />
           )}
 
-          {selectedUser && roomId ? (  // 🚩 여기 selectedUser && roomId 조건!
+          {selectedUser && roomId ? (  
             <div style={{ width: 600, margin: '80px auto 0' }}>
               <ChatRoom
               key={selectedUser.id}
@@ -403,13 +380,10 @@ useEffect(() => {
                 showNewMsgAlert={showNewMsgAlert}
                 handleScroll={handleScroll}
                 onExit={async () => {
-                  console.log('👉 onExit 버튼 클릭됨');
-                  console.log('👉 onExit 시 selectedChatRoomId:', selectedChatRoomId, 'roomId:', roomId);
 
                   let chatRoomIdToUse = selectedChatRoomId;
 
                   if (!chatRoomIdToUse) {
-                    console.warn('⚠️ selectedChatRoomId 없음 → fallback 시도 중');
 
                     try {
                       const chatRoomRes = await axios.get(`http://localhost:3065/api/chat/my-rooms`, { withCredentials: true });
@@ -434,45 +408,34 @@ useEffect(() => {
 
                         if (matchedRoom) {
                           chatRoomIdToUse = matchedRoom.chatRoomId;
-                          console.log('✅ fallback 성공 → chatRoomIdToUse:', chatRoomIdToUse);
                         } else {
-                          console.error('❌ fallback에서도 chatRoomId 못 찾음 → fallback으로 UI 강제 초기화');
-
-                          // 🚩 fallback 실패 시에도 강제로 상태 정리
                           dispatch(setSelectedUser(null));
                           dispatch(clearLog());
 
                           axios.get('http://localhost:3065/api/chat/my-rooms', { withCredentials: true })
                             .then((res) => {
                               dispatch(setChatRooms(res.data));
-                              console.log('🌍 fallback 실패 → 강제 my-rooms 갱신:', res.data);
                             })
                             .catch((err) => {
-                              console.error('❌ fallback 실패 후 my-rooms 갱신 실패:', err);
                             });
 
-                          return; // 기존 유지
+                          return;
                         }
                       }
                     } catch (err) {
-                      console.error('❌ fallback chatRoomId 가져오기 실패:', err);
-                      // fallback 실패 → 그래도 UI는 강제 초기화
                       dispatch(setSelectedUser(null));
                       dispatch(clearLog());
                       axios.get('http://localhost:3065/api/chat/my-rooms', { withCredentials: true })
                         .then((res) => {
                           dispatch(setChatRooms(res.data));
-                          console.log('🌍 fallback 실패 → 강제 my-rooms 갱신:', res.data);
                         })
                         .catch((err) => {
-                          console.error('❌ fallback 실패 후 my-rooms 갱신 실패:', err);
                         });
                       return;
                     }
                   }
 
                   try {
-                    console.log('👉 PATCH /chat/' + chatRoomIdToUse + '/exit 요청 준비됨');
                     await axios.patch(`http://localhost:3065/api/chat/${chatRoomIdToUse}/exit`, {}, { withCredentials: true });
                     dispatch(exitRoom({ roomId, userId: me.id }));
                       skipAutoSelect.current = true;
@@ -480,19 +443,16 @@ useEffect(() => {
                     dispatch(clearLog());
                     
                   } catch (error) {
-                    console.error('❌ PATCH /exit 요청 에러:', error);
 
-                    // 🚩 PATCH 실패 fallback → UI 강제 초기화
+
                    skipAutoSelect.current = true;
                     dispatch(setSelectedUser(null));
                     dispatch(clearLog());
                     axios.get('http://localhost:3065/api/chat/my-rooms', { withCredentials: true })
                       .then((res) => {
                         dispatch(setChatRooms(res.data));
-                        console.log('🌍 PATCH /exit 실패 → 강제 my-rooms 갱신:', res.data);
                       })
                       .catch((err) => {
-                        console.error('❌ PATCH /exit 실패 후 my-rooms 갱신 실패:', err);
                       });
                   }
                 }}

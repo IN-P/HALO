@@ -9,7 +9,7 @@ const SearchModal = ({ onClose, onUserSelect, userMap }) => {
   const [localTerm, setLocalTerm] = useState('');
 
   const { searchTerm, handleSearchChange, filteredData: searchedUsers } = useSearch(
-    '', // 초기 검색어는 빈 문자열
+    '',
     dataForSearch,
     'nickname'
   );
@@ -32,7 +32,7 @@ const SearchModal = ({ onClose, onUserSelect, userMap }) => {
       flexDirection: 'column',
       padding: '20px',
     }}>
-      {/* 팝업창 상단 (제목 및 닫기 버튼) */}
+
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -45,7 +45,7 @@ const SearchModal = ({ onClose, onUserSelect, userMap }) => {
         </button>
       </div>
 
-      {/* 검색 입력창 */}
+
       <input
         type="text"
         placeholder="닉네임을 검색하세요."
@@ -54,7 +54,7 @@ const SearchModal = ({ onClose, onUserSelect, userMap }) => {
         className="search-input"
       />
 
-      {/* 검색 결과 목록 */}
+
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {searchedUsers && searchedUsers.length > 0 ? (
           searchedUsers.map(user => (

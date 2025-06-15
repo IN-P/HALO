@@ -137,6 +137,7 @@ const API_URL = 'http://localhost:3065';
   return (
     <div className="chat-room-container">
       {/* 상단 타이틀 */}
+
 <h2 className="chat-room-header">
   <span>💬 {selectedUser.nickname}님과의 채팅</span>
 
@@ -153,6 +154,7 @@ const API_URL = 'http://localhost:3065';
     </button>
 
           {/* 신고 드롭다운 메뉴 */}
+
     {showReportMenu && (
       <div className="report-menu-dropdown">
         <ReportButton onClick={() => {
@@ -166,6 +168,7 @@ const API_URL = 'http://localhost:3065';
 
 
       {/* 메시지 목록 */}
+
       <div
         id="chat-box"
         ref={chatBoxRef}
@@ -210,6 +213,7 @@ const API_URL = 'http://localhost:3065';
                 )}
 
                 {/* 여기 수정된 부분 */}
+
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -217,6 +221,7 @@ const API_URL = 'http://localhost:3065';
                   gap: 6 // 말풍선과 숫자 간격
                 }}>
                   {/* 숫자 먼저 표시 (왼쪽) */}
+
                   {isMine && (msg.is_read === 0 || msg.is_read === false) && (
                     <div style={{ fontSize: 10, color: 'red', marginTop: 4 }}>
                       1
@@ -224,6 +229,7 @@ const API_URL = 'http://localhost:3065';
                   )}
 
                   {/* 말풍선 */}
+
                   <div
                     style={{
                       display: 'inline-block',
@@ -238,6 +244,7 @@ const API_URL = 'http://localhost:3065';
                 </div>
 
                 {/* 시간 */}
+
                 <div
                   style={{
                     fontSize: 11,
@@ -256,6 +263,7 @@ const API_URL = 'http://localhost:3065';
       </div>
 
       {/* 새 메시지 알림 */}
+
       {showNewMsgAlert && (
         <div
           style={{
@@ -279,6 +287,7 @@ const API_URL = 'http://localhost:3065';
       )}
 
      {/* 메시지 입력 */}
+
 {isBlockedByMe ? (
   <div className="chat-blocked-message">
     ⚠️ 차단한 유저입니다. 메시지를 보낼 수 없습니다.
@@ -315,6 +324,7 @@ const API_URL = 'http://localhost:3065';
 
 
       {/* 나가기 버튼 */}
+
       <div style={{ marginTop: '16px', textAlign: 'right' }}>
   <button
     onClick={handleExitConfirm}

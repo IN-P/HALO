@@ -66,7 +66,7 @@ const MentionTextArea = React.forwardRef(({ value, onChange, placeholder = "댓�
     border: '1px solid #ccc',
     resize: 'none',
     boxSizing: 'border-box',
-    ...style, // ✅ 외부에서 전달된 스타일 반영
+    ...style,
   };
 
   return (

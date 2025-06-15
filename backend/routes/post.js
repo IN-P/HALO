@@ -595,17 +595,7 @@ router.get('/:postId', async (req, res, next) => {
         { model: User, as: 'Likers', attributes: ['id'] },
         { model: User, as: 'Bookmarkers', attributes: ['id'] },
         { model: Hashtag, attributes: ['id', 'name'] },
-        {
-          model: Mention,
-          include: [
-        {
-          model: User,
-          as: 'Receiver',
-          attributes: ['id', 'nickname'],
-          },
-        ],
-      },
-    
+        // 🚫 Mention만 완전히 뺌
         {
           model: Post,
           as: 'Regram',
@@ -622,13 +612,12 @@ router.get('/:postId', async (req, res, next) => {
 
     const postData = post.toJSON();
 
-    // 멘션 정보를 가공하여 nickname과 user_id 필드를 직접 추가
+    // 🚩 Mentions 가공 코드 등 기존 로직은 그대로 둔다!
+    // Mentions는 undefined/null이지만, 아래처럼 null 체크 있으니 문제 없음
     if (postData.Mentions && postData.Mentions.length > 0) {
       postData.Mentions = postData.Mentions.map(mention => {
-        // mention.Receiver 객체 안에 닉네임과 ID가 있으므로,
-        // 이를 mention 객체 자체의 속성으로 복사
         return {
-          ...mention, // 기존 멘션 정보 유지
+          ...mention,
           nickname: mention.Receiver ? mention.Receiver.nickname : null,
           user_id: mention.Receiver ? mention.Receiver.id : null,
         };
@@ -641,27 +630,19 @@ router.get('/:postId', async (req, res, next) => {
     // [1] 리그램글: 원본글이 나만보기/비공개/팔로워만 필터
     if (post.regram_id && post.Regram) {
       const origin = post.Regram;
-      // 1. 원본이 나만보기
       if (origin.private_post && (!me || me.id !== origin.user_id)) {
         return res.status(403).send('비공개 글입니다.');
       }
-      // 2. 원본작성자 계정이 비공개, 로그인 안했거나 팔로워가 아니면 차단
       if (origin.User && origin.User.is_private === 1) {
-        // 본인이 아니고, 팔로워 아니면
         if (!me || (me.id !== origin.User.id && !(await isFollower(me.id, origin.User.id)))) {
           return res.status(403).send('비공개 계정의 글입니다.');
         }
       }
-    }
-    // [2] 일반글: 글 자체가 나만보기/비공개/팔로워만 필터
-    else {
-      // 글이 나만보기
+    } else {
       if (post.private_post && (!me || me.id !== post.user_id)) {
         return res.status(403).send('비공개 글입니다.');
       }
-      // 글쓴이 계정이 비공개
       if (post.User && post.User.is_private === 1) {
-        // 본인이 아니고, 팔로워 아니면
         if (!me || (me.id !== post.User.id && !(await isFollower(me.id, post.User.id)))) {
           return res.status(403).send('비공개 계정의 글입니다.');
         }
@@ -673,6 +654,7 @@ router.get('/:postId', async (req, res, next) => {
     next(error);
   }
 });
+
 
 // 👉 팔로워 여부 확인 유틸 함수 예시
 async function isFollower(meId, userId) {

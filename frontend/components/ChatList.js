@@ -32,7 +32,7 @@ const ChatList = ({ chatRooms,setChatRooms,onSelectUser }) => {
 
   const API_URL = 'http://localhost:3065';
 
-  
+
 
    return (
     <div 

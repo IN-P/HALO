@@ -112,7 +112,7 @@ const AdminAdsPage = () => {
         is_active: form.is_active,
         ...(imageFilename && { image_url: imageFilename }),
       };
-console.log('payload to send:', payload);
+      console.log('payload to send:', payload);
       if (editingAdId) {
   const isConfirmed = window.confirm('광고를 수정하시겠습니까?');
 
@@ -301,9 +301,9 @@ const handleDelete = async (id) => {
                   href={`/admin/ads/${ad.id}`}
                   style={{
                     ...buttonStyle,
-                    marginLeft: '8px', // 다른 버튼과의 간격을 위해 유지
-                    backgroundColor: '#000', // 검은색 배경
-                    color: '#fff', // 흰색 글자
+                    marginLeft: '8px', 
+                    backgroundColor: '#000', 
+                    color: '#fff', 
                   }}
                 >
                   상세 보기
