@@ -1,17 +1,20 @@
-// services/feedService.js
 const { Op } = require('sequelize');
-const { Post, User, Comment, Follow, Block, Image, Hashtag } = require('../models');
+const { Post, User, Comment, Follow, Block } = require('../models');
 const shuffleArray = require('../utils/shuffle');
 
 function calculateScore(post, isFollowing) {
-  const minutes = (Date.now() - new Date(post.createdAt).getTime()) / 60000;
+  const hours = (Date.now() - new Date(post.createdAt).getTime()) / (1000 * 60 * 60);
+  let newPostBonus = 0;
+  if (hours <= 3) newPostBonus = 3;
+  else if (hours <= 6) newPostBonus = 2;
+  else if (hours <= 12) newPostBonus = 1;
   return (
-    (isFollowing ? 100 : 0) +
-    (post.Likers?.length || 0) * 3 +
-    (post.Comments?.length || 0) * 2.5 +
-    (post.Bookmarkers?.length || 0) * 2 +
-    (post.Regrams?.length || 0) * 2 -
-    minutes * 0.01
+    (isFollowing ? 30 : 0) +
+    (post.Regrams?.length || 0) * 4 +
+    (post.Bookmarkers?.length || 0) * 3 +
+    (post.Likers?.length || 0) * 2 +
+    newPostBonus -
+    (hours * 0.2)
   );
 }
 
@@ -85,7 +88,10 @@ async function getFeedSet(userId, excludeIds = []) {
   const follows = await Follow.findAll({ where: { from_user_id: userId } });
   const followSet = new Set(follows.map(f => f.to_user_id));
 
-  const scoredGeneral = generalPosts.map(p => ({ post: p, score: calculateScore(p, followSet.has(p.user_id)) }));
+  const scoredGeneral = generalPosts.map(p => ({
+    post: p,
+    score: calculateScore(p, followSet.has(p.user_id)),
+  }));
 
   const neededFromGeneral = 10 - paidTotal;
   const topN = scoredGeneral.sort((a, b) => b.score - a.score).slice(0, neededFromGeneral).map(e => e.post);
