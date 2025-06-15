@@ -52,6 +52,7 @@ const AdminAdsPage = () => {
       const res = await axios.get('http://localhost:3065/api/advertisement', { withCredentials: true });
       setAds(res.data);
     } catch (err) {
+      console.error(err);
     }
   };
 
@@ -88,6 +89,7 @@ const AdminAdsPage = () => {
     const imageRes = await axios.post('http://localhost:3065/api/advertisement/image', imageFormData, {
       withCredentials: true,
     });
+    console.log('imageRes.data:', imageRes.data);
 
     if (imageRes.data) {
       imageFilename = imageRes.data;
@@ -97,6 +99,7 @@ const AdminAdsPage = () => {
     }
   } catch (err) {
     alert('이미지 업로드 중 오류 발생');
+    console.error(err);
     return; // 등록 중단
   }
 }
@@ -109,6 +112,7 @@ const AdminAdsPage = () => {
         is_active: form.is_active,
         ...(imageFilename && { image_url: imageFilename }),
       };
+      console.log('payload to send:', payload);
       if (editingAdId) {
   const isConfirmed = window.confirm('광고를 수정하시겠습니까?');
 
@@ -135,6 +139,7 @@ const AdminAdsPage = () => {
 
       fetchAds();
     } catch (err) {
+      console.error(err);
     }
   };
 
@@ -161,6 +166,7 @@ const handleDelete = async (id) => {
     await axios.delete(`http://localhost:3065/api/advertisement/${id}`, { withCredentials: true });
     fetchAds();
   } catch (err) {
+    console.error(err);
   }
 };
 
