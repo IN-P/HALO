@@ -43,9 +43,6 @@ const menu = (
 
   return (
     <div style={{ textAlign: "right", position: "relative" }}>
-      {isMyProfile && (
-        <CrownFilled style={{ fontSize: "32px", color: "#FFD700" }} />
-      )}
       &nbsp;&nbsp;
       <ShareAltOutlined
         style={{ fontSize: "32px", color: "#4A98FF", cursor: "pointer" }}

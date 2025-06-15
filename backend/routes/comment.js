@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Comment, CommentPath, User, Post, ActiveLog, Notification, Mention } = require('../models');
+const { Comment, User, Post, ActiveLog, Notification, Mention } = require('../models');
 const { isLoggedIn } = require('./middlewares');
 const { sendNotification } = require('../notificationSocket');
 const { checkAndAssignCommentAchievements } = require('../services/achievement/comment');
@@ -106,27 +106,6 @@ router.post('/:commentId/reply', isLoggedIn, async (req, res, next) => {
       user_id: req.user.id,
       parent_id: parent.id,
     });
-
-    // CommentPath 적용
-    await CommentPath.create({ upper_id: reply.id, lower_id: reply.id, depth: 0 });
-    const ancestors = await CommentPath.findAll({ where: { lower_id: parent.id } });
-    const paths = ancestors.map((a) => ({
-      upper_id: a.upper_id,
-      lower_id: reply.id,
-      depth: a.depth + 1,
-    }));
-    paths.push({ upper_id: parent.id, lower_id: reply.id, depth: 1 });
-
-    const keySet = new Set();
-    const uniquePaths = [];
-    for (const row of paths) {
-      const key = `${row.upper_id}-${row.lower_id}`;
-      if (!keySet.has(key)) {
-        uniquePaths.push(row);
-        keySet.add(key);
-      }
-    }
-    await CommentPath.bulkCreate(uniquePaths);
 
     const totalComments = await Comment.count({ where: { post_id: parent.post_id, is_deleted: false } });
 

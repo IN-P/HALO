@@ -20,6 +20,7 @@ const postRouter = require('./routes/post'); //## 인
 const postsRouter = require('./routes/posts'); //## 인
 const hashtagRouter = require('./routes/hashtag'); //## 인
 const commentRouter = require('./routes/comment'); //## 인
+const feedRouter = require('./routes/feed');
 const followRouter = require('./routes/follow');//## 율비
 const blockRouter = require('./routes/block');//## 율비
 const reportRouter = require('./routes/report');//## 율비
@@ -110,6 +111,7 @@ app.use('/post', postRouter); //## 인
 app.use('/posts', postsRouter); //## 인
 app.use('/hashtag', hashtagRouter); //## 인
 app.use('/comment', commentRouter); //## 인
+app.use('/feeds', feedRouter);
 app.use('/follow', followRouter); //## 율비
 app.use('/block', blockRouter); //## 율비
 app.use('/report', reportRouter); //## 율비
@@ -132,7 +134,7 @@ app.use('/user/reset-password', resetPasswordRouter); //윤기 비번재발급
 app.use('/auth', authRouter); //윤기추가 /auth/google, /auth/google/callback 용
 app.use('/pay', kakaopayRouter); //윤기추가
 app.use('/api/admin', adminRouter);
-app.use('/advertisement', advertisementRouter); // 재원 광고 라우터
+app.use('/api/advertisement', advertisementRouter); // 재원 광고 라우터
 app.use('/report-result', reportResultRouter);//율비
 app.use('/recovery', recoveryRouter); //윤기추가
 app.use('/membership', membershipRouter); // 윤기추가

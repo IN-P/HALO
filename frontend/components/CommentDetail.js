@@ -29,10 +29,8 @@ const CommentDetail = ({ postId, currentUserId }) => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (!loadCommentsDone?.[postId]) {
-      dispatch({ type: LOAD_COMMENTS_REQUEST, postId });
-    }
-  }, [dispatch, postId, loadCommentsDone]);
+    dispatch({ type: LOAD_COMMENTS_REQUEST, postId });
+  }, [postId]);
 
   const comments = allComments[postId] || [];
 
@@ -41,9 +39,17 @@ const CommentDetail = ({ postId, currentUserId }) => {
   };
 
   const onReplyClick = (comment) => {
+    const mentionText = `@${comment.User.nickname} `;
     setReplyTarget({ id: comment.id, nickname: comment.User.nickname });
-    setInputValue(`@${comment.User.nickname} `);
-    setTimeout(() => inputRef.current?.focus(), 100);
+    setInputValue(mentionText);
+
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        const length = mentionText.length;
+        inputRef.current.setSelectionRange(length, length);
+      }
+    }, 50);
   };
 
   const onSubmit = () => {
@@ -59,6 +65,11 @@ const CommentDetail = ({ postId, currentUserId }) => {
     });
     setInputValue("");
     setReplyTarget(null);
+
+    // 트리 새로 고침 바로 실행 (addCommentDone 기다리지 않음)
+    setTimeout(() => {
+      dispatch({ type: LOAD_COMMENTS_REQUEST, postId });
+    }, 300);
   };
 
   const onEdit = (c) => {
@@ -75,12 +86,18 @@ const CommentDetail = ({ postId, currentUserId }) => {
     });
     setEditId(null);
     setEditValue("");
+    setTimeout(() => {
+      dispatch({ type: LOAD_COMMENTS_REQUEST, postId });
+    }, 300);
   };
 
   const onDelete = (c) => {
     if (window.confirm("정말 삭제하시겠습니까?")) {
       dispatch({ type: REMOVE_COMMENT_REQUEST, data: { commentId: c.id, postId } });
       setMenuOpenId(null);
+      setTimeout(() => {
+        dispatch({ type: LOAD_COMMENTS_REQUEST, postId });
+      }, 300);
     }
   };
 
@@ -89,40 +106,28 @@ const CommentDetail = ({ postId, currentUserId }) => {
     alert("신고 처리(예시)");
   };
 
-  const renderContent = (content, mentions = [], parentNickname) => {
+  const renderContent = (content, mentions = []) => {
     if (!content) return null;
     const userMap = {};
     mentions.forEach(m => {
       userMap[m.nickname?.toLowerCase()] = m.user_id;
     });
 
-    let text = content;
-    let showParentNickname = false;
-    if (parentNickname && content.startsWith(`@${parentNickname}`)) {
-      text = content.slice(parentNickname.length + 1).trimStart();
-      showParentNickname = true;
-    }
-
-    return (
-      <>
-        {showParentNickname && <b>@{parentNickname} </b>}
-        {text.split(/(#[^\s#]+|@[^\s@]+)/g).filter(Boolean).map((part, i) => {
-          if (part.startsWith("#")) {
-            return <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: "#007bff", textDecoration: "none" }}>{part}</a>;
-          }
-          if (part.startsWith("@")) {
-            const nickname = part.slice(1).toLowerCase();
-            const userId = userMap[nickname] || mentionUserMap[nickname];
-            return userId ? (
-              <a key={i} href={`/profile/${userId}`} style={{ color: "#28a745", textDecoration: "none" }}>{part}</a>
-            ) : (
-              <span key={i} style={{ color: "#28a745" }}>{part}</span>
-            );
-          }
-          return <span key={i}>{part}</span>;
-        })}
-      </>
-    );
+    return content.split(/(#[^\s#]+|@[^\s@]+)/g).filter(Boolean).map((part, i) => {
+      if (part.startsWith("#")) {
+        return <a key={i} href={`/hashtag/${part.slice(1)}`} style={{ color: "#007bff", textDecoration: "none" }}>{part}</a>;
+      }
+      if (part.startsWith("@")) {
+        const nickname = part.slice(1).toLowerCase();
+        const userId = userMap[nickname] || mentionUserMap[nickname];
+        return userId ? (
+          <a key={i} href={`/profile/${userId}`} style={{ color: "#28a745", textDecoration: "none" }}>{part}</a>
+        ) : (
+          <span key={i} style={{ color: "#28a745" }}>{part}</span>
+        );
+      }
+      return <span key={i}>{part}</span>;
+    });
   };
 
   const renderComments = (list) => {
@@ -165,7 +170,10 @@ const CommentDetail = ({ postId, currentUserId }) => {
                 )}
               </div>
             </div>
-            <div style={{ color: c.is_deleted ? "#721c24" : "#222", fontSize: 15, whiteSpace: "pre-wrap", marginTop: 2 }}>
+            <div
+                className={c.is_deleted ? "deleted-comment" : "normal-comment"}
+                style={{ fontSize: 15, whiteSpace: "pre-wrap", marginTop: 2 }}
+              >
               {c.is_deleted ? "삭제된 댓글입니다." : (editId === c.id ? (
                 <span>
                   <input value={editValue} onChange={e => setEditValue(e.target.value)} style={{ width: "70%", padding: 6, borderRadius: 4, border: "1px solid #ccc", marginRight: 4, fontSize: 14 }} />
@@ -193,15 +201,16 @@ const CommentDetail = ({ postId, currentUserId }) => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#fafbfc", borderRadius: 14 }}>
-      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "0 10px" }}>
+      <div className="comment-list" style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "0 10px" }}>
         {(!comments || comments.length === 0) && (
           <div style={{ color: "#aaa", margin: 8 }}>아직 댓글이 없습니다.</div>
         )}
         {Array.isArray(comments) && renderComments(comments.filter(c => !c.parent_id))}
       </div>
-      <div style={{ borderTop: "1px solid #f1f1f1", background: "#fafbfc", padding: "12px 12px 14px", display: "flex", alignItems: "flex-start", gap: 10 }}>
+      <div className="comment-input-box" style={{ borderTop: "1px solid #f1f1f1", padding: "12px 12px 14px", display: "flex", alignItems: "flex-start", gap: 10 }}>
         <div style={{ flex: 1 }}>
           <MentionTextArea
+          className="comment-textarea"
             ref={inputRef}
             value={inputValue}
             onChange={e => setInputValue(e.target.value)}
@@ -213,7 +222,6 @@ const CommentDetail = ({ postId, currentUserId }) => {
               }
             }}
             placeholder={replyTarget ? `@${replyTarget.nickname} 에게 답글달기` : "댓글을 입력하세요..."}
-            style={{ width: '100%', minHeight: 72, fontSize: 15, borderRadius: 8, border: '1px solid #ccc', padding: '12px 16px', resize: 'none', background: "#fff" }}
           />
         </div>
         <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "stretch", height: 68, minWidth: 64, gap: 6 }}>

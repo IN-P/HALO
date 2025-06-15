@@ -75,7 +75,7 @@ const PostDetailModal = ({
 
   return (
     <div style={modalStyle} onClick={onClose}>
-      <div style={detailBoxStyle} onClick={e => e.stopPropagation()}>
+      <div className="post-detail-box" style={detailBoxStyle} onClick={e => e.stopPropagation()}>
         {/* 왼쪽 이미지 */}
         <div style={{ width: IMAGE_SIZE.width, height: IMAGE_SIZE.height, position: 'relative', background: '#eee', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {images.length > 0 ? (
@@ -94,7 +94,7 @@ const PostDetailModal = ({
         </div>
 
         {/* 오른쪽 내용 */}
-        <div style={{ display: 'flex', flexDirection: 'column', width: 500, minWidth: 420, maxWidth: 540, height: IMAGE_SIZE.height, background: '#fff', boxSizing: 'border-box', padding: '36px 18px 20px 18px', overflow: 'hidden' }}>
+        <div className="post-detail-content" style={{ display: 'flex', flexDirection: 'column', width: 500, minWidth: 420, maxWidth: 540, height: IMAGE_SIZE.height, boxSizing: 'border-box', padding: '36px 18px 20px 18px', overflow: 'hidden' }}>
           {/* 작성자 */}
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8, minHeight: 54 }}>
             <img
@@ -123,14 +123,14 @@ const PostDetailModal = ({
           {/* 아이콘 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 18, fontSize: 27, margin: '10px 0 6px 0', borderTop: '1.5px solid #f2f2f2', paddingTop: 8, flexWrap: 'nowrap' }}>
             <div style={iconBtnStyle}><FaRegComment /><span style={countStyle}>{commentCount}</span></div>
-            <button style={iconBtnStyle} onClick={liked ? onUnlike : onLike}>{liked ? <FaHeart color="red" /> : <FaRegHeart />}<span style={countStyle}>{likeCount}</span></button>
-            <button style={iconBtnStyle} onClick={onRegram} disabled={regramDisabled} title={regramTooltip}><FaRetweet color={regramIconColor} /><span style={countStyle}>{regramCount}</span></button>
-            <button style={iconBtnStyle} onClick={bookmarked ? onUnbookmark : onBookmark}>{bookmarked ? <FaBookmark color="#007bff" /> : <FaRegBookmark />}<span style={countStyle}>{bookmarkCount}</span></button>
-            <button style={iconBtnStyle} onClick={handleCopyLink}><FaShareAlt /><span style={{ fontSize: 16, marginLeft: 2, fontWeight: 500 }}>공유</span></button>
+            <button className="icon-button" style={iconBtnStyle} onClick={liked ? onUnlike : onLike}>{liked ? <FaHeart color="red" /> : <FaRegHeart />}<span style={countStyle}>{likeCount}</span></button>
+            <button className="icon-button" style={iconBtnStyle} onClick={onRegram} disabled={regramDisabled} title={regramTooltip}><FaRetweet color={regramIconColor} /><span style={countStyle}>{regramCount}</span></button>
+            <button className="icon-button" style={iconBtnStyle} onClick={bookmarked ? onUnbookmark : onBookmark}>{bookmarked ? <FaBookmark color="#007bff" /> : <FaRegBookmark />}<span style={countStyle}>{bookmarkCount}</span></button>
+            <button className="icon-button" style={iconBtnStyle} onClick={handleCopyLink}><FaShareAlt /><span style={{ fontSize: 16, marginLeft: 2, fontWeight: 500 }}>공유</span></button>
           </div>
 
           {/* 댓글 */}
-          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: '#fafbfc', borderRadius: 14, padding: '18px 0 0 0', marginTop: 8 }}>
+          <div className="post-comment-box" style={{ flex: 1, minHeight: 0, overflowY: 'auto',  borderRadius: 14, padding: '18px 0 0 0', marginTop: 8 }}>
             <CommentDetail postId={post.id} currentUserId={user?.id} />
           </div>
 
@@ -148,10 +148,10 @@ const PostDetailModal = ({
   );
 };
 
-const detailBoxStyle = { display: 'flex', background: '#fff', borderRadius: 20, boxShadow: '0 3px 16px rgba(0,0,0,0.12)', overflow: 'hidden', position: 'relative', padding: 0 };
+const detailBoxStyle = { display: 'flex', borderRadius: 20, boxShadow: '0 3px 16px rgba(0,0,0,0.12)', overflow: 'hidden', position: 'relative', padding: 0 };
 const modalStyle = { position: 'fixed', zIndex: 3000, left: 0, top: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' };
 const arrowBtnStyle = { position: 'absolute', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.4)', color: '#fff', border: 'none', borderRadius: '50%', width: 48, height: 48, fontSize: 28, cursor: 'pointer', zIndex: 1 };
-const iconBtnStyle = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 26, color: '#444', outline: 'none', display: 'flex', alignItems: 'center', gap: 4 };
+const iconBtnStyle = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 26, color: 'inherit', outline: 'none', display: 'flex', alignItems: 'center', gap: 4 };
 const countStyle = { fontSize: 16, marginLeft: 4, color: '#444', minWidth: 18, textAlign: 'right', fontWeight: 600 };
 
 export default PostDetailModal;
