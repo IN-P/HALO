@@ -57,7 +57,7 @@ KAKAO_PAY_CID=your_kakaopay_cid
 
 #  프론트 도메인
 FRONTEND_DOMAIN=http://localhost:3000
-
+```
 ---
 ## 인증 및 보안
 
