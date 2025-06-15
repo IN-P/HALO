@@ -1,3 +1,4 @@
+console.log('Weather Router file loaded!');
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
@@ -51,10 +52,14 @@ router.get('/:stadium', async (req, res, next) => {
       ny: ny,
     };
 
+    console.log(`[${stadiumName}] 기상청 API 요청 URL:`, apiUrl);
+    console.log(`[${stadiumName}] 요청 파라미터:`, params);
+
     const response = await axios.get(apiUrl, { params });
     
     const resultCode = response.data.response.header.resultCode;
     if (resultCode !== '00') {
+      console.error('기상청 API 에러 응답:', response.data.response.header.resultMsg);
       if (resultCode === '03') { 
         return res.status(200).json({ 
           stadium: stadiumName,
@@ -169,7 +174,9 @@ router.get('/:stadium', async (req, res, next) => {
     });
 
   } catch (error) {
+    console.error('날씨 정보를 가져오는 중 에러 발생:', error.message);
     if (error.response) {
+      console.error('기상청 API 응답 에러 데이터:', error.response.data);
     }
     next(error);
   }

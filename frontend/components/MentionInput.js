@@ -23,6 +23,7 @@ const MentionInput = ({ onMentionSelect }) => {
       const response = await axios.get(`/mention/users?q=${encodeURIComponent(query)}&limit=5`);
       setMentionResults(response.data);
     } catch (error) {
+      console.error('mention user fetch error:', error);
     }
   };
 

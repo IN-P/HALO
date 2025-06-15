@@ -28,6 +28,7 @@ const AdvertisementDetail = ({ adId }) => {
         const res = await axios.get(`http://localhost:3065/api/advertisement/${adId}`);
         setAd(res.data);
       } catch (err) {
+        console.error('광고 불러오기 실패:', err);
       }
     };
     fetchAd();

@@ -26,6 +26,7 @@ const MentionTextArea = React.forwardRef(({ value, onChange, placeholder = "ëŒ“ê
       });
       setMentionResults(res.data);
     } catch (err) {
+      console.error('mention user fetch error:', err);
     }
   };
 

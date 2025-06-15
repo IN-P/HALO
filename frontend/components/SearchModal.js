@@ -9,7 +9,7 @@ const SearchModal = ({ onClose, onUserSelect, userMap }) => {
   const [localTerm, setLocalTerm] = useState('');
 
   const { searchTerm, handleSearchChange, filteredData: searchedUsers } = useSearch(
-
+    '',
     dataForSearch,
     'nickname'
   );

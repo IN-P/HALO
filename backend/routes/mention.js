@@ -13,7 +13,7 @@ router.post('/', isLoggedIn, async (req, res, next) => {
     const { receiver_id, target_type, target_id, context } = req.body; 
     const sender_id = req.user.id; 
 
-    
+
     const receiver = await User.findOne({ where: { id: receiver_id } });
     if (!receiver) {
       return res.status(404).send('멘션을 받을 유저가 존재하지 않습니다.');
@@ -47,6 +47,7 @@ router.post('/', isLoggedIn, async (req, res, next) => {
 
     res.status(201).json(fullMention);
   } catch (error) {
+    console.error(error);
     next(error);
   }
 });
@@ -76,6 +77,7 @@ router.get('/received', isLoggedIn, async (req, res, next) => {
 
     res.status(200).json(mentions);
   } catch (error) {
+    console.error(error);
     next(error);
   }
 });
@@ -104,6 +106,7 @@ router.get('/sent', isLoggedIn, async (req, res, next) => {
 
     res.status(200).json(mentions);
   } catch (error) {
+    console.error(error);
     next(error);
   }
 });
@@ -119,7 +122,7 @@ router.delete('/:mentionId', isLoggedIn, async (req, res, next) => {
       return res.status(404).send('멘션이 존재하지 않습니다.');
     }
 
- 
+
     if (mention.senders_id !== req.user.id) {
       return res.status(403).send('멘션을 삭제할 권한이 없습니다.');
     }
@@ -133,6 +136,7 @@ router.delete('/:mentionId', isLoggedIn, async (req, res, next) => {
 
     res.status(200).json({ MentionId: parseInt(req.params.mentionId, 10) });
   } catch (error) {
+    console.error(error);
     next(error);
   }
 });
@@ -160,6 +164,7 @@ router.get('/users', isLoggedIn, async (req, res, next) => {
 
     res.status(200).json(users);
   } catch (error) {
+    console.error(error);
     next(error);
   }
 });
