@@ -17,7 +17,7 @@ const ChatRoomCard = ({
   onSend,
   onScroll,
 }) => {
-  const dispatch = useDispatch(); // ✅ useDispatch는 여기서 한 번만
+  const dispatch = useDispatch(); 
 
   return (
     <div
@@ -32,7 +32,7 @@ const ChatRoomCard = ({
         position: 'relative',
       }}
     >
-      {/* 🔹 상단 닉네임 + 버튼 */}
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span>💬 {selectedUser.nickname}와의 채팅 (내 ID: {me})</span>
         <div>
@@ -41,7 +41,7 @@ const ChatRoomCard = ({
         </div>
       </div>
 
-      {/* 🔹 메시지 목록 */}
+
       <div
         ref={chatBoxRef}
         onScroll={onScroll}
@@ -100,7 +100,6 @@ const ChatRoomCard = ({
         })}
       </div>
 
-      {/* 🔹 새 메시지 알림 */}
       {showNewMsgAlert && (
         <div
           style={{
@@ -117,14 +116,13 @@ const ChatRoomCard = ({
           }}
           onClick={() => {
             chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
-            dispatch(setShowNewMsgAlert(false)); // ✅ 제대로 동작
+            dispatch(setShowNewMsgAlert(false));
           }}
         >
           🔽 새 메시지 도착
         </div>
       )}
 
-      {/* 🔹 메시지 입력창 */}
       <div style={{ display: 'flex' }}>
         <input
           value={message}

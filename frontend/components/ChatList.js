@@ -3,13 +3,11 @@ import socket from '../socket';
 import Wave from './lottie/Wave';
 
 const ChatList = ({ chatRooms,setChatRooms,onSelectUser }) => {
-  console.log('🔥 ChatList 렌더링됨 chatRooms:', chatRooms);
 
   const [hoveredRoomId, setHoveredRoomId] = useState(null);
 
    useEffect(() => {
   const handleProfileUpdate = (data) => {
-    console.log('📢 profile_update 수신:', data);
     setChatRooms((prevRooms) =>
       prevRooms.map((room) =>
         room.otherUser.id === data.userId
@@ -55,15 +53,12 @@ const ChatList = ({ chatRooms,setChatRooms,onSelectUser }) => {
           key={room.roomId}
           onClick={() => {
               onSelectUser(room.otherUser);
-              console.log('ChatList: 채팅방 클릭됨, roomId:', room.roomId); // ✅ 클릭 로그도 추가!
           }}
           onMouseEnter={() => {
             setHoveredRoomId(room.roomId);
-            console.log('ChatList: 마우스 진입, hoveredRoomId:', room.roomId); // ✅ 여기에 console.log 추가!
           }}
           onMouseLeave={() => {
             setHoveredRoomId(null);
-            console.log('ChatList: 마우스 이탈, hoveredRoomId:', null); // ✅ 여기에 console.log 추가!
           }}
           style={{
             padding: '12px 0',

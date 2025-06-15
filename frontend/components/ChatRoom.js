@@ -36,7 +36,6 @@ useEffect(() => {
       setIsBlockedByMe(data.isBlockedByMe);
       setIsBlockingMe(data.isBlockingMe);
     } catch (err) {
-      console.error('차단 상태 가져오기 실패:', err);
     }
   };
 
@@ -62,7 +61,6 @@ const API_URL = 'http://localhost:3065';
 
   useEffect(() => {
     const handleChatRoomClosed = (data) => {
-      console.log('💥 chat_room_closed 수신:', data);
       alert(data.message || '상대방이 채팅방을 나갔습니다. 채팅을 새로 시작해야 합니다.');
     };
 
@@ -75,7 +73,6 @@ const API_URL = 'http://localhost:3065';
 
   useEffect(() => {
     const handleReadUpdate = (data) => {
-      console.log('✅ read_update 수신:', data);
 
       const { roomId: updateRoomId, readMessageIds } = data;
 
@@ -95,25 +92,20 @@ const API_URL = 'http://localhost:3065';
   useEffect(() => {
     if (roomId) {
       socket.emit('join_room', roomId);
-      console.log(`🔗 join_room emit: ${roomId}`);
       socket.emit('mark_as_read', roomId);
-    console.log('✅ mark_as_read emit:', roomId);
     }
     return () => {
       if (roomId) {
         socket.emit('leave_room', me.id);
-        console.log(`🚪 leave_room emit: ${roomId}`);
       }
     };
   }, [roomId]);
 
   useEffect(() => {
   const handleReceiveMessage = (message) => {
-    console.log('📩 receive_message 수신:', message);
 
     // 현재 ChatRoom의 메시지라면 → mark_as_read emit 다시 보내기
     if (message.roomId === roomId) {
-      console.log('✅ 현재 ChatRoom에서 새 메시지 수신 → mark_as_read emit:', roomId);
       socket.emit('mark_as_read', roomId);
     }
   };
@@ -136,7 +128,7 @@ const API_URL = 'http://localhost:3065';
 
   return (
     <div className="chat-room-container">
-      {/* 상단 타이틀 */}
+
 <h2 className="chat-room-header">
   <span>💬 {selectedUser.nickname}님과의 채팅</span>
 
@@ -152,7 +144,7 @@ const API_URL = 'http://localhost:3065';
       ...
     </button>
 
-          {/* 신고 드롭다운 메뉴 */}
+
     {showReportMenu && (
       <div className="report-menu-dropdown">
         <ReportButton onClick={() => {
@@ -165,7 +157,7 @@ const API_URL = 'http://localhost:3065';
       </h2>
 
 
-      {/* 메시지 목록 */}
+
       <div
         id="chat-box"
         ref={chatBoxRef}
@@ -173,8 +165,6 @@ const API_URL = 'http://localhost:3065';
         className="chat-box"
       >
         {log.map((msg, idx) => {
-          console.log('msg.id:', msg.id, typeof msg.id, 'msg.is_read:', msg.is_read);
-          console.log('렌더링 시 메시지:', msg);
           const isMine = msg.sender_id === me.id || msg.senderId === me.id;
           const sender = msg.User;
 
@@ -209,21 +199,21 @@ const API_URL = 'http://localhost:3065';
                   </div>
                 )}
 
-                {/* 여기 수정된 부분 */}
+
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: isMine ? 'flex-end' : 'flex-start',
-                  gap: 6 // 말풍선과 숫자 간격
+                  gap: 6 
                 }}>
-                  {/* 숫자 먼저 표시 (왼쪽) */}
+
                   {isMine && (msg.is_read === 0 || msg.is_read === false) && (
                     <div style={{ fontSize: 10, color: 'red', marginTop: 4 }}>
                       1
                     </div>
                   )}
 
-                  {/* 말풍선 */}
+
                   <div
                     style={{
                       display: 'inline-block',
@@ -237,7 +227,7 @@ const API_URL = 'http://localhost:3065';
                   </div>
                 </div>
 
-                {/* 시간 */}
+
                 <div
                   style={{
                     fontSize: 11,
@@ -255,7 +245,7 @@ const API_URL = 'http://localhost:3065';
         })}
       </div>
 
-      {/* 새 메시지 알림 */}
+
       {showNewMsgAlert && (
         <div
           style={{
@@ -278,7 +268,7 @@ const API_URL = 'http://localhost:3065';
         </div>
       )}
 
-     {/* 메시지 입력 */}
+
 {isBlockedByMe ? (
   <div className="chat-blocked-message">
     ⚠️ 차단한 유저입니다. 메시지를 보낼 수 없습니다.
@@ -314,7 +304,7 @@ const API_URL = 'http://localhost:3065';
 )}
 
 
-      {/* 나가기 버튼 */}
+
       <div style={{ marginTop: '16px', textAlign: 'right' }}>
   <button
     onClick={handleExitConfirm}

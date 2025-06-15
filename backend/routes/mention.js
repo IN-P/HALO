@@ -47,7 +47,6 @@ router.post('/', isLoggedIn, async (req, res, next) => {
 
     res.status(201).json(fullMention);
   } catch (error) {
-    console.error(error);
     next(error);
   }
 });
@@ -77,7 +76,6 @@ router.get('/received', isLoggedIn, async (req, res, next) => {
 
     res.status(200).json(mentions);
   } catch (error) {
-    console.error(error);
     next(error);
   }
 });
@@ -106,7 +104,6 @@ router.get('/sent', isLoggedIn, async (req, res, next) => {
 
     res.status(200).json(mentions);
   } catch (error) {
-    console.error(error);
     next(error);
   }
 });
@@ -136,7 +133,6 @@ router.delete('/:mentionId', isLoggedIn, async (req, res, next) => {
 
     res.status(200).json({ MentionId: parseInt(req.params.mentionId, 10) });
   } catch (error) {
-    console.error(error);
     next(error);
   }
 });
@@ -164,7 +160,6 @@ router.get('/users', isLoggedIn, async (req, res, next) => {
 
     res.status(200).json(users);
   } catch (error) {
-    console.error(error);
     next(error);
   }
 });
