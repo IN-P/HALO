@@ -625,3 +625,157 @@ body.dark-mode .chat-input:not(.blocked) {
 body.dark-mode .chat-send-button:not(.blocked) {
   background: #0055aa;
 }
+
+/* 다크모드 draw-box 스타일 */
+body.dark-mode .draw-box {
+  background: #1f1f1f;
+  border-color: #888;
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.1);
+}
+
+/* 다크모드 draw-btn 스타일 */
+body.dark-mode .draw-btn {
+  background-color: #2a2a2a;
+  border: 2px solid #888;
+  color: #f5f5f5;
+}
+
+body.dark-mode .draw-btn:hover {
+  box-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .draw-btn:active {
+  background-color: #333;
+}
+
+body.dark-mode .draw-btn:disabled {
+  opacity: 0.4;
+  color: #aaa;
+}
+
+/* DrawHistoryList */
+body.dark-mode .history-item {
+  background: #1f1f1f;
+  box-shadow: 0 3px 8px rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .time {
+  color: #bbb;
+}
+/* 뱃지 컬러 */
+body.dark-mode .badge.normal {
+  background-color: #555;
+}
+body.dark-mode .badge.rare {
+  background-color: #3399ff;
+}
+body.dark-mode .badge.legend {
+  background-color: #ffd700;
+  color: #222;
+}
+
+/* DrawResultModal */
+body.dark-mode .modal-content {
+  background: #2a2a2a;
+  color: #f5f5f5;
+}
+
+body.dark-mode .close-btn {
+  background-color: #aa2e2e;
+  color: white;
+}
+body.dark-mode .close-btn:hover {
+  background-color: #991f1f;
+}
+
+/* QuizList */
+body.dark-mode table {
+  color: #f0f0f0;
+}
+
+body.dark-mode thead th {
+  background-color: #2a2a2a !important;
+  border-bottom: 2px solid #555 !important;
+}
+
+body.dark-mode tbody tr {
+  border-bottom: 1px solid #444;
+}
+
+body.dark-mode td {
+  color: #eee;
+}
+
+body.dark-mode .ant-btn-link {
+  color: #4fa3ff;
+}
+
+body.dark-mode .ant-btn-link:hover {
+  color: #70c0ff;
+}
+
+body.dark-mode .ant-btn-link[disabled] {
+  color: #888 !important;
+}
+
+/* QuizModal */
+body.dark-mode .ant-modal-content {
+  background-color: #1e1e1e;
+  color: #f0f0f0;
+}
+
+body.dark-mode .ant-modal-header {
+  background-color: #1e1e1e;
+  border-bottom: 1px solid #444;
+}
+
+body.dark-mode .ant-modal-title {
+  color: #f0f0f0;
+}
+
+body.dark-mode .ant-radio-wrapper {
+  color: #ddd;
+}
+
+body.dark-mode .ant-radio-checked .ant-radio-inner {
+  border-color: #4fa3ff;
+  background-color: #4fa3ff;
+}
+
+body.dark-mode .ant-btn-primary {
+  background-color: #0055aa;
+  border-color: #0055aa;
+}
+
+body.dark-mode .ant-btn-primary:hover {
+  background-color: #0077dd;
+  border-color: #0077dd;
+}
+
+/* EventSidebar - 전체 사이드바 영역 배경 및 텍스트 */
+body.dark-mode .ant-menu {
+  background-color: #1a1a1a !important;
+  color: #f0f0f0;
+  border-right: 1px solid #444;
+}
+
+/* 메뉴 항목 hover 및 선택된 항목 강조 */
+body.dark-mode .ant-menu-item-selected {
+  background-color: #333 !important;
+  color: #4fa3ff !important;
+}
+
+body.dark-mode .ant-menu-item:hover {
+  background-color: #2a2a2a !important;
+  color: #70c0ff !important;
+}
+
+/* 링크 텍스트 색 */
+body.dark-mode .ant-menu-item a {
+  color: #f0f0f0;
+}
+
+/* 링크 hover 시 */
+body.dark-mode .ant-menu-item a:hover {
+  color: #70c0ff;
+}
