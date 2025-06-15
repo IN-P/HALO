@@ -191,8 +191,8 @@ useEffect(() => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-  const RightSidebarLimit = windowWidth > 1720;
-  const LeftSidebarLimit = windowWidth > 1580;
+  const RightSidebarLimit = windowWidth > 1024; // 우측 사이드바 1024px보다 좁을 시 숨김
+  const LeftSidebarLimit = windowWidth > 768; // 좌측 사이드바 768px보다 좁을 시 숨김
 
   // ✅ 화면 렌더링
   return (
