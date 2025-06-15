@@ -1,5 +1,5 @@
 # HALO
-> HALO는 소셜미디어(SNS), 실시간 커뮤니케이션, 결제 기반 멤버십 시스템이 통합된 플랫폼입니다.
+> SNS · 실시간 채팅 · 결제 시스템을 통합한 보안 중심의 차세대 커뮤니티 플랫폼
   
 ---
 
@@ -7,10 +7,56 @@
 ## 프로젝트 소개:
 
 ---
-## 관련문서 : 
+##  관련문서
+- [API 명세서 보기](링크추가)
+- [ERD (DB 설계도)](링크추가)
+- [기능 요구사항 정의서 (Notion 등)](링크추가)
+
 
 ---
 ## 주요기능 :
+
+
+
+---
+
+## ⚙️ .env 환경변수 설정
+
+> 프로젝트 실행 전에 `.env` 파일을 반드시 먼저 설정하세요!  
+
+```env
+#  데이터베이스 설정
+DB_NAME=halo
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+DB_HOST=localhost
+DB_PORT=3306
+DB_DIALECT=mysql
+
+#  외부 API 키
+OPENAI_API_KEY=your_openai_api_key
+KMA_API_KEY=your_kma_api_key
+
+#  보안 및 세션
+COOKIE_SECRET=your_cookie_secret
+
+#  이메일 인증
+MAIL_USER=your_email@gmail.com
+MAIL_PASS=your_email_app_password
+
+#  Google OAuth
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:3065/auth/google/callback
+
+#  Kakao OAuth & Pay
+KAKAO_CLIENT_ID=your_kakao_client_id
+KAKAO_CALLBACK_URL=http://localhost:3065/auth/kakao/callback
+KAKAO_SECRET_KEY=your_kakao_secret_key
+KAKAO_PAY_CID=your_kakaopay_cid
+
+#  프론트 도메인
+FRONTEND_DOMAIN=http://localhost:3000
 
 ---
 ## 인증 및 보안
@@ -53,7 +99,7 @@ HALO는 사용자 인증과 보안 강화를 위해 다음과 같은 기능을 �
 
 ---
 
-※ 실제 블록체인 로그 시스템은 미구현이며, 향후 확장 가능성으로만 고려 중입니다.
+※ 향후 계획: 로그 위변조 방지를 위한 블록체인 로그 시스템은 별도 설계 중입니다.
 
 
 
