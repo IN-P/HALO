@@ -35,28 +35,25 @@ HALO는 실시간 채팅 및 맨션, 포스트 추천 알고리즘, 업적·뱃�
 
 ---
 
-## ⚙️ .env 환경변수 설정
+## 🧪 프로젝트 실행 방법
 
-> 프로젝트 실행 전에 `.env` 파일을 반드시 먼저 설정하세요!  
+### 1. 환경 변수 설정 (.env)
+
+> 프로젝트 실행 전, 백엔드 루트 디렉토리에 `.env` 파일을 반드시 생성하고 아래 항목을 설정해야 합니다.  
+> 예시 파일 `.env.example`이 함께 제공됩니다.
 
 ```env
-#  데이터베이스 설정
-DB_NAME=halo
-DB_USER=your_db_user
-DB_PASSWORD=your_db_password
-DB_HOST=localhost
-DB_PORT=3306
-DB_DIALECT=mysql
+#  DATABASE 설정
+DB_PASSPORT=your_db_password
 
-#  외부 API 키
-OPENAI_API_KEY=your_openai_api_key
-KMA_API_KEY=your_kma_api_key
-
-#  보안 및 세션
+#  세션 쿠키 시크릿 키
 COOKIE_SECRET=your_cookie_secret
 
-#  이메일 인증
-MAIL_USER=your_email@gmail.com
+# 🌤 기상청 날씨 API (KMA)
+KMA_API_KEY=your_kma_api_key
+
+#  이메일 인증 설정
+MAIL_USER=your_email@example.com
 MAIL_PASS=your_email_app_password
 
 #  Google OAuth
@@ -64,15 +61,37 @@ GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 GOOGLE_CALLBACK_URL=http://localhost:3065/auth/google/callback
 
-#  Kakao OAuth & Pay
+#  Kakao OAuth & 결제
 KAKAO_CLIENT_ID=your_kakao_client_id
 KAKAO_CALLBACK_URL=http://localhost:3065/auth/kakao/callback
 KAKAO_SECRET_KEY=your_kakao_secret_key
 KAKAO_PAY_CID=your_kakaopay_cid
 
-#  프론트 도메인
+#  OpenAI 연동용 (자동응답/AI 기능 등)
+OPENAI_API_KEY=your_openai_api_key
+
+#  프론트엔드 도메인
 FRONTEND_DOMAIN=http://localhost:3000
+
 ```
+> .env 파일은 Git에 업로드되지 않도록 .gitignore에 포함되어 있습니다.
+> 위 값은 실제 키로 대체해 주세요. 키는 팀원별로 개별 전달합니다.
+
+### 2. 백엔드 실행
+```
+cd backend
+npm install
+npm run dev
+```
+> 기본적으로 Express 서버는 http://localhost:3065에서 실행됩니다.
+
+### 3. 프론트엔드 실행
+```
+cd frontend
+npm install
+npm run dev
+```
+> Next.js 기반 프론트엔드는 http://localhost:3000에서 실행됩니다.
 ---
 
 ## 기여자
