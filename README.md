@@ -16,7 +16,7 @@ HALO는 실시간 채팅 및 맨션, 포스트 추천 알고리즘, 업적·뱃�
 ##  관련문서
 - [ERD (DB 설계도)](링크추가)
 - [기능 요구사항 정의서 (Notion 등)](링크추가)
-- [화면 설계안 (피그마)](링크추가)
+- [화면 설계안 (피그마)](https://www.figma.com/design/Rq64drhRrFNn4V3IZoSINI/HALO?node-id=0-1&t=DwuTeYBSMSj4Tevs-1)
 - [HALO 보안 정리 문서](https://github.com/IN-P/HALO/blob/main/security.md)
 
 ---
@@ -35,7 +35,7 @@ HALO는 실시간 채팅 및 맨션, 포스트 추천 알고리즘, 업적·뱃�
 
 ---
 
-## 🧪 프로젝트 실행 방법
+##  프로젝트 실행 방법
 
 ### 1. 환경 변수 설정 (.env)
 
