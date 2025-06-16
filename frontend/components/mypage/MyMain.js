@@ -89,34 +89,20 @@ const MyMain = ({ data, isMyProfile, onRefetch }) => {
   const showBadge = data?.Badges.find(badge => badge.UserBadge && badge.UserBadge.isSelected === true) || null;
 
   return (
-    <div style={{ width: '25%' }}>
+    <div style={{ width: '30%' }}>
       <div style={{ paddingBottom: "10px", display: 'flex', alignItems: 'center', marginTop: '5%' }}>
         { showBadge &&
         <Tooltip title={showBadge.name}><img style={{maxHeight: "40px", maxWidth: "40px", marginRight: "3%" }} src={`http://localhost:3065${showBadge.img}`} /></Tooltip>
         }
-        <span
-          style={{
-            fontSize: "24px",
-            fontWeight: "bold",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            maxWidth: "70%"
-          }}
-          title={nickname}
-        >
-          {nickname}
-        </span>
-        <span
-          style={{
-            fontSize: "16px",
-            color: "#9F9F9F",
-            marginLeft: "10px",
-            whiteSpace: "nowrap"
-          }}
-        >
-          {UserRoleNames[data?.role] || ""}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+          <span style={{ fontSize: "24px", fontWeight: "bold", wordBreak: 'break-word' }}>
+            {nickname}
+          </span>
+          <span style={{ fontSize: "16px", color: "#9F9F9F" }}>
+            {UserRoleNames[data?.role] || ""}
+          </span>
+        </div>
+
         {!isMyProfile && (
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginLeft: 'auto', verticalAlign: 'middle' }}>
             {!data?.isBlocked && (
