@@ -44,16 +44,23 @@ router.get('/', isLoggedIn, async (req, res, next) => {
             { model: User, as: 'Bookmarkers', attributes: ['id'] },
             {
               model: Post,
+              as: 'Regrams',
+              include: [{ model: User, attributes: ['id', 'nickname', 'profile_img', 'last_active'] }],
+            },
+            {
+              model: Post,
               as: 'Regram',
               include: [
                 { model: User, attributes: ['id', 'nickname', 'profile_img', 'last_active'] },
                 { model: Image },
+                { model: User, as: 'Likers', attributes: ['id'] },
+                { model: User, as: 'Bookmarkers', attributes: ['id'] },
+                {
+                  model: Post,
+                  as: 'Regrams',
+                  include: [{ model: User, attributes: ['id', 'nickname', 'profile_img', 'last_active'] }],
+                },
               ],
-            },
-            {
-              model: Post,
-              as: 'Regrams',
-              include: [{ model: User, attributes: ['id', 'nickname', 'profile_img'] }],
             },
           ],
         });

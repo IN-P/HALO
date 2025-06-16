@@ -1,21 +1,33 @@
-// components/MainFeed.js (실전형, 광고 삽입 로직 포함)
 import React, { useEffect, useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { LOAD_FEED_REQUEST } from '../reducers/feed_IN';
 import PostCard from './PostCard';
 import AdvertisementDetail from './AdvertisementDetail';
+import axios from 'axios';
 
 const AD_INDEX = 10; // 10번째에 광고 삽입
-const AD_ID = 1;     // 임시 광고ID(실제 서비스에선 서버에서 전달받거나 API로 따로 받음)
 
 const MainFeed = ({ search }) => {
   const dispatch = useDispatch();
   const { mainFeeds, hasMoreFeeds, loadFeedsLoading } = useSelector(state => state.feed_IN);
-  const [adLoaded, setAdLoaded] = useState(false);
   const [excludePostIds, setExcludePostIds] = useState([]);
+
+  // 광고 목록 + 랜덤 광고ID 상태 추가
+  const [adList, setAdList] = useState([]);
+  const [randomAdId, setRandomAdId] = useState(null);
 
   useEffect(() => {
     dispatch({ type: LOAD_FEED_REQUEST });
+
+    // 광고목록 불러와서 랜덤 광고ID 추출
+    axios.get('http://localhost:3065/api/advertisement/active')
+      .then(res => {
+        setAdList(res.data);
+        if (res.data.length > 0) {
+          const idx = Math.floor(Math.random() * res.data.length);
+          setRandomAdId(res.data[idx].id);
+        }
+      });
   }, [dispatch]);
 
   const onScroll = useCallback(() => {
@@ -56,10 +68,10 @@ const MainFeed = ({ search }) => {
   const isPaidUser = false;
   let items = filteredPosts;
 
-  if (!isPaidUser && filteredPosts.length >= AD_INDEX) {
+  if (!isPaidUser && filteredPosts.length >= AD_INDEX && randomAdId) {
     items = [
       ...filteredPosts.slice(0, AD_INDEX),
-      { type: 'ad', adId: AD_ID },
+      { type: 'ad', adId: randomAdId },
       ...filteredPosts.slice(AD_INDEX)
     ];
   }
