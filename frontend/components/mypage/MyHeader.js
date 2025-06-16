@@ -15,7 +15,7 @@ const MyHeader = ({ data, onClickSetting, isMyProfile, reload }) => {
   const [showReportModal, setShowReportModal] = useState(false);//율비
 
   const profileUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/profile/${data?.nickname}`
+    ? `${window.location.origin}/profile/${data?.id}`
     : "";
   //율비
   const handleReportClick = () => {

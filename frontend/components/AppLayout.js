@@ -9,6 +9,10 @@ import socket, { registerUserSocket, subscribeToNotifications, unsubscribeFromNo
 import axios from 'axios';
 import styled from 'styled-components';
 
+const ScrollFix = styled.div`
+  background-Color: white;
+`
+
 const AppLayout = ({ children }) => {
   const dispatch = useDispatch();
   const chatRooms = useSelector((state) => state.chat.chatRooms);
@@ -191,8 +195,8 @@ useEffect(() => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-  const RightSidebarLimit = windowWidth > 1024; // 우측 사이드바 1024px보다 좁을 시 숨김
-  const LeftSidebarLimit = windowWidth > 768; // 좌측 사이드바 768px보다 좁을 시 숨김
+  const RightSidebarLimit = windowWidth > 1600; // 우측 사이드바 1024px보다 좁을 시 숨김
+  const LeftSidebarLimit = windowWidth > 1366; // 좌측 사이드바 768px보다 좁을 시 숨김
 
   // ✅ 화면 렌더링
   return (
@@ -244,7 +248,9 @@ useEffect(() => {
 
       {/* 우측 사이드바 */}
       { RightSidebarLimit && (  
-        <RightSidebar />
+        <ScrollFix>
+          <RightSidebar />
+        </ScrollFix>
       )}
     </div>
   );
