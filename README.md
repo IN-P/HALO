@@ -185,3 +185,73 @@ npm run dev
 
 - 오프라인 미팅  
   주요 기획 회의 및 설계 논의는 직접 만나서 진행
+  
+---
+
+## 사용자 분석 및 개선 계획
+
+HALO 프로젝트는 SNS 구조의 특성상, 사용자의 행동 패턴과 상호작용 데이터를 수집하여  
+피드 추천 알고리즘 개선과 사용자 경험(UX) 향상에 활용하는 구조로 설계되어 있습니다.  
+이를 위해 **분석 관리자(role = 11)** 기능과 **포스트 기반 추천 구조**가 연계되어 있습니다.
+
+### 분석 대상 항목
+
+| 분석 항목 | 목적 | 활용 방안 |
+|-----------|------|------------|
+| 유저별 좋아요 수 | 인기 유저 파악 | 추천 피드에 우선 노출 |
+| 게시글 리트윗 수 | 확산성 높은 콘텐츠 식별 | 피드 정렬 우선순위 반영 |
+| 피드 도달률 | 특정 유저군 도달범위 확인 | 추천 알고리즘 보정 |
+| 활동량 | 댓글/포스트 빈도 측정 | 휴면 계정 전환 판단 기준 |
+| 로그인 빈도 | 접속률 변화 확인 | 마케팅 타겟 구간 정의 |
+
+### 핵심 API 구조
+
+분석 요청은 `분석 관리자 전용 라우터`에서 처리되며,  
+로그인된 관리자 계정의 권한을 통해 다음과 같은 API 호출이 가능합니다:
+
+```javascript
+GET /admin/analytics/top-liked-users
+GET /admin/analytics/top-retweeted-posts
+```
+
+위 API는 내부적으로 다음과 같은 서비스를 호출합니다:
+
+```javascript
+// services/adminAnalyticsService.js
+async function getTopLikedUsers() {
+  return await User.findAll({
+    attributes: ['id', 'nickname', [Sequelize.fn('SUM', Sequelize.col('Likes.count')), 'likeCount']],
+    include: [{ model: Post, include: ['Likes'] }],
+    group: ['User.id'],
+    order: [[Sequelize.literal('likeCount'), 'DESC']],
+    limit: 10
+  });
+}
+```
+
+### 시각화 및 활용 예시
+
+- 분석 결과는 관리자 페이지에서 **BarChart** 형태로 시각화됩니다 (`/admin/analytics`).
+- 상위 유저, 게시물 데이터는 UI에서 다음과 같은 방식으로 표현됩니다:
+  - 유저 Top10: 닉네임 / 좋아요 수 / 포스트 수 표시
+  - 포스트 Top10: 포스트 제목 / 작성자 / 리트윗 수 표시
+
+### 피드백 루프 구조
+
+사용자 행동 → 서버 집계 → 관리자 분석 → 알고리즘 보정 → 사용자 피드 노출 개선  
+이러한 **분석 → 개선 → 반영** 루프를 통해 HALO는 사용자 선호에 맞춘 **동적 콘텐츠 제공 구조**를 목표로 합니다.
+
+### 권한 제한
+
+- 분석 API는 `보안 관리자(role = 6)` 또는 `분석 관리자(role = 11)`만 접근 가능
+- 관리자 미들웨어를 통해 보호 (`middlewares/isAdmin.js`)
+
+### 향후 확장 계획
+
+- Google Analytics 연동 (`react-ga4`)을 통해 비로그인 유저의 흐름 분석 도입 예정
+- AI 추천 시스템 연계를 위한 유저-포스트 관계 그래프 모델 학습 구조 설계 중
+
+---
+
+## 테스트 및 품질 관리
+
