@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     user_id: {            // 로그 발생 주체 (유저 or 관리자)
       type: DataTypes.BIGINT,
-      allowNull: false,
+      allowNull: true,
     },
     target_user_id: {     // 관리자 행위 대상 유저 (없을 수도 있음)
       type: DataTypes.BIGINT,
@@ -26,6 +26,7 @@ module.exports = (sequelize, DataTypes) => {
     tableName: 'logs',
     timestamps: true,
     updatedAt: false,
+    underscored: true,
   });
 
   Log.associate = (models) => {

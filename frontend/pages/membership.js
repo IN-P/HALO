@@ -12,6 +12,8 @@ import {
 import AppLayout from '../components/AppLayout';
 import { LOAD_MY_INFO_REQUEST } from '../reducers/user_YG';
 import { useSpring, animated } from '@react-spring/web';
+import useRequireLogin from '../hooks/useRequireLogin';
+
 
 const { Title, Text } = Typography;
 
@@ -30,7 +32,7 @@ const theme = {
   vvip: { color: '#ff4d4f', bg: '#fff0f6', icon: <ThunderboltOutlined /> },
 };
 
-// ✅ 분리된 카드 컴포넌트
+//  분리된 카드 컴포넌트
 const MembershipCard = ({ m, user, index, onBuy }) => {
   const spring = useSpring({
     from: { opacity: 0, transform: 'translateY(20px)' },
@@ -109,6 +111,8 @@ const MembershipPage = () => {
   const dispatch = useDispatch();
   const router = useRouter();
   const { isLogin, user } = useSelector((state) => state.user_YG);
+
+  useRequireLogin();
 
   const [memberships, setMemberships] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -7,6 +7,7 @@ import { LOAD_USER_NOTIFICATION_REQUEST, IS_READ_TRUE_REQUEST, DELETE_NOTIFICATI
 import { setChatRooms } from '../reducers/chatReducer_JW';
 import socket, { registerUserSocket, subscribeToNotifications, unsubscribeFromNotifications } from '../socket';
 import axios from 'axios';
+import styled from 'styled-components';
 
 const AppLayout = ({ children }) => {
   const dispatch = useDispatch();
@@ -183,28 +184,40 @@ useEffect(() => {
     };
   }, [dispatch, chatRooms]);
 
+  const [windowWidth, setWindowWidth] = useState(0);
+  useEffect(() => {
+    setWindowWidth(window.innerWidth);
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  const RightSidebarLimit = windowWidth > 1024; // 우측 사이드바 1024px보다 좁을 시 숨김
+  const LeftSidebarLimit = windowWidth > 768; // 좌측 사이드바 768px보다 좁을 시 숨김
+
   // ✅ 화면 렌더링
   return (
     <div style={{ display: 'flex' }}>
       {/* 좌측 고정 사이드바 */}
-      <Sidebar
-        showNotification={showNotification}
-        onToggleNotification={onToggleNotification}
-        notificationCount={notificationCount}
-        importantCount={importantCount}
-        themeMode={themeMode}
-        onToggleTheme={handleToggleTheme}
-      />
+      { LeftSidebarLimit && (  
+        <Sidebar
+          showNotification={showNotification}
+          onToggleNotification={onToggleNotification}
+          notificationCount={notificationCount}
+          importantCount={importantCount}
+          themeMode={themeMode}
+          onToggleTheme={handleToggleTheme}
+        />
+      )}
 
       {/* 알림창 팝업 */}
-      {showNotification && (
+      {showNotification && LeftSidebarLimit && (
         <div style={{
           position: 'fixed',
           top: 0,
           left: 240,
           height: '100vh',
           width: '20vw',
-          backgroundColor: '#fff',
+          //backgroundColor: '#fff',
           borderRight: '1px solid #eee',
           boxShadow: '4px 0 10px rgba(0,0,0,0.08)',
           zIndex: 1100,
@@ -217,19 +230,22 @@ useEffect(() => {
       {/* 메인 콘텐츠 */}
       <div
         style={{
-          marginLeft: 240,
+          marginLeft: LeftSidebarLimit ? 240 : 0,
           flex: 1,
           padding: 24,
           minHeight: '100vh',
-          background: '#ffffff',
+          //background: '#ffffff',
         }}
         id="mainContents"
+        className="main-contents"
       >
         {children}
       </div>
 
       {/* 우측 사이드바 */}
-      <RightSidebar />
+      { RightSidebarLimit && (  
+        <RightSidebar />
+      )}
     </div>
   );
 };

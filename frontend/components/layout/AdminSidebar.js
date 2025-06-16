@@ -11,6 +11,9 @@ import {
   GiftOutlined,
   AppstoreOutlined,
   CommentOutlined,
+  BarChartOutlined,      // 분석 아이콘
+  RocketOutlined,        // 이벤트 아이콘
+  ShopOutlined           // 상점 아이콘
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -42,36 +45,45 @@ const AdminSidebar = () => {
       </Menu.Item>
     );
 
-    // ✅ 관리자별 메뉴
+    //  관리자별 메뉴
     switch (user.role) {
       case 1: // 마스터
-        items.push(
-          <Menu.Item key="users" icon={<UserOutlined />}>
-            <Link href="/admin/users">사용자 관리</Link>
-          </Menu.Item>,
-          <Menu.Item key="ads" icon={<AppstoreOutlined />}>
-            <Link href="/admin/ads">광고 관리</Link>
-          </Menu.Item>,
-          <Menu.Item key="reports" icon={<BellOutlined />}>
-            <Link href="/admin/report/report">신고 관리</Link>
-          </Menu.Item>,
-          <Menu.Item key="inquiries" icon={<MessageOutlined />}>
-            <Link href="/admin/inquiry/inquiry">문의 관리</Link>
-          </Menu.Item>,
-          <Menu.Item key="security" icon={<LockOutlined />}>
-            <Link href="/admin/security">보안 설정</Link>
-          </Menu.Item>,
-          <Menu.Item key="achievements" icon={<GiftOutlined />}>
-            <Link href="/admin/achievements">업적 관리</Link>
-          </Menu.Item>,
-          <Menu.Item key="chat" icon={<CommentOutlined />}>
-            <Link href="/admin/chat">채팅 관리</Link>
-          </Menu.Item>,
-          <Menu.Item key="posts" icon={<NotificationOutlined />}>
-            <Link href="/admin/posts">게시글 관리</Link>
-          </Menu.Item>
-        );
-        break;
+  items.push(
+    <Menu.Item key="users" icon={<UserOutlined />}>
+      <Link href="/admin/users">사용자 관리</Link>
+    </Menu.Item>,
+    <Menu.Item key="ads" icon={<AppstoreOutlined />}>
+      <Link href="/admin/ads">광고 관리</Link>
+    </Menu.Item>,
+    <Menu.Item key="reports" icon={<BellOutlined />}>
+      <Link href="/admin/report/report">신고 관리</Link>
+    </Menu.Item>,
+    <Menu.Item key="inquiries" icon={<MessageOutlined />}>
+      <Link href="/admin/inquiry/inquiry">문의 관리</Link>
+    </Menu.Item>,
+    <Menu.Item key="security" icon={<LockOutlined />}>
+      <Link href="/admin/logs">보안 설정</Link>
+    </Menu.Item>,
+    <Menu.Item key="achievements" icon={<GiftOutlined />}>
+      <Link href="/admin/achievements">업적 관리</Link>
+    </Menu.Item>,
+    <Menu.Item key="chat" icon={<CommentOutlined />}>
+      <Link href="/admin/chat">채팅 관리</Link>
+    </Menu.Item>,
+    <Menu.Item key="posts" icon={<NotificationOutlined />}>
+      <Link href="/admin/post/posts">게시글 관리</Link>
+    </Menu.Item>,
+    <Menu.Item key="analytics" icon={<BarChartOutlined />}>
+      <Link href="/admin/analytics/analytics">분석 리포트</Link>
+    </Menu.Item>,
+    <Menu.Item key="events" icon={<RocketOutlined />}>
+      <Link href="/admin/event/roulette">이벤트 관리</Link>
+    </Menu.Item>,
+    <Menu.Item key="store" icon={<ShopOutlined />}>
+      <Link href="/admin/player">상점 관리</Link>
+    </Menu.Item>
+  );
+  break;
 
       case 2: // 광고 관리자
         items.push(
@@ -108,7 +120,7 @@ const AdminSidebar = () => {
       case 6: // 보안 관리자
         items.push(
           <Menu.Item key="security" icon={<LockOutlined />}>
-            <Link href="/admin/security">보안 설정</Link>
+            <Link href="/admin/logs">보안 설정</Link>
           </Menu.Item>
         );
         break;

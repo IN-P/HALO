@@ -96,32 +96,89 @@ const RightSidebar = () => {
     };
 
     return (
-        <div style={{
-            width: 260,
+        <div 
+        className="weather-box" 
+        style={{
+            width: 340,
             borderLeft: '1px solid #eee',
             padding: 24,
-            background: '#fff',
+            //background: '#fff',
             minHeight: '100vh',
             display: 'flex', 
             flexDirection: 'column'
         }}>
             {/*미니 프로필 영역*/}
-            <div onClick={() => window.location.href = `http://localhost:3000/profile/${user?.id}`} 
-                style={{
+            <div 
+            className="mini-profile-card"
+            onClick={() => window.location.href = `http://localhost:3000/profile/${user?.id}`} 
+            style={{
                 marginBottom: 24,
-                padding: 16,
+                padding: 12,
                 border: '1px solid #ddd',
                 borderRadius: 8,
-                textAlign: 'center',
-                cursor:"pointer",
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                cursor: 'pointer',
+                //backgroundColor: '#fafafa',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+            }}
+            onMouseEnter={e => {
+                e.currentTarget.style.transform = 'scale(1.02)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+            }}
+            onMouseLeave={e => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = 'none';
+            }}
+            >
+                        {/* 프로필 이미지 */}
+            <div 
+            className="user-profile-circle"
+            style={{
+            width: 48,
+            height: 48,
+            borderRadius: '50%',
+            backgroundColor: '#e0e0e0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+            flexShrink: 0,
             }}>
-                <strong>{user?.nickname}</strong>
-                <div style={{ fontSize: 12, color: '#888' }}>{user?.email}</div>
+            {user?.profile_img ? (
+                <img 
+                src={`http://localhost:3065${user?.profile_img}`} 
+                alt="프로필 이미지"
+                style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                }}
+                />
+            ) : (
+                <div style={{
+                fontWeight: 'bold',
+                fontSize: 18,
+                color: '#555',
+                }}>
+                {user?.nickname?.charAt(0) || 'U'}
+                </div>
+            )}
+            </div>
+                {/* 닉네임*/}
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontWeight: 'bold', fontSize: 16 }}>{user?.nickname}</span>
+                </div>
             </div>
 
             {/* 일반회원: 날씨 / 관리자: 버튼 */}
             {user?.role === 0 ? (
-                <div style={{
+                <div 
+                className="weather-box"
+                style={{
+                    marginTop: 250, // ✅ 위쪽 여백 추가
+                    marginBottom: 32, // ✅ 아래쪽도 여유
                     padding: 16,
                     border: '1px solid #ddd',
                     borderRadius: 8,
@@ -130,16 +187,18 @@ const RightSidebar = () => {
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'space-between', 
-                    gap: '10px' 
+                    gap: '10px',
+                    //backgroundColor: '#F5F9FF'
                 }}>
-                    <button onClick={goToPreviousStadium} style={{
+                    <button onClick={goToPreviousStadium} 
+                    className="weather-nav-btn"
+                    style={{
                         background: 'none',
                         border: '1px solid #ccc',
                         borderRadius: '5px',
                         padding: '5px 8px',
                         cursor: 'pointer',
                         fontSize: '1.2em',
-                        color: '#333',
                         flexShrink: 0 
                     }}>&lt;</button>
 
@@ -153,38 +212,42 @@ const RightSidebar = () => {
                         gap: '5px'
                     }}> 
                         {loading ? (
-                            <div>날씨 정보 로딩 중...</div>
+                            <div style={{ fontSize: 14, color: '#888' }}>⏳ 날씨 정보 로딩 중...</div>
                         ) : error ? (
-                            <div>{error}</div>
+                            <div style={{ fontSize: 14, color: 'red' }}>⚠️ {error}</div>
                         ) : (
                             <>
                                 {weatherInfo.weatherIcon && (
                                     <img
                                         src={`/weather-icons/${weatherInfo.weatherIcon}?t=${Date.now()}`} 
                                         alt={weatherInfo.weatherStatus}
-                                        style={{ width: 60, height: 60 }}
+                                        style={{ width: 80, height: 80 }}
                                     />
                                 )}
                                 <div style={{ fontSize: 16, fontWeight: 'bold' }}>
                                     {weatherInfo.stadium}
                                 </div>
-                                <div style={{ fontSize: 20, fontWeight: 'bold' }}>
+                                <div className="weather-status-main">
                                     {weatherInfo.temperature} {weatherInfo.weatherStatus}
+                                    <div className="weather-status-sub">
+                                    {weatherInfo.weatherStatus}
+                                    </div>
                                 </div>
-                                {weatherInfo.humidity && <div style={{ fontSize: 12, color: '#666' }}>습도: {weatherInfo.humidity}</div>}
-                                {weatherInfo.wind && <div style={{ fontSize: 12, color: '#666' }}>풍속: {weatherInfo.wind}</div>}
+                                {weatherInfo.humidity && <div className="weather-detail">💧습도: {weatherInfo.humidity}</div>}
+                                {weatherInfo.wind && <div className="weather-detail">🌬️풍속: {weatherInfo.wind}</div>}
                             </>
                         )}
                     </div>
 
-                    <button onClick={goToNextStadium} style={{
+                    <button onClick={goToNextStadium} 
+                    className="weather-nav-btn"
+                    style={{
                         background: 'none',
                         border: '1px solid #ccc',
                         borderRadius: '5px',
                         padding: '5px 8px',
                         cursor: 'pointer',
                         fontSize: '1.2em',
-                        color: '#333',
                         flexShrink: 0 
                     }}>&gt;</button>
                 </div>

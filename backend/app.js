@@ -20,6 +20,7 @@ const postRouter = require('./routes/post'); //## 인
 const postsRouter = require('./routes/posts'); //## 인
 const hashtagRouter = require('./routes/hashtag'); //## 인
 const commentRouter = require('./routes/comment'); //## 인
+const feedRouter = require('./routes/feed');
 const followRouter = require('./routes/follow');//## 율비
 const blockRouter = require('./routes/block');//## 율비
 const reportRouter = require('./routes/report');//## 율비
@@ -53,7 +54,8 @@ const adminPostsRouter = require('./routes/adminPosts');
 const logRouter = require('./routes/log'); //윤기추가
 const userPoint = require('./routes/userPoint'); // 준혁
 const mentionUserRouter = require('./routes/mentionUser'); //재원 맨션
-
+const initDummyUsers = require('./utils/init/initDummyUsers'); //윤기
+const attackDetector = require('./middlewares/attackDetector'); //윤기 공격 탐지 미들웨어
 
 // .env 적용
 dotenv.config();
@@ -86,17 +88,17 @@ app.use(session({
 // 반드시 session 뒤에 호출! 이것도 추가입니다
 app.use(passport.initialize());  //##윤기 <-- 이거 꼭 넣어야 req.isAuthenticated가 생김
 app.use(passport.session()); //##윤기
+app.use(attackDetector); //윤기
 
 // DB 연결 ##윤기 추가
 db.sequelize.sync()
   .then(async () => {
     console.log('DB 연결 성공');
-
     await initUserStatus();   //## 윤기 추가
     await initMembership();    //## 윤기 추가
     await initMyTeam();     //## 윤기 추가
     await initSocials();     //## 윤기 추가
-    
+    await initDummyUsers(); //## 윤기추가
     app.set('models', db); //윤기추가
     console.log('기본 데이터 초기화 완료'); //## 윤기 추가
   })
@@ -109,6 +111,7 @@ app.use('/post', postRouter); //## 인
 app.use('/posts', postsRouter); //## 인
 app.use('/hashtag', hashtagRouter); //## 인
 app.use('/comment', commentRouter); //## 인
+app.use('/feeds', feedRouter);
 app.use('/follow', followRouter); //## 율비
 app.use('/block', blockRouter); //## 율비
 app.use('/report', reportRouter); //## 율비
@@ -131,7 +134,7 @@ app.use('/user/reset-password', resetPasswordRouter); //윤기 비번재발급
 app.use('/auth', authRouter); //윤기추가 /auth/google, /auth/google/callback 용
 app.use('/pay', kakaopayRouter); //윤기추가
 app.use('/api/admin', adminRouter);
-app.use('/advertisement', advertisementRouter); // 재원 광고 라우터
+app.use('/api/advertisement', advertisementRouter); // 재원 광고 라우터
 app.use('/report-result', reportResultRouter);//율비
 app.use('/recovery', recoveryRouter); //윤기추가
 app.use('/membership', membershipRouter); // 윤기추가

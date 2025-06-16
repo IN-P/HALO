@@ -31,9 +31,14 @@ const MySettingAchievement = ({ data }) => {
 
   const unlockedIds = new Set((data?.Achievements ?? []).map((a) => String(a.id)));
 
-  const filteredAchievements = (achievements ?? []).filter((a) =>
-    filterByType(Number(a.id), filter)
-  );
+  const filteredAchievements = (achievements ?? [])
+    .filter((a) => filterByType(Number(a.id), filter))
+    .sort((a, b) => {
+      const aOwned = unlockedIds.has(String(a.id));
+      const bOwned = unlockedIds.has(String(b.id));
+      if (aOwned === bOwned) return 0;
+      return aOwned ? -1 : 1;
+    });
 
   return (
     <>
@@ -103,8 +108,23 @@ const MySettingAchievement = ({ data }) => {
                 />
               </div>
 
-              <div>
-                <h4 style={{ margin: 0, fontSize: '16px' }}>{a.name}</h4>
+              <div style={{ flexGrow: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h4 style={{ margin: 0, fontSize: '16px' }}>{a.name}</h4>
+                  <span
+                    style={{
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      color: isOwned ? '#2c7' : '#999',
+                      backgroundColor: isOwned ? '#e6ffed' : '#f0f0f0',
+                      border: `1px solid ${isOwned ? '#2c7' : '#ccc'}`,
+                      borderRadius: '8px',
+                      padding: '2px 8px',
+                    }}
+                  >
+                    {isOwned ? '달성' : '미달성'}
+                  </span>
+                </div>
                 <p style={{ margin: '4px 0 8px', color: '#666', fontSize: '14px' }}>{a.description}</p>
                 {isOwned ? (
                   <small style={{ fontSize: '12px', color: '#999' }}>

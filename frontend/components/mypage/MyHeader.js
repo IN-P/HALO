@@ -26,19 +26,23 @@ const MyHeader = ({ data, onClickSetting, isMyProfile, reload }) => {
     setShowReportModal(false);
   };
   // 드롭다운 메뉴 구성
-  const menu = (
-    <Menu>
-      <Menu.Item key="report">
-        <ReportButton onClick={handleReportClick} />
-      </Menu.Item>
-    </Menu>
-  );
+const menu = (
+  <Menu
+    onClick={(e) => {
+      if (e.key === "report") {
+        e.domEvent.stopPropagation(); 
+        setShowReportModal(true);     
+      }
+    }}
+  >
+    <Menu.Item key="report">
+      신고하기
+    </Menu.Item>
+  </Menu>
+);
 
   return (
     <div style={{ textAlign: "right", position: "relative" }}>
-      {isMyProfile && (
-        <CrownFilled style={{ fontSize: "32px", color: "#FFD700" }} />
-      )}
       &nbsp;&nbsp;
       <ShareAltOutlined
         style={{ fontSize: "32px", color: "#4A98FF", cursor: "pointer" }}

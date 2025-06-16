@@ -1,12 +1,12 @@
-// routes/comment.js
 const express = require('express');
 const router = express.Router();
-const { Comment, CommentPath, User, Post, ActiveLog, Notification, Mention  } = require('../models'); // ActiveLog 준혁 추가 mention추가
+const { Comment, User, Post, ActiveLog, Notification, Mention } = require('../models');
 const { isLoggedIn } = require('./middlewares');
-const { sendNotification } = require('../notificationSocket'); // 준혁추가 실시간 알림  
+const { sendNotification } = require('../notificationSocket');
 const { checkAndAssignCommentAchievements } = require('../services/achievement/comment');
+const { Op } = require('sequelize');
 
-// 1. 기본 댓글 등록: POST /comment/post/:postId
+// 댓글 등록
 router.post('/post/:postId', isLoggedIn, async (req, res, next) => {
   try {
     const post = await Post.findByPk(req.params.postId);
@@ -17,62 +17,36 @@ router.post('/post/:postId', isLoggedIn, async (req, res, next) => {
       post_id: post.id,
       user_id: req.user.id,
     });
+
+    // 멘션 감지
     const mentions = req.body.content.match(/@[^\s@]+/g);
-
     if (mentions) {
-  await Promise.all(
-    mentions.map(async tag => {
-      const nickname = tag.slice(1);
-      const receiver = await User.findOne({ where: { nickname } });
-      if (receiver) {
-        await Mention.create({
-          senders_id: req.user.id,
-          receiver_id: receiver.id,
-          target_type: 'COMMENT',
-          target_id: comment.id, // ✅ 댓글 id로 target_id 저장!
-          context: req.body.content,
-          createAt: new Date(),
-        });
-        // 준혁 : 알림 생성
-        const sender = await User.findOne({
-          where: req.user.id,
-          attributes: ['nickname'] })
-        await Notification.create({
-          content: sender.nickname,
-          users_id:  receiver.id,
-          target_type_id: 8,
-        })
-        // 소켓 푸시
-        sendNotification(receiver.id, {
-          type: "MENTION",
-          message: '당신을 언급했습니다'
-        });
-        //
-        console.log(`✅ Mention 저장 완료 (COMMENT): @${nickname} → userId=${receiver.id}`);
-      } else {
-        console.log(`⚠️ Mention 대상 유저 없음 (COMMENT): @${nickname}`);
-      }
-    })
-  );
-}
+      await Promise.all(mentions.map(async tag => {
+        const nickname = tag.slice(1);
+        const receiver = await User.findOne({ where: { nickname } });
+        if (receiver) {
+          await Mention.create({
+            senders_id: req.user.id,
+            receiver_id: receiver.id,
+            target_type: 'COMMENT',
+            target_id: comment.id,
+            context: req.body.content,
+            createAt: new Date(),
+          });
+          await Notification.create({
+            content: req.user.nickname,
+            users_id: receiver.id,
+            target_type_id: 8,
+          });
+          sendNotification(receiver.id, {
+            type: "MENTION",
+            message: "당신을 언급했습니다",
+          });
+        }
+      }));
+    }
 
-    const fullComment = await Comment.findOne({
-      where: { id: comment.id },
-      include: [{ model: User, attributes: ['id', 'nickname', 'profile_img'] }],
-    });
-
-    // 댓글 등록 후 최신 댓글 카운트도 같이 응답!
-    const totalComments = await Comment.count({ where: { post_id: post.id, } });
-
-    // 준혁 추가
-    // 활동 내역 생성
-    await ActiveLog.create({
-      action: "CREATE",
-      target_id: comment.id,
-      users_id: req.user.id,
-      target_type_id: 2,
-    } );
-    // 재원 맨션
+    // 수동 receiver_id 멘션
     if (req.body.receiver_id) {
       await Mention.create({
         senders_id: req.user.id,
@@ -82,49 +56,49 @@ router.post('/post/:postId', isLoggedIn, async (req, res, next) => {
         context: req.body.content,
         createAt: new Date(),
       });
-      console.log('✅ 댓글 Mention 저장 완료');
     }
-//
-    // 알림 생성
-    // 댓글이 달린 포스트의 내용과 user id 추출
-    const commentedPost = await Post.findOne({
-      where: { id: post.id },
-      attributes: [ "content", "user_id" ],
+
+    const fullComment = await Comment.findOne({
+      where: { id: comment.id },
+      include: [{ model: User, attributes: ['id', 'nickname', 'profile_img'] }],
     });
-    // 포스트 작성한 user id와 댓글을 단 user id가 다를 경우에만 알림 생성
-    if (commentedPost.user_id !== req.user.id) {
+
+    const totalComments = await Comment.count({ where: { post_id: post.id, is_deleted: false } });
+
+    await ActiveLog.create({
+      action: "CREATE",
+      target_id: comment.id,
+      users_id: req.user.id,
+      target_type_id: 2,
+    });
+
+    if (post.user_id !== req.user.id) {
       await Notification.create({
-        content: `${commentedPost.content}`,
-        users_id: commentedPost.user_id,
+        content: `${post.content}`,
+        users_id: post.user_id,
         target_type_id: 2,
-      })
-      // 소켓 푸시
-      sendNotification(commentedPost.user_id, {
+      });
+      sendNotification(post.user_id, {
         type: 'COMMENT',
         message: '댓글이 달렸습니다',
       });
-      //
     }
-    //
-    // 업적 부여 함수
+
     await checkAndAssignCommentAchievements(req.user.id);
 
-    res.status(201).json({
-      comment: fullComment,
-      postId: post.id,
-      commentCount: totalComments, // ← 추가
-    });
+    res.status(201).json({ comment: fullComment, postId: post.id, commentCount: totalComments });
   } catch (error) {
     console.error(error);
     next(error);
   }
 });
 
-// 2. 대댓글 등록: POST /comment/:commentId/reply
+// 대댓글 등록
 router.post('/:commentId/reply', isLoggedIn, async (req, res, next) => {
   try {
     const parent = await Comment.findByPk(req.params.commentId);
     if (!parent) return res.status(404).send('부모 댓글이 존재하지 않습니다.');
+    if (parent.parent_id) return res.status(400).send('2단계(대댓글)까지만 허용');
 
     const reply = await Comment.create({
       content: req.body.content,
@@ -133,166 +107,91 @@ router.post('/:commentId/reply', isLoggedIn, async (req, res, next) => {
       parent_id: parent.id,
     });
 
-    await CommentPath.create({ upper_id: reply.id, lower_id: reply.id, depth: 0 });
+    const totalComments = await Comment.count({ where: { post_id: parent.post_id, is_deleted: false } });
 
-    const ancestors = await CommentPath.findAll({ where: { lower_id: parent.id } });
-    const paths = ancestors.map((a) => ({
-      upper_id: a.upper_id,
-      lower_id: reply.id,
-      depth: a.depth + 1,
-    }));
-    paths.push({ upper_id: parent.id, lower_id: reply.id, depth: 1 });
-
-    const keySet = new Set();
-    const uniquePaths = [];
-    for (const row of paths) {
-      const key = `${row.upper_id}-${row.lower_id}`;
-      if (!keySet.has(key)) {
-        uniquePaths.push(row);
-        keySet.add(key);
-      }
-    }
-
-    await CommentPath.bulkCreate(uniquePaths);
-
-    // 대댓글 등록 후 최신 댓글 카운트도 같이 응답!
-    const totalComments = await Comment.count({ where: { post_id: parent.post_id, } });
-
-    // 준혁 추가
-    // 활동 내역 생성
     await ActiveLog.create({
       action: "CREATE",
       target_id: reply.id,
       users_id: req.user.id,
       target_type_id: 4,
-    } );
-    // ㅈㅇ ㅁㅅ
-    if (req.body.receiver_id) {
-  await Mention.create({
-    senders_id: req.user.id,
-    receiver_id: req.body.receiver_id,
-    target_type: 'COMMENT',
-    target_id: reply.id,
-    context: req.body.content,
-    createAt: new Date(),
-  });
-  console.log('✅ 대댓글 Mention 저장 완료');
-}
-//
-    // 알림 생성
-    // 원본 내용과 작성자 id 추출
-    const RepliedComment = await Comment.findOne({
-      where: { id: parent.id },
-      attributes: [ "content", "user_id" ],
-    })
-    // 해당 포스트 정보 가져오기 (포스트 주인 알림용)
-    const post = await Post.findOne({
-      where: { id: parent.post_id },
-      attributes: ["user_id", 'content'],
     });
-    // 포스트 주인에게 알림 생성 (댓글 단 유저가 포스트 주인이 아닐 경우)
-    if (post.user_id !== req.user.id && post.user_id !== RepliedComment.user_id) {
-      await Notification.create({
-        content: `${post.content}`,
-        users_id: post.user_id,
-        target_type_id: 2,
-      });
-      sendNotification(post.user_id, {
-        type: 'COMMENT',
-        message: '포스트에 새로운 댓글이 달렸습니다',
-      });
-    }
-    // 원본 댓글 유저 id와 작성자 id가 다를경우 알림 생성
-    if ( RepliedComment.user_id !== req.user.id ) {
-      await Notification.create({
-        content: `${RepliedComment.content}`,
-        users_id: RepliedComment.user_id,
-        target_type_id: 4,
-      })
-      // 소켓 푸시
-      // 답장이 달린 댓글의 유저
-      sendNotification(RepliedComment.user_id, {
-        type: 'REPLY',
-        message: '답장이 달렸습니다',
-      });
-    }
-    //
 
-    res.status(201).json({
-      comment: reply,
-      postId: parent.post_id,
-      commentCount: totalComments, // ← 추가
-    });
+    if (req.body.receiver_id) {
+      await Mention.create({
+        senders_id: req.user.id,
+        receiver_id: req.body.receiver_id,
+        target_type: 'COMMENT',
+        target_id: reply.id,
+        context: req.body.content,
+        createAt: new Date(),
+      });
+    }
+
+    const repliedComment = await Comment.findOne({ where: { id: parent.id }, attributes: ['content', 'user_id'] });
+    const post = await Post.findOne({ where: { id: parent.post_id }, attributes: ['user_id', 'content'] });
+
+    if (post.user_id !== req.user.id && post.user_id !== repliedComment.user_id) {
+      await Notification.create({ content: post.content, users_id: post.user_id, target_type_id: 2 });
+      sendNotification(post.user_id, { type: 'COMMENT', message: '포스트에 새로운 댓글이 달렸습니다' });
+    }
+    if (repliedComment.user_id !== req.user.id) {
+      await Notification.create({ content: repliedComment.content, users_id: repliedComment.user_id, target_type_id: 4 });
+      sendNotification(repliedComment.user_id, { type: 'REPLY', message: '답장이 달렸습니다' });
+    }
+
+    res.status(201).json({ comment: reply, postId: parent.post_id, commentCount: totalComments });
   } catch (error) {
     console.error(error);
     next(error);
   }
 });
 
-// 3. 트리형 댓글 조회: GET /comment/post/:postId/tree
+// 트리형 댓글 조회
 router.get('/post/:postId/tree', async (req, res, next) => {
   try {
-    //윫추가
     const { Block } = require('../models');
-    const { Op } = require('sequelize');
 
     let blockedUserIds = [];
-
     if (req.user) {
       const blocks = await Block.findAll({
         where: {
           [Op.or]: [
             { from_user_id: req.user.id },
             { to_user_id: req.user.id },
-          ]
-        }
+          ],
+        },
       });
-
-      // 윫 나를 차단했거나 내가 차단한 사람 모두 필터링
       blockedUserIds = blocks.map(b =>
         b.from_user_id === req.user.id ? b.to_user_id : b.from_user_id
       );
     }
 
-    //////
     const comments = await Comment.findAll({
       where: {
         post_id: req.params.postId,
-        user_id: {
-          [Op.notIn]: blockedUserIds, // 윫 추가
-        },
+        user_id: { [Op.notIn]: blockedUserIds },
       },
       include: [
         { model: User, attributes: ['id', 'nickname', 'profile_img'] },
-        { model: Comment, as: 'Parent', include: [{ model: User, attributes: ['id', 'nickname', 'profile_img'] }] }
+        { model: Comment, as: 'Parent', include: [{ model: User, attributes: ['id', 'nickname', 'profile_img'] }] },
       ],
       order: [['id', 'ASC']],
     });
 
     const commentMap = {}, roots = [];
-
     comments.forEach(c => commentMap[c.id] = { ...c.toJSON(), replies: [] });
     comments.forEach(c => {
-      if (c.parent_id) {
-        commentMap[c.parent_id]?.replies.push(commentMap[c.id]);
-      } else {
-        roots.push(commentMap[c.id]);
-      }
+      if (c.parent_id) commentMap[c.parent_id]?.replies.push(commentMap[c.id]);
+      else roots.push(commentMap[c.id]);
     });
 
-    // 삭제된 댓글은 content를 대체
     const cleanComment = (comment) => {
-      if (comment.is_deleted) {
-        comment.content = '삭제된 댓글입니다.';
-      }
-      if (comment.replies) {
-        comment.replies = comment.replies.map(cleanComment);
-      }
+      if (comment.is_deleted) comment.content = '삭제된 댓글입니다.';
+      if (comment.replies) comment.replies = comment.replies.map(cleanComment);
       return comment;
     };
 
-    const cleanedTree = roots.map(cleanComment);
-    res.status(200).json(cleanedTree);
+    res.status(200).json(roots.map(cleanComment));
   } catch (error) {
     console.error(error);
     next(error);
@@ -307,16 +206,12 @@ router.patch('/:commentId', isLoggedIn, async (req, res, next) => {
     if (comment.user_id !== req.user.id) return res.status(403).send('수정 권한이 없습니다.');
 
     await comment.update({ content: req.body.content });
-
-    // 준혁 추가
-    // 활동 내역 생성
     await ActiveLog.create({
       action: "UPDATE",
       target_id: comment.id,
       users_id: req.user.id,
       target_type_id: 2,
-    } );
-
+    });
 
     res.status(200).json({ CommentId: comment.id, content: req.body.content });
   } catch (error) {
@@ -325,7 +220,7 @@ router.patch('/:commentId', isLoggedIn, async (req, res, next) => {
   }
 });
 
-// 댓글 삭제 (실제 삭제 or soft delete 방식)
+// 댓글 삭제
 router.delete('/:commentId', isLoggedIn, async (req, res, next) => {
   try {
     const comment = await Comment.findByPk(req.params.commentId);
@@ -334,21 +229,19 @@ router.delete('/:commentId', isLoggedIn, async (req, res, next) => {
 
     await comment.update({ is_deleted: true });
 
-    // 삭제 후 최신 댓글 카운트도 같이 응답!
-    const totalComments = await Comment.count({ where: { post_id: comment.post_id,} });
+    const totalComments = await Comment.count({ where: { post_id: comment.post_id, is_deleted: false } });
 
-    // 활동 내역 생성 - 준혁 추가
     await ActiveLog.create({
       action: "DELETE",
       target_id: comment.id,
       users_id: req.user.id,
       target_type_id: 2,
-    } );
+    });
 
     res.status(200).json({
       CommentId: comment.id,
       postId: comment.post_id,
-      commentCount: totalComments, 
+      commentCount: totalComments,
     });
   } catch (error) {
     console.error(error);

@@ -1,11 +1,17 @@
-import React, { useEffect, useCallback } from 'react';
+// components/MainFeed.js (실전형, 광고 삽입 로직 포함)
+import React, { useEffect, useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { LOAD_POSTS_REQUEST } from '../reducers/post_IN';
 import PostCard from './PostCard';
+import AdvertisementDetail from './AdvertisementDetail';
+
+const AD_INDEX = 10; // 10번째에 광고 삽입
+const AD_ID = 1;     // 임시 광고ID(실제 서비스에선 서버에서 전달받거나 API로 따로 받음)
 
 const MainFeed = ({ search }) => {
   const dispatch = useDispatch();
   const { mainPosts, hasMorePosts, loadPostsLoading } = useSelector(state => state.post_IN);
+  const [adLoaded, setAdLoaded] = useState(false);
 
   useEffect(() => {
     dispatch({ type: LOAD_POSTS_REQUEST });
@@ -45,13 +51,27 @@ const MainFeed = ({ search }) => {
     );
   });
 
+  // ====== [광고 아이템 삽입] ======
+  // 유료회원 여부는 userSelector에서 확인 (여기선 임시 false)
+  const isPaidUser = false;
+  let items = filteredPosts;
+
+  if (!isPaidUser && filteredPosts.length >= AD_INDEX) {
+    items = [
+      ...filteredPosts.slice(0, AD_INDEX),
+      { type: 'ad', adId: AD_ID }, // 광고 아이템 (구조는 자유롭게)
+      ...filteredPosts.slice(AD_INDEX)
+    ];
+  }
 
   return (
     <>
-      {filteredPosts.map(post => (
-        <PostCard key={post.id} post={post} />
-      ))}
-      {!hasMorePosts && <div style={{textAlign:'center',color:'#bbb',margin:'20px'}}>모든 글을 다 불러왔습니다</div>}
+      {items.map((item, idx) =>
+        item.type === 'ad'
+          ? <AdvertisementDetail key={`ad-${item.adId}-${idx}`} adId={item.adId} />
+          : <PostCard key={item.id} post={item} />
+      )}
+      {!hasMorePosts && <div style={{ textAlign: 'center', color: '#bbb', margin: '20px' }}>모든 글을 다 불러왔습니다</div>}
     </>
   );
 };
