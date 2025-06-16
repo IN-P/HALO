@@ -13,7 +13,7 @@ HALO는 실시간 채팅 및 맨션, 포스트 추천 알고리즘, 업적·뱃�
 팀원별 역할 분담을 통해 기능별 모듈을 독립적으로 설계·개발한 협업형 프로젝트입니다.
 
 ---
-##  관련문서 (아직 빠진 문서들 많고 링크 연결 안된 문서 있음
+##  관련문서
 - [ERD (DB 설계도)](https://github.com/IN-P/HALO/blob/main/md_images/halo_ERD.png)
 - [기능 요구사항 정의서 (Notion 등)](링크추가) - 연결안됨
 - [화면 설계안 (피그마)](https://www.figma.com/design/Rq64drhRrFNn4V3IZoSINI/HALO?node-id=0-1&t=DwuTeYBSMSj4Tevs-1)
