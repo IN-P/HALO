@@ -88,6 +88,8 @@ const MySettingProfile = ({ data, reload, reloadLogInUser }) => {
       // PATCH 요청 생략!
       setPreview(uploadedPath + "?t=" + Date.now()); // 캐시 방지
       message.success("프로필 사진이 성공적으로 변경되었습니다.");
+      reload();
+      reloadLogInUser();
     } catch (err) {
       console.error("이미지 업로드 오류:", err);
       message.error("이미지 변경 중 오류가 발생했습니다.");
@@ -109,6 +111,8 @@ const MySettingProfile = ({ data, reload, reloadLogInUser }) => {
       );
       setPreview(defaultImgPath);
       message.success("프로필 사진이 성공적으로 변경되었습니다.");
+      reload();
+      reloadLogInUser();
     } catch (err) {
       console.error("프로필 이미지 기본값 변경 오류:", err);
     }

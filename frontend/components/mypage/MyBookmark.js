@@ -68,10 +68,16 @@ const MyBookmark = ({ data }) => {
   }
 
   // 비공개 게시글 필터링
-  const visiblePosts = data.BookmarkedPosts.filter(post => {
-    const basePost = post.Regram || post;
-    return !basePost.private_post;
-  });
+  const visiblePosts = data.BookmarkedPosts
+    .filter(post => {
+      const basePost = post.Regram || post;
+      return !basePost.private_post;
+    })
+    .sort((a, b) => {
+      const idA = a.Regram?.id || a.id;
+      const idB = b.Regram?.id || b.id;
+      return idB - idA; // 내림차순
+    });
 
   if (visiblePosts.length === 0) {
     return <NoDataMessage>표시할 수 있는 게시물이 없습니다</NoDataMessage>;

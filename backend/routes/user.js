@@ -5,7 +5,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const passport = require('passport');
-const { User } = require('../models');
+const { User, UserInfo } = require('../models');
 const { isLoggedIn, isNotLoggedIn } = require('./middlewares'); // 로그인 여부 체크 미들웨어
 const userService = require('../services/userService'); //소프트 딜리트
 const db = require('../models');
@@ -79,6 +79,11 @@ router.post('/', async (req, res, next) => {
       myteam_id: req.body.myteam_id || 1,         // "응원팀 없음"
       social_id: 1,         // 간편로그인 안한양반으로 디폴트
       ip,   //ip저장
+    });
+    await UserInfo.create({
+      users_id: newUser.id,
+      phone: null,
+      introduce: null,
     });
 
     await registerBadge(newUser.id);

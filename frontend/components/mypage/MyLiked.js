@@ -56,10 +56,17 @@ const MyLiked = ({ data }) => {
     return <NoDataMessage>좋아요한 게시물이 없습니다</NoDataMessage>;
   }
 
-  const visiblePosts = data.Liked.filter(post => {
-    const basePost = post.Regram || post;
-    return !basePost.private_post;
-  });
+  const visiblePosts = data.Liked
+    .filter(post => {
+      const basePost = post.Regram || post;
+      return !basePost.private_post;
+    })
+    .sort((a, b) => {
+      const idA = (a.Regram?.id ?? a.id);
+      const idB = (b.Regram?.id ?? b.id);
+      return idB - idA; // 내림차순
+    });
+
 
   if (visiblePosts.length === 0) {
     return <NoDataMessage>표시할 수 있는 게시물이 없습니다</NoDataMessage>;

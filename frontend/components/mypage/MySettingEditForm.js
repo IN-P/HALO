@@ -190,7 +190,7 @@ const MySettingEditForm = ({ data, reload, reloadLogInUser }) => {
       )}
       
       {/* 휴대전화 */}
-      <StyledBar onClick={togglePhone}>{user?.UserInfo?.phone || data?.UserInfo?.phone || "전화번호 없음"}</StyledBar>
+      <StyledBar onClick={togglePhone}>{data?.UserInfo?.phone || user?.UserInfo?.phone || "전화번호 없음"}</StyledBar>
       {editPhoneOpen && (
         <StyledEditBar>
           <Title>휴대전화번호 변경</Title>
