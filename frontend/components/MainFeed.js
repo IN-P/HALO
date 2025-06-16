@@ -1,7 +1,7 @@
 // components/MainFeed.js (실전형, 광고 삽입 로직 포함)
 import React, { useEffect, useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { LOAD_POSTS_REQUEST } from '../reducers/post_IN';
+import { LOAD_FEED_REQUEST } from '../reducers/feed_IN';
 import PostCard from './PostCard';
 import AdvertisementDetail from './AdvertisementDetail';
 
@@ -10,24 +10,26 @@ const AD_ID = 1;     // 임시 광고ID(실제 서비스에선 서버에서 전�
 
 const MainFeed = ({ search }) => {
   const dispatch = useDispatch();
-  const { mainPosts, hasMorePosts, loadPostsLoading } = useSelector(state => state.post_IN);
+  const { mainFeeds, hasMoreFeeds, loadFeedsLoading } = useSelector(state => state.feed_IN);
   const [adLoaded, setAdLoaded] = useState(false);
+  const [excludePostIds, setExcludePostIds] = useState([]);
 
   useEffect(() => {
-    dispatch({ type: LOAD_POSTS_REQUEST });
+    dispatch({ type: LOAD_FEED_REQUEST });
   }, [dispatch]);
 
   const onScroll = useCallback(() => {
     if (window.scrollY + document.documentElement.clientHeight > document.documentElement.scrollHeight - 300) {
-      if (hasMorePosts && !loadPostsLoading) {
-        const lastId = mainPosts[mainPosts.length - 1]?.id;
+      if (hasMoreFeeds && !loadFeedsLoading) {
+        const newExclude = mainFeeds.map(p => p.id);
+        setExcludePostIds(newExclude);
         dispatch({
-          type: LOAD_POSTS_REQUEST,
-          lastId,
+          type: LOAD_FEED_REQUEST,
+          excludePostIds: newExclude,
         });
       }
     }
-  }, [hasMorePosts, loadPostsLoading, mainPosts, dispatch]);
+  }, [hasMoreFeeds, loadFeedsLoading, mainFeeds, dispatch]);
 
   useEffect(() => {
     window.addEventListener('scroll', onScroll);
@@ -35,8 +37,7 @@ const MainFeed = ({ search }) => {
   }, [onScroll]);
 
   // ====== [검색 필터] ======
-  const filteredPosts = mainPosts.filter(post => {
-    // basePost로 통일
+  const filteredPosts = mainFeeds.filter(post => {
     const basePost = post.regram_id && post.Regram ? post.Regram : post;
     const nickname = post.User?.nickname || '';
     let hashtagMatch = false;
@@ -52,14 +53,13 @@ const MainFeed = ({ search }) => {
   });
 
   // ====== [광고 아이템 삽입] ======
-  // 유료회원 여부는 userSelector에서 확인 (여기선 임시 false)
   const isPaidUser = false;
   let items = filteredPosts;
 
   if (!isPaidUser && filteredPosts.length >= AD_INDEX) {
     items = [
       ...filteredPosts.slice(0, AD_INDEX),
-      { type: 'ad', adId: AD_ID }, // 광고 아이템 (구조는 자유롭게)
+      { type: 'ad', adId: AD_ID },
       ...filteredPosts.slice(AD_INDEX)
     ];
   }
@@ -71,7 +71,7 @@ const MainFeed = ({ search }) => {
           ? <AdvertisementDetail key={`ad-${item.adId}-${idx}`} adId={item.adId} />
           : <PostCard key={item.id} post={item} />
       )}
-      {!hasMorePosts && <div style={{ textAlign: 'center', color: '#bbb', margin: '20px' }}>모든 글을 다 불러왔습니다</div>}
+      {!hasMoreFeeds && <div style={{ textAlign: 'center', color: '#bbb', margin: '20px' }}>모든 글을 다 불러왔습니다</div>}
     </>
   );
 };

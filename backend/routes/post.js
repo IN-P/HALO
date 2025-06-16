@@ -491,7 +491,7 @@ router.post('/:postId/regram', isLoggedIn, async (req, res, next) => {
     const fullRegram = await Post.findOne({
       where: { id: regram.id },
       include: [
-        { model: User, attributes: ['id', 'nickname'] },
+        { model: User, attributes: ['id', 'nickname', 'profile_img'] },
         { model: Image },
         { model: User, as: 'Likers', attributes: ['id'] },
         { model: User, as: 'Bookmarkers', attributes: ['id'] },
@@ -499,7 +499,7 @@ router.post('/:postId/regram', isLoggedIn, async (req, res, next) => {
           model: Post,
           as: 'Regram',
           include: [
-            { model: User, attributes: ['id', 'nickname'] },
+            { model: User, attributes: ['id', 'nickname', 'profile_img'] },
             { model: Image },
           ],
         },
