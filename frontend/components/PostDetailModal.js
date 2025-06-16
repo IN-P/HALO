@@ -1,7 +1,3 @@
-// 병합된 PostDetailModal.js
-// - 기존 메인 기능 (멘션 렌더링, 지도, 신고, 슬라이드 등 포함)
-// - 사용자 구조 (CommentDetail 분리, handleCopyLink 등) 유지
-
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { FaHeart, FaRegHeart, FaRegComment, FaBookmark, FaRegBookmark, FaRetweet, FaShareAlt } from 'react-icons/fa';
@@ -25,9 +21,6 @@ const PostDetailModal = ({
   const dispatch = useDispatch();
   const mentionUserMap = useSelector(state => state.mentionUser_JW?.mentionUserMap || {});
   const images = basePost.Images || [];
-
-  const prevImage = () => setImageIndex(i => (i > 0 ? i - 1 : images.length - 1));
-  const nextImage = () => setImageIndex(i => (i < images.length - 1 ? i + 1 : 0));
   const [showMapModal, setShowMapModal] = useState(false);
 
   useEffect(() => {
@@ -73,6 +66,11 @@ const PostDetailModal = ({
 
   if (!show) return null;
 
+  // 위치 정보: 원본/리그램 모두 지원
+  const location = basePost.location;
+  const latitude = basePost.latitude;
+  const longitude = basePost.longitude;
+
   return (
     <div style={modalStyle} onClick={onClose}>
       <div className="post-detail-box" style={detailBoxStyle} onClick={e => e.stopPropagation()}>
@@ -87,8 +85,8 @@ const PostDetailModal = ({
           ) : (<div style={{ width: '100%', height: '100%', background: '#f3f3f3' }} />)}
           {images.length > 1 && (
             <>
-              <button onClick={prevImage} style={{ ...arrowBtnStyle, left: 16 }}>←</button>
-              <button onClick={nextImage} style={{ ...arrowBtnStyle, right: 16, left: 'auto' }}>→</button>
+              <button onClick={() => setImageIndex(i => (i > 0 ? i - 1 : images.length - 1))} style={{ ...arrowBtnStyle, left: 16 }}>←</button>
+              <button onClick={() => setImageIndex(i => (i < images.length - 1 ? i + 1 : 0))} style={{ ...arrowBtnStyle, right: 16, left: 'auto' }}>→</button>
             </>
           )}
         </div>
@@ -108,6 +106,16 @@ const PostDetailModal = ({
               <div style={{ fontSize: 13, color: '#aaa', marginTop: 2 }}>마지막 접속 {minutesAgo < 1 ? '방금 전' : `${minutesAgo}분 전`}</div>
             </div>
           </div>
+
+          {/* 위치 (추가) */}
+          {location && (
+            <div
+              style={{ fontSize: 15, color: '#1558d6', marginBottom: 10, cursor: 'pointer', fontWeight: 500, textDecoration: 'underline' }}
+              onClick={() => setShowMapModal(true)}
+            >
+              {location}
+            </div>
+          )}
 
           {/* 리그램 */}
           {RegramInfo}
@@ -130,7 +138,7 @@ const PostDetailModal = ({
           </div>
 
           {/* 댓글 */}
-          <div className="post-comment-box" style={{ flex: 1, minHeight: 0, overflowY: 'auto',  borderRadius: 14, padding: '18px 0 0 0', marginTop: 8 }}>
+          <div className="post-comment-box" style={{ flex: 1, minHeight: 0, overflowY: 'auto', borderRadius: 14, padding: '18px 0 0 0', marginTop: 8 }}>
             <CommentDetail postId={post.id} currentUserId={user?.id} />
           </div>
 
@@ -142,7 +150,7 @@ const PostDetailModal = ({
         <button style={{ position: 'absolute', top: 22, right: 32, fontSize: 32, background: 'none', border: 'none', cursor: 'pointer', color: '#aaa' }} onClick={onClose}>×</button>
 
         {/* 지도 */}
-        <MapModal visible={showMapModal} onClose={() => setShowMapModal(false)} location={post.location} />
+        <MapModal visible={showMapModal} onClose={() => setShowMapModal(false)} location={location} latitude={latitude} longitude={longitude} />
       </div>
     </div>
   );

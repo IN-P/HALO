@@ -19,9 +19,9 @@ import activeLog_JH from './activeLog_JH';
 import reportResult_YB from './reportResult_YB';
 import badge_JH from './badge_JH';
 import achievement_JH from './achievement_JH';
-import userPoint_JH from './userPoint_JH'; //준혁
+import userPoint_JH from './userPoint_JH';
 import mentionUser_JW from './mentionUser_JW';
-
+import feed_IN from './feed_IN';
 
 const rootReducer = combineReducers({
   index: (state = {}, action) => {
@@ -43,6 +43,7 @@ const rootReducer = combineReducers({
   comment_IN,
   hashtag_IN,
   regram_IN,
+  feed_IN,
   follow_YB,
   report_YB: reportReducer,
   block,
@@ -57,7 +58,7 @@ const rootReducer = combineReducers({
   reportResult_YB,
   badge_JH,
   achievement_JH,
-  userPoint_JH, //준혁
+  userPoint_JH,
   mentionUser_JW,
 
 });
