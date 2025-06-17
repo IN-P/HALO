@@ -33,17 +33,16 @@ module.exports = (sequelize, DataTypes) => {
     //  모델 초기화 후 기본 데이터 삽입
   TargetType.sync().then(() => {
     return TargetType.bulkCreate([
-      { code: 'post' },
-      { code: 'comment' },
-      { code: 'user' },
-      // 준혁 추가
-      { code: 'reply'},
-      { code: 'like' },
-      { code: 'retweet' },
-      { code: 'chat' },
-      { code: 'mention' },
-      { code: 'warn' },
-      { code: 'restrict' },
+      { code: 'post' }, //1
+      { code: 'comment' },//2
+      { code: 'user' },//3
+      { code: 'reply'},//4
+      { code: 'like' },//5
+      { code: 'retweet' },//6
+      { code: 'chat' },//7
+      { code: 'mention' },//8
+      { code: 'warn' },//9
+      { code: 'restrict' },//10
       //
     ], {
       ignoreDuplicates: true, // 중복 데이터 무시
