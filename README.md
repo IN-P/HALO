@@ -1,204 +1,420 @@
-# 👋 About Me
+# HALO
+> - 야구 팬들이 다양한 콘텐츠(제품 후기, 경기 응원, 선수 정보 등)를 자유롭게 공유하고 피드백을 주고받을 수 있는 커뮤니티형 SNS 플랫폼
+> - 벤치마킹 : 인스타그램, X(트위터), 페이스북  
+---
 
-안녕하세요, 흐름을 먼저 설계하고 끝까지 책임지는 백엔드 개발자 **안윤기**입니다.  
-저는 시스템의 신뢰는 '정확한 로직과 단단한 구조'에서 시작된다고 믿습니다.
 
-- 🌱 CS 기반 구조 이해 및 실무 설계 경험  
-- 🛡️ JWT + 세션 혼합 하이브리드 인증 구조 구현  
-- ☁️ AWS EC2 + S3 + Nginx + Shell Script 배포 및 인프라 구축  
-- 🔐 보안 감수성 기반 미들웨어 및 공격 대응 로직 설계  
-- 🧠 구조부터 로그 추적까지, 장애 시 전방위 분석 습관  
+## 프로젝트 소개:
+HALO는 실시간 채팅 및 맨션, 포스트 추천 알고리즘, 업적·뱃지 시스템, 광고 포스트 등
+사용자 인터랙션 기능과 함께, 관리자 권한 분기, 회원 인증 및 결제 시스템,
+자동 공격 탐지 및 로그 기록까지 실전 서비스 수준으로 설계되었습니다.
+
+프론트는 Next.js + Redux 기반, 백엔드는 Node.js + Express + MySQL로 구성되었으며
+팀원별 역할 분담을 통해 기능별 모듈을 독립적으로 설계·개발한 협업형 프로젝트입니다.
+
+---
+##  관련문서
+- [ERD (DB 설계도)](https://github.com/IN-P/HALO/blob/main/md_images/halo_ERD.png)
+- [기능 요구사항 정의서 (Notion 등)](링크추가) - 연결안됨
+- [화면 설계안 (피그마)](https://www.figma.com/design/Rq64drhRrFNn4V3IZoSINI/HALO?node-id=0-1&t=DwuTeYBSMSj4Tevs-1)
+- [HALO 보안 정리 문서](https://github.com/IN-P/HALO/blob/main/security.md)
+
+---
+## 주요기능 :
+
+| 분류 | 기능 설명 |
+|------|-----------|
+| 👤 **사용자 기능** | - 회원가입 / 로그인 / 소셜 로그인 (카카오, 구글)<br>- 비밀번호 변경, 탈퇴 (소프트딜리트)<br>- 휴면 / 정지 / 복구 처리 (이메일 인증 기반) |
+| 🗨️ **실시간 기능** | - 실시간 채팅 및 맨션(@)<br>- 실시간 알림 시스템<br>- 업적 / 뱃지 시스템 |
+| 📰 **피드 & 포스트** | - 포스트 작성, 이미지 업로드<br>- 캐러셀(슬라이드) 기능<br>- 피드 추천 알고리즘 적용<br>- 광고 포스트 별도 구분 |
+| 🎮 **상호작용 기능** | - 팔로우 / 언팔로우<br>- 유저 차단<br>- 문의 등록, 신고 접수 기능 |
+| 🔐 **인증 및 보안** | - 세션 기반 인증 (`passport` + `express-session`)<br>- 계정 상태별 분기 처리 (탈퇴, 휴면, 정지)<br>- 보안 모니터링 미들웨어: 로그인 실패, 빠른 요청 반복, XSS/SQL 인젝션 시도 등 10+ 패턴을 감지해 로그 기록<br>- 보안 로그 기록 및 관리자 전용 로그 조회 시스템 |
+| 💳 **결제 시스템** | - 카카오페이 연동 실시간 포인트 충전<br>- 멤버십 등급 적용 및 잔액 관리<br>- 결제 내역 확인, 환불 처리 로직 포함 |
+| 🛠️ **관리자 기능** | - 13종의 관리자 역할 기반 권한 분기 (`role` 관리)<br>- 유저 관리 (조회 / 수정 / 소프트·하드 삭제)<br>- 업적, 신고, 보안 로그, 포스트 등 세부 권한별 페이지 운영 |
+| 📦 **기타** | - 기상청 날씨 API 연동<br>- 개발용 더미데이터 생성 (`@faker-js/faker`) |
 
 ---
 
-## 📬 CONTACT & LINKS
+##  프로젝트 실행 방법
 
-| 구분 | 내용 |
+### 1. 환경 변수 설정 (.env)
+
+> 프로젝트 실행 전, 백엔드 루트 디렉토리에 `.env` 파일을 반드시 생성하고 아래 항목을 설정해야 합니다.  
+> DB명은 halo 입니다
+
+```env
+#  DATABASE 설정
+DB_PASSPORT=your_db_password
+
+#  세션 쿠키 시크릿 키
+COOKIE_SECRET=your_cookie_secret
+
+# 🌤 기상청 날씨 API (KMA)
+KMA_API_KEY=your_kma_api_key
+
+#  이메일 인증 설정
+MAIL_USER=your_email@example.com
+MAIL_PASS=your_email_app_password
+
+#  Google OAuth
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:3065/auth/google/callback
+
+#  Kakao OAuth & 결제
+KAKAO_CLIENT_ID=your_kakao_client_id
+KAKAO_CALLBACK_URL=http://localhost:3065/auth/kakao/callback
+KAKAO_SECRET_KEY=your_kakao_secret_key
+KAKAO_PAY_CID=your_kakaopay_cid
+
+#  OpenAI 연동용 (자동응답/AI 기능 등)
+OPENAI_API_KEY=your_openai_api_key
+
+#  프론트엔드 도메인
+FRONTEND_DOMAIN=http://localhost:3000
+
+```
+> .env 파일은 Git에 업로드되지 않도록 .gitignore에 포함되어 있습니다.
+> 위 값은 실제 키로 대체해 주세요. 키는 팀원별로 개별 전달합니다.
+
+### 2. 백엔드 실행
+```
+cd backend
+npm install
+npm run dev
+```
+> 기본적으로 Express 서버는 http://localhost:3065에서 실행됩니다.
+
+### 3. 프론트엔드 실행
+```
+cd frontend
+npm install
+npm run dev
+```
+> Next.js 기반 프론트엔드는 http://localhost:3000에서 실행됩니다.
+---
+
+## 기여자
+
+| 이름 | 역할 |
 |------|------|
-| Email | zgha16@gmail.com |
-| GitHub | https://github.com/yoon0416 |
+| 박인 (팀장) | **포스트/피드 전체 흐름 설계 및 추천 알고리즘 구현**<br> - 게시글 업로드, 피드 구성, 댓글, 이미지 슬라이더 사용자 맞춤형 정렬 로직 담당 |
+| 김재원 | **실시간 소통 기능 및 외부 API 연동**<br> - 채팅 및 멘션 시스템, 기상청 날씨 API, 광고 전용 포스트 인터페이스 설계 |
+| 조율비 | **유저 상호작용 모듈 및 신고/문의 처리 구조 담당**<br> - 차단 및 팔로우 기능, 신고 접수/문의 등록 시스템 개발, 룰렛 시스템 개발 |
+| 김준혁 | **마이페이지 및 활동 기반 시스템 구현**<br> - 프로필/알림/업적/뱃지 UI 및 기록 추적 기능 전체 담당 |
+| 안윤기 | **회원 인증ㆍ관리ㆍ분석, 보안, 결제 시스템 전반 설계 및 로그 추적 기능 담당**<br> - 세션 인증, 간편로그인, 계정 복구, 카카오페이 결제, 소프트/하드 딜리트 처리, 보안 모니터링 미들웨어(로그인 실패, 빠른 요청, XSS/SQL 인젝션 등 의심스러운 요청 감지 및 로그 기록), 관리자 권한 구조 설계, 유저 참여율 분석 시스템 설계 |
+| 김경미 | **유저 참여형 콘텐츠 기획 및 인터랙션 기능 구현**<br> - 퀴즈 이벤트, 인기 선수 뽑기, 유저 참여 기반 콘텐츠 및 게임화 요소(Gamification) 구성 |
+
 
 ---
 
-## 🏆 Awards
+## 기술 스택 (Tech Stack)
 
-🥇 **육군군수사령부 디지털 대전환 아이디어 공모전** (2023.07)  
-- 전·평시 탄약 적송 자동화 시스템 설계로 사령부 최우수상 수상  
-- 개념설계 및 구조화, 전군 확장 가능성 입증  
+#### 📦 프론트엔드 환경 (Next.js 기반)
 
----
-
-## 🛠 기술 역량 (Tech Stack)
-
-[![기술스택](https://github-readme-stats.vercel.app/api/top-langs/?username=yoon0416&layout=compact&hide=html)](https://github.com/anuraghazra/github-readme-stats)
-
-| 영역             | 기술 및 도구 |
-|------------------|-------------------------------------------------------------------------------------------------------------------|
-| **Backend**      | Java, Spring Boot, Spring Security, MyBatis, JPA, Node.js, Python, REST API, OAuth2, @PreAuthorize |
-| **Frontend**     | React, Next.js, Redux, Axios, Styled-components |
-| **Infra & 보안** | AWS EC2, S3, Nginx, PM2, Linux, Shell Script, crontab, ffuf, Hydra, TruffleHog, curl |
-| **Database**     | MySQL, MyBatis, Sequelize, Soft Delete, Backup Table, node-cron |
-| **CI/CD**        | Shell Script + crontab 자동화 (서비스 구동 시간 117s → 26s 단축) |
-
----
-
-## 📈 GitHub 활동 요약
-
-[![yoon's GitHub stats](https://github-readme-stats.vercel.app/api?username=yoon0416)](https://github.com/anuraghazra/github-readme-stats)
-
-- 1,300회 이상 커밋  
-- 90건 이상 Pull Request  
-- 외부 기여 레포지토리:
-  - [HALO_SHOP](https://github.com/joyulbi/HALO_SHOP)
-  - [HALO](https://github.com/IN-P/HALO)
+| 항목 | 실제 설치 버전 | 용도 |
+|------|------------------|------|
+| Node.js | **v22.15.0** | 전체 자바스크립트 런타임 |
+| NPM | **v10.9.2** | 패키지 설치 및 관리 |
+| Next.js | **13.4.13** | SSR 지원 React 프레임워크 |
+| React | **18.3.1** | UI 컴포넌트 구성 라이브러리 |
+| Redux | **4.0.5** | 글로벌 상태 관리 |
+| Redux-Saga | **1.1.3** | 비동기 사이드이펙트 처리 |
+| Styled-Components | **5.3.11** | CSS-in-JS 방식 스타일링 |
+| Ant Design | **4.24.16** | UI 컴포넌트 프레임워크 |
+| Framer-Motion | **12.17.0** | 애니메이션 및 인터랙션 |
+| React-Slick | **0.30.3** | 슬라이더/캐러셀 구현 |
+| Immer | **9.0.19** | 상태 불변성 유지 보조 |
+| Axios | **1.9.0** | HTTP 통신 (API 요청) |
+| Shortid | **2.2.15** | 고유 ID 생성 |
+| Prop-Types | **15.8.1** | 컴포넌트 타입 검사 |
+| @faker-js/faker | **9.8.0** | 더미데이터 생성 (개발용) |
 
 ---
 
-## 📌 Projects
+#### ⚙️ 백엔드 환경 (Node.js + Express)
+
+| 항목 | 실제 설치 버전 | 용도 |
+|------|------------------|------|
+| Node.js | **v22.15.0** | 서버 실행 및 API 처리 |
+| NPM | **v10.9.2** | 백엔드 의존성 관리 |
+| Express | **5.1.0** | 웹 서버 및 REST API 프레임워크 |
+| Sequelize | **6.37.7** | ORM: DB 테이블 관리 |
+| Sequelize CLI | **6.6.3** | 마이그레이션 및 모델 자동화 |
+| MySQL2 | **3.14.1** | MySQL 연결용 드라이버 |
+| Passport | **0.7.0** | 인증 처리 프레임워크 |
+| Passport-Local | **1.0.0** | 기본 이메일+비밀번호 로그인 |
+| Passport-Kakao | **1.0.1** | 카카오 간편 로그인 |
+| Passport-Google | **2.0.0** | 구글 간편 로그인 |
+| Bcrypt | **6.0.0** | 비밀번호 해시 처리 |
+| Express-Session | **1.18.1** | 세션 기반 로그인 관리 |
+| Cookie-Parser | **1.4.7** | 쿠키 읽기 및 파싱 |
+| Dotenv | **16.5.0** | 환경변수 설정(.env) 로드 |
+| Multer | **2.0.0** | 이미지 및 파일 업로드 |
+| Morgan | **1.10.0** | 요청 로깅 (로그 미들웨어) |
+| Cors | **2.8.5** | CORS 설정 (프론트-백 연결 허용) |
+| Nodemailer | **7.0.3** | 이메일 발송 기능 |
+| Node-Cron | **4.1.0** | 예약 작업 실행 (예: 자동 삭제) |
+| OpenAI | **5.3.0** | AI 자동화 기능 테스트용 |
+| Socket.io | **4.8.1** | 실시간 채팅 및 알림 |
+| Express-Socket.io-Session | **1.3.5** | 세션 기반 실시간 통신 연동 |
+| Moment-Timezone | **0.6.0** | 날짜/시간 포맷 처리 |
+
+####  데이터베이스
+| 항목 | 버전 | 용도 |
+|------|--------|------|
+| MySQL | **8.0.41** | 관계형 DB, 사용자/게시글/결제 등 저장소 |
+
+####  API 및 외부 연동 기술스택
+
+| 항목 | 내용 |
+|------|------|
+| 🛰 **기상청 날씨 API (KMA)** | 실시간 날씨 데이터 연동 (`KMA_API_KEY`) |
+| 📧 **이메일 인증 (SMTP)** | 회원가입, 계정 복구, 비밀번호 재설정 이메일 발송 |
+| 🔐 **Google OAuth** | 구글 간편 로그인 (`GOOGLE_CLIENT_ID`, `GOOGLE_CALLBACK_URL`) |
+| 🟡 **Kakao OAuth** | 카카오 간편 로그인 연동 (`KAKAO_CLIENT_ID`) |
+| 💰 **Kakao Pay API** | 카카오페이 결제 시스템 연동, 결제 승인 및 환불 처리 지원 |
+| 🧠 **OpenAI API** | 게시글 요약, 자동응답, 콘텐츠 분석 등 AI 기능 확장 가능성 기반 |
+| 🌐 **도메인 설정** | `FRONTEND_DOMAIN`을 통해 CORS 및 리다이렉트 처리 최적화 |
+---
+## 협업 도구
+
+- Git / GitHub  
+  버전 관리 및 코드 공유, PR 리뷰 및 브랜치 전략 사용
+
+- Sourcetree  
+  Git GUI 툴로 브랜치 시각화 및 커밋 내역 관리
+
+- KakaoTalk  
+  빠른 피드백 및 일정 조율을 위한 실시간 커뮤니케이션
+
+- Discord  
+  음성 회의 및 화면 공유를 통한 원격 회의 진행
+
+- 구글 스프레드시트 (공유 시트)  
+  업무 분담, 일정 관리, ERD 및 API 명세 작성 등 협업용 문서 관리
+
+- 오프라인 미팅  
+  주요 기획 회의 및 설계 논의는 직접 만나서 진행
+  
+---
+---
+
+## 사용자 분석 및 개선 계획
+
+HALO 프로젝트는 SNS 구조의 특성상, 사용자의 행동 패턴과 상호작용 데이터를 수집하여  
+피드 추천 알고리즘 개선과 사용자 경험(UX) 향상에 활용하는 구조로 설계되어 있습니다.  
+이를 위해 **분석 관리자(role = 11)** 기능으로 시작했지만, 현재는 **모든 관리자(role ≥ 1)** 가 접근할 수 있도록 확장 중입니다.
+
+### 분석 대상 항목
+
+| 분석 항목 | 목적 | 활용 방안 |
+|-----------|------|------------|
+| 유저별 좋아요 수 | 인기 유저 파악 | 추천 피드에 우선 노출 |
+| 게시글 리트윗 수 | 확산성 높은 콘텐츠 식별 | 피드 정렬 우선순위 반영 |
+| 피드 도달률 | 특정 유저군 도달범위 확인 | 추천 알고리즘 보정 |
+| 활동량 | 댓글/포스트 빈도 측정 | 휴면 계정 전환 판단 기준 |
+| 로그인 빈도 | 접속률 변화 확인 | 마케팅 타겟 구간 정의 |
+
+### 핵심 API 구조
+
+분석 요청은 관리자 권한을 가진 계정에서 호출되며,  
+현재 다음과 같은 API를 통해 사용자 콘텐츠 데이터를 분석할 수 있습니다:
+
+```javascript
+GET /admin/analytics/top-liked-users
+GET /admin/analytics/top-retweeted-posts
+```
+이 API는 내부적으로 Sequelize를 통해 데이터 집계 및 정렬을 수행합니다:
+```
+// services/adminAnalyticsService.js
+async function getTopLikedUsers() {
+  return await User.findAll({
+    attributes: ['id', 'nickname', [Sequelize.fn('SUM', Sequelize.col('Likes.count')), 'likeCount']],
+    include: [{ model: Post, include: ['Likes'] }],
+    group: ['User.id'],
+    order: [[Sequelize.literal('likeCount'), 'DESC']],
+    limit: 10
+  });
+}
+```
+### 시각화 및 활용 예시
+- 관리자 대시보드(/admin/analytics)에서 BarChart 형태로 결과가 출력됩니다.
+- 시각화 요소 예시:
+  - 유저 Top10: 닉네임 / 좋아요 수 / 포스트 수
+  - 게시글 Top10: 제목 / 작성자 / 리트윗 수
+
+### 피드백 루프 구조
+사용자 행동 → 서버 집계 → 관리자 분석 → 알고리즘 보정 → 사용자 피드 개선
+이와 같은 분석 → 개선 → 반영 루프를 통해 HALO는 동적 콘텐츠 제공 구조를 실현하고 있습니다.
+
+### 향후 확장 방향
+- 관리자 범위 확대: 초기에는 분석 관리자 전용 기능이었지만,
+  - 현재는 모든 관리자(role ≥ 1) 가 사용자 행동 데이터를 분석하고 해당 데이터를 기반으로 서비스 운영 품질을 개선할 수 있도록 확대 운영 중입니다.
+
+- 분석 대상 확대: 현재는 콘텐츠(게시글, 좋아요, 리트윗 등) 중심 분석이지만,
+  - 향후에는 신고 수, 회원가입 추이, 비밀번호 변경/복구 빈도, 결제 데이터, 휴면 전환률 등 다양한 기능 사용 데이터를 수집하여 서비스 정책 개선, UX 개편, 고객 응대 효율화 등에 활용할 예정입니다.
+
+- 외부 분석 도구 연동:
+  - Google Analytics (react-ga4)를 통해 비로그인 유저 흐름까지 추적 가능하도록 설정 예정
+  - 관리자 유형별로 개별 분석 리포트 기능 도입 고려
+
+- AI 기반 분석 자동화:
+  - 유저-포스트 그래프 모델을 활용한 추천 시스템 도입 예정
+  - 관리자의 수동 판단을 줄이기 위해 이상 행동 감지, 유저 등급 자동 판정, 피드 선호도 예측 등의 기능을 설계 중입니다.
 
 ---
 
-<details>
-<summary>🔹 HALO_SHOP – 굿즈 쇼핑몰 & 팬 커뮤니티 (2025.06 ~ 07)</summary>
+---
 
-**담당:** 회원/보안/인증 시스템 전담, EC2 인프라 구성, 자동 배포, 트러블슈팅 및 문서화  
+##  테스트 및 품질 관리
 
-### 🧰 사용기술
+### 1. 실시간 로그 기반 품질 관리
 
-| 영역     | 기술 |
-|----------|------|
-| Frontend | React, Next.js, Redux, Styled-components, SockJS, StompJS, Recharts, Axios |
-| Backend  | Spring Boot, Java 11, MyBatis, JPA, Spring Security, OAuth2, WebSocket |
-| Infra    | AWS EC2, S3, Nginx, PM2, Shell Script, crontab |
-| DB       | MySQL 8.x (Soft Delete, backup table, node-cron 기반 스케줄링) |
-| 보안도구 | Hydra, ffuf, TruffleHog, curl, Nikto 등 |
+- `attackerDetect.js` 미들웨어를 통해 모든 요청 실시간 감시
+- 이상 요청 및 보안 위협은 `logs` 테이블에 자동 기록
+- 요청 URL, 요청자 ID, IP, 행위 유형(Action), 상세 설명까지 모두 기록됨
+- 모든 로그는 관리자 전용 페이지에서 실시간 확인 가능
 
-### 📌 주요 기능
-
-- 4중 인증 구조 (JWT + bcrypt / 세션 + Argon2)
-- 관리자 권한 분기 및 세션 강제 종료 기능
-- 보안 미들웨어로 XSS, SQL Injection, 빠른 요청 차단
-- Shell Script 기반 자동 배포 (117s → 26s 단축)
-- 실전 보안 도구(ffuf, Hydra 등) 기반 공격 대응 구조 설계
-
-### 🔧 주요 트러블슈팅
-
-- 요청 폭주 → rate limiter + IP 차단
-- UTC 시간 설정 → `-Duser.timezone=Asia/Seoul`
-- 프론트 비효율적 빌드 반복 → 조건 분기 + 병렬 실행 최적화
-
-### 🤝 협업 및 회고
-
-- 역할 분담 기반 개발 및 문서화 주도 (API 명세서, ERD 등)
-- 피드백 기반 응답 포맷 통일 (isAdmin, role)
-- 회의록/협업 툴 기반 커뮤니케이션 능동적 참여
-
-### 🔗 링크
-
-- [GitHub](https://github.com/joyulbi/HALO_SHOP)  
-- [배포](http://43.202.189.108/)  
-- [시연 영상](https://www.youtube.com/watch?v=Xm-JVtveUPE)
-
-</details>
+→ 실제 SQL Injection, XSS, 빠른 요청(DoS 유사), 빈 요청 등의 시나리오 테스트를 통해 **정상 탐지 및 로그 기록 여부 검증 완료**  
+→ 향후 로그 블록체인화 계획으로 **위변조 방지 및 법적 대응 가능**
 
 ---
 
-<details>
-<summary>🔹 HALO – 팬 SNS 기반 커뮤니티 (2025.05 ~ 06)</summary>
+### 2. 보안 공격 테스트 요약
 
-**담당:** 회원/인증/결제 시스템, 상태 차단, 이메일 인증, EC2 배포 및 리버스 프록시 구성
+| 공격 유형       | 테스트 시도 예시                             | 결과 요약        | 로그 기록 여부 | 비고                           |
+|----------------|----------------------------------------------|------------------|----------------|--------------------------------|
+| **SQL Injection** | `email: admin@example.com' OR 1=1 --`        | 로그인 실패       | ✅ 기록됨       | Body 내 `' OR` 키워드 탐지 성공 |
+|                | `/post/1%20OR%201%3D1`                         | 단일 게시글만 출력 | ❌ 미기록       | DB 필터링 정상작동             |
+| **XSS 공격**     | `<script>alert('XSS')</script>` (로그인 폼)   | 로그인 실패       | ✅ 기록됨       | `<script>` 포함 탐지 성공      |
+|                | `<script>alert('XSS')</script>` (게시글 내용) | 아무 일 없음      | ❌ 미기록       | sanitize 여부 확인 필요        |
 
-### 🧰 사용기술
-
-| 영역     | 기술 |
-|----------|------|
-| Frontend | React, Redux, Axios |
-| Backend  | Node.js, Express, Passport, bcrypt, Nodemailer |
-| Infra    | AWS EC2, PM2, Nginx |
-| DB       | MySQL 8.x (Soft Delete, deleted_users 테이블) |
-| 보안기반 | 이메일 인증, 상태 기반 로그인 차단, 관리자 권한 분기(role 기반) |
-
-### 📌 주요 기능
-
-- 세션 기반 인증 (`passport-local`), bcrypt 해싱
-- 탈퇴/정지/휴면 계정 차단
-- 이메일 인증 기반 임시 비밀번호 발급 및 복구
-- 카카오페이 결제 시스템 구현 및 멤버십 등급 반영
-- 관리자 role 기반 접근 제한 미들웨어 설계
-
-### 🔧 트러블슈팅
-
-- Soft delete 계정 정리 누락 → node-cron 기반 자동 제거 구현
-- FK 제약으로 인한 삭제 실패 → 트랜잭션 + CASCADE 처리
-
-### 🔗 링크
-
-- [GitHub](https://github.com/IN-P/HALO)
-
-</details>
+> 🔎 *위 공격 외에도 Too Many Requests, 반복 로그인 실패, 빈 body 요청 등 다양한 시나리오도 로그화됨*
 
 ---
 
-<details>
-<summary>🔹 SSGFC – SSG 랜더스 팬 커뮤니티 (2025.04 ~ 05)</summary>
+### 3. 코드상 구현 완료된 로그 항목 (테스트 미실행)
 
-**담당:** 인증/보안/로그 시스템, 관리자 기능, 크롤링, 외부 API 연동, 트러블슈팅 및 보안 문서화
-
-### 🧰 사용기술
-
-| 영역     | 기술 |
-|----------|------|
-| Frontend | Thymeleaf, Bootstrap, JavaScript |
-| Backend  | Java 11, Spring Boot 2.7.14, Spring Security, JPA |
-| DB       | MySQL 8.0 |
-| Infra    | 로컬 Tomcat → AWS EC2 이전 준비 중 |
-| 인증/보안 | Spring Security 커스텀 로그인, OAuth2, 이메일/전화 인증 |
-| 외부 API | CoolSMS, Google SMTP, Kakao 주소 API, 기상청 초단기 API |
-| 기타     | Jsoup 기반 HTML 크롤링 |
-
-### 📌 주요 기능
-
-- 소셜 로그인(OAuth2), 이메일·전화 인증 통합
-- 관리자 권한 분리 및 접근 제어 (@PreAuthorize)
-- 게시글/댓글 본인 인증, 비로그인 차단
-- 로그 자동 수집 및 30일 보존 스케줄링
-- 구조적 보안 설계 + 외부 API 활용
-
-### 🔗 참고 문서
-
-- [보안 설계 문서](https://github.com/yoon0416/ssgpack/blob/main/시큐리티.md)
-- [트러블슈팅 문서](https://github.com/yoon0416/ssgpack/blob/main/트러블슈팅.md)
-- [문서 저장소](https://github.com/yoon0416/document)
-- [AWS 설정](https://github.com/yoon0416/ssgpack/blob/main/aws.md)
-- [시연 영상](https://youtu.be/pWBEOX9JKqc)
-
-</details>
+| 로그 타입                  | 트리거 조건                                         | 구현 상태  |
+|----------------------------|----------------------------------------------------|------------|
+| `DIRECT_ADMIN_URL_ACCESS` | 비관리자가 관리자 전용 URL에 직접 접근 시도       | ✅ 구현 완료 |
+| `BLOCKED_USER_ACCESS_ATTEMPT` | 정지/탈퇴/휴면 유저가 로그인 또는 접근 시도   | ✅ 구현 완료 |
+| `LOGIN_SUCCESS`            | 로그인 성공 시                                     | ✅ 구현 완료 |
+| `LOGIN_FAIL`               | 로그인 실패 시 (5회 미만 포함)                     | ✅ 구현 완료 |
+| `PASSWORD_CHANGE_SUCCESS`  | 마이페이지 비밀번호 변경 성공 시                   | ✅ 구현 완료 |
+| `SOCIAL_LOGIN_SUCCESS`     | 카카오/구글 등 소셜 로그인 성공 시                 | ✅ 구현 완료 |
+| `ADMIN_USER_SOFTDELETE`    | 관리자가 유저를 소프트딜리트한 경우                | ✅ 구현 완료 |
+| `ADMIN_USER_HARDDELETE`    | 관리자가 유저를 하드딜리트한 경우                  | ✅ 구현 완료 |
+| `ADMIN_LOG_VIEW`           | 관리자가 로그 관리자 페이지에서 조회했을 때        | ✅ 구현 완료 |
+| `BLOCKCHAIN_LOG_CREATED`   | 로그 블록체인 블록 생성 시                         | ✅ 구현 예정 |
+| `PASSWORD_RESET_EMAIL_SENT`| 이메일 인증 통한 임시 비밀번호 전송 시             | ✅ 구현 완료 |
 
 ---
 
-## 💼 경력 및 활동 요약
+### 4. Git 기반 병합 전략 및 테스트 운영
 
-- HALO_SHOP, HALO, SSGFC 등 **3개 팀 프로젝트에서 회원/보안/인증 전담**  
-- 모든 프로젝트 **AWS EC2 + Nginx + S3 + PM2 운영 및 배포 완료**  
-- 관리자 강제 로그아웃, Argon2 해싱, 이메일 인증 기반 복구 등 **보안 로직 직접 구현**  
-- JANUS 보안 아키텍처 논문 설계 및 시뮬레이션 기반 보안 흐름 설계  
-- 리눅스 Shell Script 자동화, 로그 분석, crontab 기반 스케줄링 경험 보유
+- **브랜치 전략**  
+  - `main`: 운영 기준  
+  - `dev_이니셜`: 개인 개발 브랜치 (예: `dev_yoon`, `dev_jh`)  
+  - 기능 완료 후 → PR → `main` 병합
+
+- **충돌 방지 방식**  
+  - 기능 단위 모듈화 (`user`, `admin`, `security`, `payment` 등)  
+  - `app.js`, `routes/index.js` 등 공용 라우터는 충돌 주의  
+  - 병합 전 `소스트리`, `VSCode`, `git diff`로 충돌 여부 사전 확인
+
+- **테스트 전략**  
+  - 모든 기능은 `Postman`, 프론트, 콘솔, DB 등 **직접 실행 테스트**
+  - GitHub + Discord 통해 **버그 공유 → 수정 → 병합**
+  - 자동 테스트 프레임워크(Jest)는 예시로만 존재, 실 운영은 시나리오 기반 수동 테스트 중심
+
+> ✅ *보안 시나리오, 유저 상태, 비정상 요청 등 모든 테스트 항목은 실제 로그 기록을 통해 품질 검증됨*
 
 ---
 
-## ⭐ 평가 가능한 장점 (Strengths)
 
-- **상황 해결 중심**: 설계 레벨에서 문제 원인을 추적하고 구조로 대응  
-- **보안 감수성**: 인증·공격 시나리오·테스트·침투 대응 경험  
-- **문서화 역량**: README, 배포 가이드, 트러블슈팅 정리 습관  
-- **시스템 구조 이해**: 팀 전체 흐름과 역할 파악에 강점  
+### 5. 향후 개선 계획: React + Node.js 기반 테스트 자동화 도입
+
+- **단위 테스트 (Unit Test)**  
+  → `Jest`, `Mocha`, `Chai` 등 도구를 활용하여 핵심 로직(회원가입, 로그인, 결제 등)의 단위 테스트 자동화 예정  
+  → 주요 시나리오에 대한 성공/실패 케이스 분기 테스트 추가로 회귀 방지
+
+- **통합 테스트 (Integration Test)**  
+  → `Supertest` 기반 Express API 테스트 구성  
+  → 사용자 흐름: 회원가입 → 로그인 → 마이페이지 접근 → 결제 → 멤버십 변경 전체 플로우 시나리오 테스트 예정
+
+- **프론트엔드 테스트**  
+  → `React Testing Library`, `Cypress` 도입 고려  
+  → 버튼 클릭, 폼 입력, 뷰 렌더링, 조건부 뷰 분기 등 UI 기반 테스트 자동화로 사용성 확보
+
+- **보안 테스트 자동화**  
+  → XSS, SQL Injection, 빈 요청 등 시나리오를 `Postman Collection` + `Newman CLI`로 자동화 실행  
+  → 반복 공격 시나리오 재현 및 미들웨어 반응 검증
+
+- **CI/CD 연동 계획**  
+  → GitHub Actions 또는 GitLab CI와 연동해 `PR → 자동 테스트 → 실패 시 Merge 차단` 체계 도입 예정
+
+---
+---
+
+
+##  데이터 분석 및 인사이트
+
+HALO 프로젝트는 서비스 운영 중 사용자 데이터를 기반으로  
+**트렌드 분석**과 **기능 개선**을 목표로 한 분석 체계를 다음과 같이 구축하고 있으며,  
+**기초 시각화 기능은 현재 구현 완료된 상태**입니다.
 
 ---
 
-## 💡 Career Goals
+###  1. 사용자 인터랙션 분석 (1차 구현 완료)
 
-- 설계에 기반한 기술 도입 및 구조적 확장 가능성 추구  
-- Linux, SQL, AWS 기반으로 실용 중심 백엔드 성장  
-- 보안 탐지 및 로그 설계 고도화 → 실전 대응 가능한 보안 시스템 구현  
-- 다양한 인증/보안 도구를 커스터마이징할 수 있는 보안 개발자 지향
+- 사용자의 **좋아요, 리트윗** 활동을 기준으로 인기 콘텐츠와 유저를 분석
+- `/admin/analytics` 페이지에서 **표와 차트 시각화** 기능 구현 완료
+
+ 현재 시각화된 항목:
+
+| 분석 항목       | 시각화 형태       | 설명                             |
+|----------------|------------------|----------------------------------|
+| 좋아요 Top 유저 | Table + BarChart | 닉네임/좋아요 수로 정렬된 유저 |
+| 리트윗 Top 게시글 | Table + BarChart | 콘텐츠/리트윗 수 기반 순위 표시 |
+
+> ⚙️ 사용 기술: `Ant Design Table`, `Recharts BarChart`, `ResponsiveContainer`, `LabelList`
+
+---
+
+###  2. 분석 도구 적용 방안 (도입 예정)
+
+- **Google Analytics (react-ga4)** → 비로그인 유저 흐름 포함 전체 페이지 방문 분석
+- **Matomo** → 자체 서버형 분석 도구로 개인정보 보호 강화를 고려
+- **Heatmap 도구** → 클릭, 스크롤 시각화를 통한 UI 개선 예고
+
+---
+
+###  3. 개선 루프 설계
+
+> (분석 관리자 또는 마스터 관리자만 접근 가능, 권한 role = 1 또는 11)
+```
+사용자 행동 수집
+↓
+관리자 대시보드 시각화
+↓
+트렌드/이상 탐지
+↓
+기능 개선 및 피드백 반영
+↓
+서비스 품질 향상
+```
+
+---
+
+###  향후 확장 계획
+
+- 현재는 유저-콘텐츠 중심의 분석이지만,
+  추후에는 **신고 건수, 회원가입 경로, 유입 트래픽, 계정 상태 변화** 등으로 확대
+- **모든 관리자**가 요약 통계를 조회 가능하도록 관리자 공용 대시보드 기능 구현 예정
+- 분석 결과를 바탕으로 **AI 추천 시스템**, **리텐션 마케팅**, **UX 최적화** 등 서비스 품질을 높이는 것에 초점을 두어 활용
+
+---
+
 
